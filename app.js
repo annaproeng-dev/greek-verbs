@@ -1,7 +1,7 @@
 /* ── Language & Accent ─────────────────────────────── */
 let lang = localStorage.getItem('greekTrainerLang') || 'en';
 let accentMode = false;
-let practicePool = [...VERBS];
+let practicePool = ALL_VERBS.filter(v=>v.conj_pres);
 let selectedPracticeTense = 'mixed';
 let difficultMode = false;
 const difficultIds = new Set(JSON.parse(localStorage.getItem('greekDifficultVerbs') || '[]'));
@@ -27,6 +27,7 @@ function setLang(l) {
     el.placeholder = t(el.dataset.i18nPh);
   });
   document.getElementById('langBtn').textContent = t('lang_toggle');
+  setupControls();
   document.querySelectorAll('.results-wrap').forEach(result => {
     const exercise = result.closest('.exercise');
     if (exercise) renderResults(exercise.id.replace('ex-',''), Number(result.dataset.correct), Number(result.dataset.total));
@@ -55,9 +56,14 @@ function speakGreek(text, event) {
   speechSynthesis.speak(utterance);
 }
 
-function saveProgress() {}
-function recordAnswer() {}
-function recordSession() {}
+function saveProgress() { localStorage.setItem('greekTrainerProgress', JSON.stringify(progress)); }
+function recordAnswer(v, tense, ok) {
+  progress[ok?'correct':'wrong']++;
+  const key=tense||'mixed'; progress.byTense[key] ||= {correct:0,wrong:0}; progress.byTense[key][ok?'correct':'wrong']++;
+  if (v) progress.mistakes[v.id] = Math.max(0,(progress.mistakes[v.id]||0)+(ok?-1:1));
+  saveProgress();
+}
+function recordSession() { progress.sessions++; saveProgress(); }
 function showProgress() {
   const total=progress.correct+progress.wrong, accuracy=total?Math.round(progress.correct/total*100):0;
   const hard=Object.values(progress.mistakes).filter(n=>n>0).length;
@@ -143,6 +149,7 @@ function switchExercise(id) {
 
 /* ── Results helper ──────────────────────────────── */
 function showResults(exId, correct, total) {
+  recordSession();
   renderResults(exId, correct, total);
 }
 
@@ -188,6 +195,7 @@ function renderTable() {
   tbody.innerHTML = '';
   sorted.forEach(v => {
     const tr = document.createElement('tr');
+    tr.className='verb-row'; tr.tabIndex=0; tr.onclick=()=>openVerb(v.id); tr.onkeydown=e=>{if(e.key==='Enter')openVerb(v.id)};
     tr.innerHTML = `
       <td><button class="audio-btn" title="Pronunciation" onclick="speakGreek('${v.greek.replaceAll("'","\\'")}',event)">🔊</button></td>
       <td class="td-greek">${v.greek}</td>
@@ -226,6 +234,7 @@ function renderFC() {
   document.getElementById('fcNextBtn').textContent  = t('fc_next');
   document.getElementById('fcAudioBtn').textContent = t('fc_audio');
   document.getElementById('fcAudioBtn').onclick = event => speakGreek(v.greek,event);
+  document.getElementById('markDifficultBtn').textContent = difficultIds.has(v.id) ? t('unmark_difficult') : t('mark_difficult');
   document.getElementById('fcShowBtn').style.display = 'inline-block';
   document.getElementById('fcNextBtn').style.display = 'none';
 }
@@ -444,7 +453,11 @@ let cjDeck=[], cjIdx=0, cjCorrect=0, cjAnswered=false;
 
 function buildCjItems() {
   const a=[];
-  practicePool.forEach(v=>{ [0,1,2,3,4,5].forEach(p=>a.push({v,p,tense:'pres',correct:v.conj_pres[p]})); });
+  practicePool.forEach(v=>{ [0,1,2,3,4,5].forEach(p=>{
+    if(selectedPracticeTense==='mixed'||selectedPracticeTense==='pres')a.push({v,p,tense:'pres',correct:v.conj_pres[p]});
+    if(v.aoristSupported&&(selectedPracticeTense==='mixed'||selectedPracticeTense==='past'))a.push({v,p,tense:'past',correct:v.conj_past[p]});
+    if(selectedPracticeTense==='mixed'||selectedPracticeTense==='fut')a.push({v,p,tense:'fut',correct:v.conj_fut[p]});
+  }); });
   return a.sort(()=>Math.random()-0.5);
 }
 
@@ -454,15 +467,16 @@ function renderConj() {
   cjAnswered=false;
   const item=cjDeck[cjIdx];
   document.getElementById('cjPrompt').textContent = t('q_conj');
-  document.getElementById('cjVerb').textContent   = `${PERSONS[item.p]} + ${item.v.greek} (${verbTrans(item.v)})`;
+  document.getElementById('cjVerb').textContent   = `${PERSONS[item.p]} + ${item.v.greek} · ${t(item.tense+'_t')} (${verbTrans(item.v)})`;
   document.getElementById('cjFeedback').className = 'feedback';
   document.getElementById('cjNext').classList.remove('show');
   document.getElementById('cjScore').textContent  = `${t('score_lbl')} ${cjIdx}/${cjDeck.length}`;
   // Wrong options: other persons of same verb + one from another verb
-  const wrongPool = item.v.conj_pres.filter((_,i)=>i!==item.p);
+  const forms=item.tense==='pres'?item.v.conj_pres:item.tense==='past'?item.v.conj_past:item.v.conj_fut;
+  const wrongPool = forms.filter((_,i)=>i!==item.p);
   const otherVerbs=practicePool.filter(v=>v!==item.v&&v.conj_pres);
   const other=otherVerbs[Math.floor(Math.random()*otherVerbs.length)]||item.v;
-  const extra = other.conj_pres[item.p];
+  const extra = (item.tense==='pres'?other.conj_pres:item.tense==='past'?other.conj_past:other.conj_fut)[item.p];
   const opts = [item.correct, ...wrongPool.sort(()=>Math.random()-0.5).slice(0,2), extra].sort(()=>Math.random()-0.5);
   renderMC(opts, item.correct, 'cjOpts', (btn, chosen, correct) => {
     if (cjAnswered) return; cjAnswered=true;
@@ -681,6 +695,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   switchExercise('quiz');
   renderPhraseSelect();
   renderPhrases();
+  setupControls();
   if(!('speechSynthesis' in window)) document.querySelectorAll('.audio-btn').forEach(button=>button.hidden=true);
   // apply initial i18n
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n).replace('{count}',ALL_VERBS.length); });

@@ -7,7 +7,7 @@
   <meta name="description" content="A2 Greek verb trainer: flashcards, conjugation, fill-in-blank, tense change, and more." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=expanded" />
 </head>
 <body>
 
@@ -24,6 +24,7 @@
     <button class="nav-link"        id="nav-phrases"    onclick="switchSection('phrases')"    data-i18n="nav_phrases">💬 Phrases</button>
   </div>
   <div class="nav-settings">
+    <button class="lang-btn" id="progressBtn" onclick="showProgress()" aria-label="Progress">📊</button>
     <button class="lang-btn" id="langBtn" onclick="toggleLang()">RU</button>
     <label class="accent-toggle">
       <input type="checkbox" id="accentChk" onchange="toggleAccent()" />
@@ -41,6 +42,11 @@
   <!-- ══ VERBS TABLE ════════════════════════════════ -->
   <div class="section active" id="sec-verbs">
     <p class="section-title" data-i18n="all_verbs">All Verbs</p>
+    <div class="verb-tools">
+      <input id="verbSearch" class="tool-input" type="search" data-i18n-ph="search_verbs" oninput="renderTable()" />
+      <select id="verbGroup" class="phrase-select" onchange="renderTable()"></select>
+      <span class="verb-count" id="verbCount"></span>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead>
@@ -60,6 +66,10 @@
   <!-- ══ FLASHCARDS ══════════════════════════════════ -->
   <div class="section" id="sec-flashcards">
     <div class="fc-area">
+      <div class="flash-tools">
+        <select id="flashTopic" class="phrase-select" onchange="applyFlashFilter()"></select>
+        <button class="tool-btn" id="difficultBtn" onclick="toggleDifficultMode()"></button>
+      </div>
       <div class="fc-counter" id="fcCounter">1 / 10</div>
       <div class="fc-card" id="fcCard">
         <div class="fc-front-only">
@@ -84,11 +94,22 @@
         <button class="fc-next-btn" id="fcNextBtn" onclick="fcNext()" style="display:none">Next →</button>
       </div>
       <button class="fc-shuffle-btn" onclick="fcShuffle()" data-i18n="fc_shuffle">🔀 Shuffle</button>
+      <button class="fc-shuffle-btn" id="markDifficultBtn" onclick="toggleCurrentDifficult()"></button>
     </div>
   </div>
 
   <!-- ══ PRACTICE ════════════════════════════════════ -->
   <div class="section" id="sec-practice">
+    <div class="practice-setup" id="practiceSetup">
+      <strong data-i18n="practice_setup">Practice setup</strong>
+      <div class="setup-grid">
+        <label><span data-i18n="select_topic">Topic</span><select id="practiceTopic" class="phrase-select"></select></label>
+        <label><span data-i18n="select_tense">Tense</span><select id="practiceTense" class="phrase-select"></select></label>
+        <label><span data-i18n="select_exercise">Exercise</span><select id="practiceType" class="phrase-select"></select></label>
+        <button class="fill-submit" onclick="startConfiguredPractice()" data-i18n="start_practice">Start practice</button>
+      </div>
+      <div class="setup-message" id="practiceMessage"></div>
+    </div>
     <div class="sub-tabs">
       <button class="sub-tab active" id="subtab-quiz"   onclick="switchExercise('quiz')"   data-i18n="sub_quiz">Translation</button>
       <button class="sub-tab"        id="subtab-match"  onclick="switchExercise('match')"  data-i18n="sub_match">Matching</button>
@@ -96,7 +117,7 @@
       <button class="sub-tab"        id="subtab-conj"   onclick="switchExercise('conj')"   data-i18n="sub_conj">Conjugation</button>
       <button class="sub-tab"        id="subtab-fill"   onclick="switchExercise('fill')"   data-i18n="sub_fill">Fill Blank</button>
       <button class="sub-tab"        id="subtab-change" onclick="switchExercise('change')" data-i18n="sub_change">Change Tense</button>
-      <button class="sub-tab"        id="subtab-image"  onclick="switchExercise('image')"  data-i18n="sub_image">Images</button>
+      <button class="sub-tab" hidden id="subtab-image"  onclick="switchExercise('image')"  data-i18n="sub_image">Images</button>
     </div>
 
     <!-- Quiz -->
@@ -214,8 +235,11 @@
 
 </div><!-- /wrap -->
 
+<dialog id="verbDialog" class="verb-dialog"><div id="verbDialogContent"></div></dialog>
+<dialog id="progressDialog" class="verb-dialog"><div id="progressContent"></div></dialog>
 
-<script src="data.js?v=11"></script>
-<script src="app.js?v=11"></script>
+
+<script src="data.js?v=expanded"></script>
+<script src="app.js?v=expanded"></script>
 </body>
 </html>
