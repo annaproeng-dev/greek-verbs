@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greek Verbs A2 — Trainer</title>
+  <meta name="description" content="A2 Greek verb trainer: flashcards, conjugation, fill-in-blank, tense change, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=11" />
+</head>
+<body>
+
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<!-- ── Navigation ──────────────────────────────── -->
+<nav>
+  <div class="nav-logo">🇬🇷 <span>ελληνικά</span> A2</div>
+  <div class="nav-links">
+    <button class="nav-link active" id="nav-verbs"      onclick="switchSection('verbs')"      data-i18n="nav_verbs">📖 Verbs</button>
+    <button class="nav-link"        id="nav-flashcards" onclick="switchSection('flashcards')" data-i18n="nav_flash">🃏 Flashcards</button>
+    <button class="nav-link"        id="nav-practice"   onclick="switchSection('practice')"   data-i18n="nav_practice">🎯 Practice</button>
+    <button class="nav-link"        id="nav-phrases"    onclick="switchSection('phrases')"    data-i18n="nav_phrases">💬 Phrases</button>
+  </div>
+  <div class="nav-settings">
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">RU</button>
+    <label class="accent-toggle">
+      <input type="checkbox" id="accentChk" onchange="toggleAccent()" />
+      <span data-i18n="accent_label">Train accents</span>
+    </label>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header>
+    <h1 data-i18n="page_title">Greek Verbs</h1>
+    <p class="subtitle" data-i18n="subtitle">64 A2 verbs · present, past, future tense</p>
+  </header>
+
+  <!-- ══ VERBS TABLE ════════════════════════════════ -->
+  <div class="section active" id="sec-verbs">
+    <p class="section-title" data-i18n="all_verbs">All Verbs</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="tbl_audio">🔊</th>
+            <th data-i18n="tbl_present">Present</th>
+            <th data-i18n="tbl_past">Past</th>
+            <th data-i18n="tbl_future">Future</th>
+            <th data-i18n="tbl_trans">Translation</th>
+          </tr>
+        </thead>
+        <tbody id="verbTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ FLASHCARDS ══════════════════════════════════ -->
+  <div class="section" id="sec-flashcards">
+    <div class="fc-area">
+      <div class="fc-counter" id="fcCounter">1 / 10</div>
+      <div class="fc-card" id="fcCard">
+        <div class="fc-front-only">
+          <div class="fc-front-label" id="fcFrontLabel">Greek · Present tense</div>
+          <div class="fc-verb" id="fcVerb"></div>
+          <div class="fc-hint-click" data-i18n="fc_hint">click to reveal</div>
+        </div>
+        <div class="fc-back-content">
+          <div class="fc-back-label" data-i18n="fc_back_label">Translation</div>
+          <div class="fc-translation" id="fcTranslation"></div>
+          <div class="fc-tense-row">
+            <span class="fc-tense-chip chip-past"    id="fcPastLbl"></span>
+            <span class="fc-tense-chip chip-present" id="fcPresLbl"></span>
+            <span class="fc-tense-chip chip-future"  id="fcFutLbl"></span>
+          </div>
+          <div class="fc-example" id="fcExample"></div>
+          <button class="audio-btn" id="fcAudioBtn" style="margin-top:10px">🔊 Pronunciation</button>
+        </div>
+      </div>
+      <div class="fc-btn-row">
+        <button class="fc-show-btn" id="fcShowBtn" onclick="fcShow()">Show answer</button>
+        <button class="fc-next-btn" id="fcNextBtn" onclick="fcNext()" style="display:none">Next →</button>
+      </div>
+      <button class="fc-shuffle-btn" onclick="fcShuffle()" data-i18n="fc_shuffle">🔀 Shuffle</button>
+    </div>
+  </div>
+
+  <!-- ══ PRACTICE ════════════════════════════════════ -->
+  <div class="section" id="sec-practice">
+    <div class="sub-tabs">
+      <button class="sub-tab active" id="subtab-quiz"   onclick="switchExercise('quiz')"   data-i18n="sub_quiz">Translation</button>
+      <button class="sub-tab"        id="subtab-match"  onclick="switchExercise('match')"  data-i18n="sub_match">Matching</button>
+      <button class="sub-tab"        id="subtab-tense"  onclick="switchExercise('tense')"  data-i18n="sub_tense">Tense ID</button>
+      <button class="sub-tab"        id="subtab-conj"   onclick="switchExercise('conj')"   data-i18n="sub_conj">Conjugation</button>
+      <button class="sub-tab"        id="subtab-fill"   onclick="switchExercise('fill')"   data-i18n="sub_fill">Fill Blank</button>
+      <button class="sub-tab"        id="subtab-change" onclick="switchExercise('change')" data-i18n="sub_change">Change Tense</button>
+      <button class="sub-tab"        id="subtab-image"  onclick="switchExercise('image')"  data-i18n="sub_image">Images</button>
+    </div>
+
+    <!-- Quiz -->
+    <div class="exercise active" id="ex-quiz">
+      <div class="ex-card">
+        <div class="ex-prompt" id="qPrompt">What does this mean?</div>
+        <div class="ex-verb"   id="qVerb"></div>
+        <div class="ex-sub"    id="qSub"></div>
+        <button class="dir-btn" id="qDirBtn" onclick="toggleQDir()">🔁 Switch direction</button>
+        <div class="opts-grid" id="qOpts"></div>
+        <div class="feedback"  id="qFeedback"></div>
+        <button class="ex-next-btn" id="qNext" onclick="nextQuiz()">Next →</button>
+        <div class="ex-score"  id="qScore"></div>
+      </div>
+    </div>
+
+    <!-- Matching -->
+    <div class="exercise" id="ex-match">
+      <div class="match-grid">
+        <div class="match-col"><div class="match-col-label" id="matchColL">Greek</div><div id="matchLeft"></div></div>
+        <div class="match-col"><div class="match-col-label" id="matchColR">Translation</div><div id="matchRight"></div></div>
+      </div>
+      <div class="match-info" id="matchInfo"></div>
+      <button class="match-restart" id="matchRestart" onclick="initMatch()" data-i18n="match_restart">🔄 New game</button>
+    </div>
+
+    <!-- Tense ID -->
+    <div class="exercise" id="ex-tense">
+      <div class="ex-card">
+        <div class="ex-prompt" id="tPrompt">What tense is this?</div>
+        <div class="ex-verb"   id="tForm"></div>
+        <div class="ex-sub"    id="tSub"></div>
+        <div class="opts-grid" id="tOpts"></div>
+        <div class="feedback"  id="tFeedback"></div>
+        <button class="ex-next-btn" id="tNext" onclick="nextTense()">Next →</button>
+        <div class="ex-score"  id="tScore"></div>
+      </div>
+    </div>
+
+    <!-- Conjugation -->
+    <div class="exercise" id="ex-conj">
+      <div class="ex-card">
+        <div class="ex-prompt" id="cjPrompt">Conjugate the verb:</div>
+        <div class="ex-verb"   id="cjVerb" style="font-size:20px;line-height:1.4"></div>
+        <div class="opts-grid" id="cjOpts"></div>
+        <div class="feedback"  id="cjFeedback"></div>
+        <button class="ex-next-btn" id="cjNext" onclick="nextConj()">Next →</button>
+        <div class="ex-score"  id="cjScore"></div>
+      </div>
+    </div>
+
+    <!-- Fill Blank -->
+    <div class="exercise" id="ex-fill">
+      <div class="ex-card">
+        <div class="ex-prompt"   id="fillPrompt">Fill in the correct verb form:</div>
+        <div class="fill-sentence" id="fillSentence"></div>
+        <div class="fill-hint"    id="fillHint"></div>
+        <div class="fill-tip"     id="fillTip"></div>
+        <input class="fill-input" id="fillInput" type="text"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               placeholder="…" />
+        <button class="fill-submit" id="fillCheck" onclick="checkFill()">Check</button>
+        <div class="feedback" id="fillFeedback"></div>
+        <button class="ex-next-btn" id="fillNext" onclick="nextFill()">Next →</button>
+        <div class="ex-score" id="fillScore"></div>
+      </div>
+    </div>
+
+    <!-- Change Tense -->
+    <div class="exercise" id="ex-change">
+      <div class="ex-card">
+        <div class="ex-prompt" id="ctPrompt">Convert to the indicated tense:</div>
+        <div class="ex-sub"    id="ctDir" style="color:var(--accent2);font-weight:600;margin-bottom:8px;"></div>
+        <div class="ex-verb"   id="ctForm"></div>
+        <div class="opts-grid" id="ctOpts"></div>
+        <div class="feedback"  id="ctFeedback"></div>
+        <button class="ex-next-btn" id="ctNext" onclick="nextChange()">Next →</button>
+        <div class="ex-score"  id="ctScore"></div>
+      </div>
+    </div>
+
+    <!-- Image Match -->
+    <div class="exercise" id="ex-image">
+      <div class="ex-prompt" id="imgInfo" style="text-align:center;margin-bottom:16px;color:var(--muted)"></div>
+      <div class="match-grid" style="max-width:680px;margin:0 auto">
+        <div class="match-col"><div id="imgLeft"></div></div>
+        <div class="match-col"><div id="imgRight"></div></div>
+      </div>
+      <button class="match-restart" id="imgRestart" onclick="initImage()" data-i18n="match_restart">🔄 New game</button>
+    </div>
+
+  </div><!-- /sec-practice -->
+
+  <!-- ══ EXAM PHRASEBOOK ══════════════════════════════ -->
+  <div class="section" id="sec-phrases">
+    <p class="section-title" id="phrasesTitle" data-i18n="phrases_title">Everyday Greek for the A2 exam</p>
+    <p class="phrases-intro" data-i18n="phrases_intro">Useful phrases for speaking and everyday situations.</p>
+    <div class="phrases-controls">
+      <label data-i18n="phrases_pick">Choose a topic:</label>
+      <select id="phraseSelect" onchange="renderPhrases()" class="phrase-select"></select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="phrases_greek">Greek</th>
+            <th data-i18n="phrases_meaning">Meaning</th>
+            <th data-i18n="phrases_context">Situation</th>
+          </tr>
+        </thead>
+        <tbody id="phrasesTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+
+<script src="data.js?v=11"></script>
+<script src="app.js?v=11"></script>
+</body>
+</html>
