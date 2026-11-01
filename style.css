@@ -126,7 +126,9 @@ tbody td { padding: 14px 16px; vertical-align: middle; }
 .chip-past { background: rgba(248,113,113,0.15); color: #f87171; border-color: rgba(248,113,113,0.3); }
 .chip-present { background: rgba(94,234,212,0.15); color: var(--accent2); border-color: rgba(94,234,212,0.3); }
 .chip-future { background: rgba(124,109,250,0.15); color: var(--accent); border-color: rgba(124,109,250,0.3); }
-.fc-example { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 6px; }
+.fc-example-block { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
+.fc-example-greek { font-family:'Noto Serif',serif; font-size:18px; font-weight:700; color:var(--text); line-height:1.5; }
+.fc-example { font-size:14px; color:var(--muted); font-style:italic; margin-top:5px; line-height:1.45; }
 .fc-hint-click { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .fc-btn-row { display: flex; gap: 12px; }
 .fc-show-btn, .fc-next-btn {
@@ -349,13 +351,34 @@ tbody td { padding: 14px 16px; vertical-align: middle; }
 .verb-badges span { padding:5px 10px; border-radius:99px; background:rgba(143,131,255,.12); border:1px solid var(--border); color:var(--accent2); font-size:12px; }
 .tense-note { color:#fabe3c; padding:10px 12px; border-radius:10px; background:rgba(250,190,60,.08); margin:12px 0; }
 .example-line { color:var(--muted); margin-top:8px; }
-.progress-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:22px; }
+.verb-page { padding-top:32px; padding-bottom:52px; }
+.verb-back { display:inline-flex; margin-bottom:24px; color:var(--accent2); text-decoration:none; font-weight:700; }
+.verb-detail { padding:32px; border:1px solid var(--border); border-radius:26px; background:var(--surface); box-shadow:var(--shadow); }
+.verb-detail-head h1 { margin:0; font-size:clamp(36px,6vw,62px); }
+.verb-detail-head p { margin:8px 0 20px; font-size:22px; font-weight:600; }
+.td-listen { white-space:nowrap; }
+.row-audio { display:inline-flex; align-items:center; gap:7px; }
+.progress-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:22px; }
 .progress-cards div { padding:20px 10px; text-align:center; border:1px solid var(--border); border-radius:16px; background:var(--surface); }
 .progress-cards b { display:block; font-size:28px; color:var(--accent2); }
 .progress-cards span { color:var(--muted); font-size:12px; }
+.progress-summary { margin:18px 0 0; color:var(--muted); font-size:13px; line-height:1.6; }
+.situation-card { overflow:hidden; border:1px solid var(--border); border-radius:24px; background:var(--surface); box-shadow:var(--shadow); }
+.situation-image { display:block; width:100%; height:auto; max-height:520px; object-fit:contain; background:#111426; }
+.situation-body { padding:30px; }
+.situation-context { color:var(--accent2); font-weight:700; margin:8px 0 18px; }
+.situation-dialogue { padding:18px 20px; border:1px solid var(--border); border-radius:16px; background:rgba(9,12,28,.45); font-family:'Noto Serif',serif; font-size:18px; line-height:1.55; }
+.situation-dialogue p { margin:8px 0; }
+.situation-answer-row { display:flex; gap:10px; align-items:center; margin-top:16px; }
+.situation-answer-row .fill-input { margin:0; flex:1; }
 .phrase-audio { margin-right:10px; }
 .phrases-intro { color: var(--muted); margin: -12px 0 22px; font-size: 14px; }
 .phrases-controls label { color: var(--muted); font-size: 14px; }
+.phrase-scenes { margin:18px 0; }
+.phrase-scene { position:relative; width:100%; border:1px solid var(--border); border-radius:20px; background-repeat:no-repeat; box-shadow:var(--shadow); transition:background-position .25s ease; overflow:hidden; }
+.phrase-scene::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,transparent 58%,rgba(8,11,25,.5)); pointer-events:none; }
+#phraseSceneEmoji { position:absolute; right:22px; bottom:16px; z-index:1; font-size:42px; filter:drop-shadow(0 3px 8px rgba(0,0,0,.45)); }
+.phrase-emoji { display:inline-grid; place-items:center; width:36px; height:36px; margin-right:8px; border-radius:10px; background:rgba(143,131,255,.12); font-family:system-ui,sans-serif; font-size:20px; vertical-align:middle; }
 .phrase-select {
   padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--surface-strong); color: var(--text); font-size: 14px;
@@ -392,6 +415,12 @@ tbody td { padding: 14px 16px; vertical-align: middle; }
   .setup-grid { grid-template-columns:1fr; }
   .tool-input { min-width:100%; }
   .progress-cards { grid-template-columns:1fr; }
+  .situation-image { max-height:340px; }
+  .situation-body { padding:22px 16px; }
+  .situation-answer-row { align-items:stretch; flex-direction:column; }
+  .phrase-scene { min-height:0; }
+  .verb-detail { padding:20px 14px; }
+  .conjugation-table .row-audio span { display:none; }
   tbody td, thead th { padding-inline: 12px; }
 }
 

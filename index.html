@@ -68,6 +68,7 @@
     <div class="fc-area">
       <div class="flash-tools">
         <select id="flashTopic" class="phrase-select" onchange="applyFlashFilter()"></select>
+        <select id="flashGroup" class="phrase-select" onchange="applyFlashFilter()"></select>
         <button class="tool-btn" id="difficultBtn" onclick="toggleDifficultMode()"></button>
       </div>
       <div class="fc-counter" id="fcCounter">1 / 10</div>
@@ -75,6 +76,7 @@
         <div class="fc-front-only">
           <div class="fc-front-label" id="fcFrontLabel">Greek · Present tense</div>
           <div class="fc-verb" id="fcVerb"></div>
+          <button class="audio-btn" id="fcAudioBtn" type="button">🔊 Listen to Greek</button>
           <div class="fc-hint-click" data-i18n="fc_hint">click to reveal</div>
         </div>
         <div class="fc-back-content">
@@ -85,8 +87,10 @@
             <span class="fc-tense-chip chip-present" id="fcPresLbl"></span>
             <span class="fc-tense-chip chip-future"  id="fcFutLbl"></span>
           </div>
-          <div class="fc-example" id="fcExample"></div>
-          <button class="audio-btn" id="fcAudioBtn" style="margin-top:10px">🔊 Pronunciation</button>
+          <div class="fc-example-block">
+            <div class="fc-example-greek" id="fcExampleGreek"></div>
+            <div class="fc-example" id="fcExample"></div>
+          </div>
         </div>
       </div>
       <div class="fc-btn-row">
@@ -115,8 +119,9 @@
       <button class="sub-tab"        id="subtab-match"  onclick="switchExercise('match')"  data-i18n="sub_match">Matching</button>
       <button class="sub-tab"        id="subtab-tense"  onclick="switchExercise('tense')"  data-i18n="sub_tense">Tense ID</button>
       <button class="sub-tab"        id="subtab-conj"   onclick="switchExercise('conj')"   data-i18n="sub_conj">Conjugation</button>
-      <button class="sub-tab"        id="subtab-fill"   onclick="switchExercise('fill')"   data-i18n="sub_fill">Fill Blank</button>
       <button class="sub-tab"        id="subtab-change" onclick="switchExercise('change')" data-i18n="sub_change">Change Tense</button>
+      <button class="sub-tab"        id="subtab-situation" onclick="switchExercise('situation')" data-i18n="sub_situation">Situations</button>
+      <button class="sub-tab"        id="subtab-fill"   onclick="switchExercise('fill')"   data-i18n="sub_fill">Missing letters</button>
       <button class="sub-tab" hidden id="subtab-image"  onclick="switchExercise('image')"  data-i18n="sub_image">Images</button>
     </div>
 
@@ -199,6 +204,26 @@
       </div>
     </div>
 
+    <!-- Picture situations -->
+    <div class="exercise" id="ex-situation">
+      <div class="situation-card">
+        <img id="situationImage" class="situation-image" alt="" />
+        <div class="situation-body">
+          <div class="ex-prompt" id="situationPrompt"></div>
+          <div class="situation-context" id="situationContext"></div>
+          <div class="situation-dialogue" id="situationDialogue"></div>
+          <button class="dir-btn" id="situationAudio" type="button"></button>
+          <div class="situation-answer-row">
+            <input class="fill-input" id="situationInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="…" />
+            <button class="fill-submit" id="situationCheck" onclick="checkSituation()"></button>
+          </div>
+          <div class="feedback" id="situationFeedback"></div>
+          <button class="ex-next-btn" id="situationNext" onclick="nextSituation()"></button>
+          <div class="ex-score" id="situationScore"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Image Match -->
     <div class="exercise" id="ex-image">
       <div class="ex-prompt" id="imgInfo" style="text-align:center;margin-bottom:16px;color:var(--muted)"></div>
@@ -218,6 +243,9 @@
     <div class="phrases-controls">
       <label data-i18n="phrases_pick">Choose a topic:</label>
       <select id="phraseSelect" onchange="renderPhrases()" class="phrase-select"></select>
+    </div>
+    <div class="phrase-scenes" aria-label="Everyday Greek situations">
+      <div class="phrase-scene" id="phraseScene" role="img"><span id="phraseSceneEmoji"></span></div>
     </div>
     <div class="tbl-wrap">
       <table>

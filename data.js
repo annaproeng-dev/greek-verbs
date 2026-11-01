@@ -205,6 +205,79 @@ ALL_VERBS.forEach(v => {
   v.topics = TOPICS.filter(topic => (TOPIC_VERBS[topic.id] || []).includes(v.greek)).map(topic => topic.id);
 });
 
+/* Complete person/number forms for the shared practice pool. */
+const PRESENT_OVERRIDES = {
+  'γίνομαι':['γίνομαι','γίνεσαι','γίνεται','γινόμαστε','γίνεστε','γίνονται'],
+  'έρχομαι':['έρχομαι','έρχεσαι','έρχεται','ερχόμαστε','έρχεστε','έρχονται'],
+  'κάθομαι':['κάθομαι','κάθεσαι','κάθεται','καθόμαστε','κάθεστε','κάθονται'],
+  'σηκώνομαι':['σηκώνομαι','σηκώνεσαι','σηκώνεται','σηκωνόμαστε','σηκώνεστε','σηκώνονται'],
+  'σκέφτομαι':['σκέφτομαι','σκέφτεσαι','σκέφτεται','σκεφτόμαστε','σκέφτεστε','σκέφτονται'],
+  'χρειάζομαι':['χρειάζομαι','χρειάζεσαι','χρειάζεται','χρειαζόμαστε','χρειάζεστε','χρειάζονται'],
+  'παίρνω μέρος':['παίρνω μέρος','παίρνεις μέρος','παίρνει μέρος','παίρνουμε μέρος','παίρνετε μέρος','παίρνουν μέρος'],
+};
+
+function regularPresent(v) {
+  if (PRESENT_OVERRIDES[v.greek]) return PRESENT_OVERRIDES[v.greek];
+  const base=v.greek.split(' / ')[0];
+  if(v.group==='b1') {
+    const stem=base.endsWith('άω')?base.slice(0,-2):base.slice(0,-1);
+    return [base,stem+'άς',stem+'άει',stem+'άμε',stem+'άτε',stem+'άνε'];
+  }
+  if(v.group==='b2') {
+    const stem=base.slice(0,-1);
+    return [base,stem+'είς',stem+'εί',stem+'ούμε',stem+'είτε',stem+'ούν'];
+  }
+  const stem=base.endsWith('ω')?base.slice(0,-1):base;
+  return [base,stem+'εις',stem+'ει',stem+'ουμε',stem+'ετε',stem+'ουν'];
+}
+
+function conjugateAorist(form) {
+  if(!form)return null;
+  if(form.includes(' μέρος')) {
+    const first=form.replace(' μέρος','');
+    return conjugateAorist(first).map(x=>x+' μέρος');
+  }
+  if(!form.endsWith('α'))return [form,form,form,form,form,form];
+  const stem=form.slice(0,-1);
+  return [form,stem+'ες',stem+'ε',stem+'αμε',stem+'ατε',stem+'αν'];
+}
+
+const FUTURE_OVERRIDES = {
+  'θα δω':['θα δω','θα δεις','θα δει','θα δούμε','θα δείτε','θα δουν'],
+  'θα βρω':['θα βρω','θα βρεις','θα βρει','θα βρούμε','θα βρείτε','θα βρουν'],
+  'θα βγω':['θα βγω','θα βγεις','θα βγει','θα βγούμε','θα βγείτε','θα βγουν'],
+  'θα μπω':['θα μπω','θα μπεις','θα μπει','θα μπούμε','θα μπείτε','θα μπουν'],
+  'θα πω':['θα πω','θα πεις','θα πει','θα πούμε','θα πείτε','θα πουν'],
+  'θα πιω':['θα πιω','θα πιεις','θα πιει','θα πιούμε','θα πιείτε','θα πιουν'],
+  'θα πάω':['θα πάω','θα πας','θα πάει','θα πάμε','θα πάτε','θα πάνε'],
+  'θα φάω':['θα φάω','θα φας','θα φάει','θα φάμε','θα φάτε','θα φάνε'],
+  'θα πάρω μέρος':['θα πάρω μέρος','θα πάρεις μέρος','θα πάρει μέρος','θα πάρουμε μέρος','θα πάρετε μέρος','θα πάρουν μέρος'],
+};
+
+function conjugateFuture(form) {
+  if(FUTURE_OVERRIDES[form])return FUTURE_OVERRIDES[form];
+  const bare=form.replace(/^θα\s+/,'');
+  if(bare.endsWith('ομαι')) {
+    const fake={greek:bare,group:'omai'};
+    return regularPresent(fake).map(x=>'θα '+x);
+  }
+  if(bare.endsWith('ώ')) {
+    const stem=bare.slice(0,-1);
+    return [bare,stem+'είς',stem+'εί',stem+'ούμε',stem+'είτε',stem+'ούν'].map(x=>'θα '+x);
+  }
+  if(bare.endsWith('ω')) {
+    const stem=bare.slice(0,-1);
+    return [bare,stem+'εις',stem+'ει',stem+'ουμε',stem+'ετε',stem+'ουν'].map(x=>'θα '+x);
+  }
+  return Array(6).fill(form);
+}
+
+ALL_VERBS.forEach(v=>{
+  v.conj_pres ||= regularPresent(v);
+  if(v.aoristSupported) v.conj_past ||= conjugateAorist(v.past);
+  v.conj_fut ||= conjugateFuture(v.future);
+});
+
 /* ── Fill-in-blank exercises ─────────────────────── */
 const FILL_BLANKS = [
   { sen_en:'I ___ at home.',           sen_ru:'Я ___ дома.',               answer:'είμαι',    hint_en:'to be (I)',      hint_ru:'быть (я)' },
@@ -233,11 +306,11 @@ const SENTENCES = [
 
 /* ── Change-the-tense exercises ──────────────────── */
 const CHANGE_TENSES = [
-  { dir_en:'Present → Aorist', dir_ru:'Настоящее → Аорист', form:'βλέπω',   opts:['έβλεπα','είδα','θα δω','βλέπεις'],       answer:'είδα' },
+  { dir_en:'Present → Past (aorist)', dir_ru:'Настоящее → Прошедшее (аорист)', form:'βλέπω',   opts:['έβλεπα','είδα','θα δω','βλέπεις'],       answer:'είδα' },
   { dir_en:'Present → Simple future', dir_ru:'Настоящее → Простое будущее', form:'τρώω', opts:['θα φάω','φάγαμε','έφαγα','τρως'], answer:'θα φάω' },
-  { dir_en:'Present → Aorist', dir_ru:'Настоящее → Аорист', form:'πηγαίνω', opts:['θα πάω','πηγαίνεις','πήγα','πηγαίνει'], answer:'πήγα' },
+  { dir_en:'Present → Past (aorist)', dir_ru:'Настоящее → Прошедшее (аорист)', form:'πηγαίνω', opts:['θα πάω','πηγαίνεις','πήγα','πηγαίνει'], answer:'πήγα' },
   { dir_en:'Present → Simple future', dir_ru:'Настоящее → Простое будущее', form:'κάνω', opts:['θα κάνω','έκανα','κάνεις','κάναμε'], answer:'θα κάνω' },
-  { dir_en:'Present → Aorist', dir_ru:'Настоящее → Аорист', form:'λέω', opts:['θα πω','λένε','είπα','λέει'], answer:'είπα' },
+  { dir_en:'Present → Past (aorist)', dir_ru:'Настоящее → Прошедшее (аорист)', form:'λέω', opts:['θα πω','λένε','είπα','λέει'], answer:'είπα' },
   { dir_en:'Present → Simple future', dir_ru:'Настоящее → Простое будущее', form:'ξέρω', opts:['ήξερα','θα ξέρω','ξέρεις','ξέραμε'], answer:'θα ξέρω' },
   { dir_en:'Present → Simple future', dir_ru:'Настоящее → Простое будущее', form:'έχω', opts:['θα έχω','έχεις','είχα','είχαμε'], answer:'θα έχω' },
   { dir_en:'Present → Simple future', dir_ru:'Настоящее → Простое будущее', form:'είμαι', opts:['θα είμαι','ήμουν','είσαι','είμαστε'], answer:'θα είμαι' },
@@ -252,6 +325,42 @@ const IMAGE_EXERCISES = [
   { emoji:'🚶', label_en:'going to work',   label_ru:'идти на работу',        sentence:'Πηγαίνω στη δουλειά.', answer:'πηγαίνω' },
   { emoji:'💪', label_en:'doing exercise',  label_ru:'делать гимнастику',     sentence:'Κάνω γυμναστική.', answer:'κάνω' },
   { emoji:'💬', label_en:'saying the truth',label_ru:'говорить правду',       sentence:'Λέω την αλήθεια.', answer:'λέω' },
+];
+
+/* ── Picture situations with short dialogues ─────── */
+const SITUATIONS = [
+  {cat:'food', image:'assets/phrases/topics/food.png', answer:'παραγγείλω',
+   lines:['— Καλησπέρα. Τι θα θέλατε;','— Θα ήθελα να ___ ένα ψάρι, παρακαλώ.','— Βεβαίως.'],
+   full:['— Καλησπέρα. Τι θα θέλατε;','— Θα ήθελα να παραγγείλω ένα ψάρι, παρακαλώ.','— Βεβαίως.'],
+   en:'At a restaurant',ru:'В ресторане'},
+  {cat:'travel', image:'assets/phrases/topics/travel.png', answer:'στάση',
+   lines:['— Συγγνώμη, πού είναι η ___ του λεωφορείου;','— Είναι απέναντι, δίπλα στο φαρμακείο.','— Ευχαριστώ πολύ!'],
+   full:['— Συγγνώμη, πού είναι η στάση του λεωφορείου;','— Είναι απέναντι, δίπλα στο φαρμακείο.','— Ευχαριστώ πολύ!'],
+   en:'Asking for directions',ru:'Как спросить дорогу'},
+  {cat:'shopping', image:'assets/phrases/topics/shopping.png', answer:'κάρτα',
+   lines:['— Πόσο κάνει αυτό;','— Κάνει είκοσι ευρώ.','— Μπορώ να πληρώσω με ___;'],
+   full:['— Πόσο κάνει αυτό;','— Κάνει είκοσι ευρώ.','— Μπορώ να πληρώσω με κάρτα;'],
+   en:'Paying in a shop',ru:'Оплата в магазине'},
+  {cat:'doctor', image:'assets/phrases/topics/doctor.png', answer:'πονάει',
+   lines:['— Τι πρόβλημα έχετε;','— Με ___ ο λαιμός μου από χτες.','— Θα σας εξετάσω.'],
+   full:['— Τι πρόβλημα έχετε;','— Με πονάει ο λαιμός μου από χτες.','— Θα σας εξετάσω.'],
+   en:'At the doctor',ru:'У врача'},
+  {cat:'hotel', image:'assets/phrases/topics/hotel.png', answer:'κράτηση',
+   lines:['— Καλησπέρα σας.','— Έχω κάνει ___ στο όνομα Ιβάνοβα.','— Μάλιστα, ένα λεπτό.'],
+   full:['— Καλησπέρα σας.','— Έχω κάνει κράτηση στο όνομα Ιβάνοβα.','— Μάλιστα, ένα λεπτό.'],
+   en:'At a hotel reception',ru:'На стойке отеля'},
+  {cat:'lost', image:'assets/phrases/topics/lost.png', answer:'τσάντα',
+   lines:['— Πώς μπορώ να σας βοηθήσω;','— Έχασα την ___ μου στο λεωφορείο.','— Τι χρώμα είναι;'],
+   full:['— Πώς μπορώ να σας βοηθήσω;','— Έχασα την τσάντα μου στο λεωφορείο.','— Τι χρώμα είναι;'],
+   en:'Reporting a lost bag',ru:'Потерянная сумка'},
+  {cat:'work', image:'assets/phrases/topics/work.png', answer:'εξηγήσετε',
+   lines:['— Δεν καταλαβαίνω αυτή την άσκηση.','— Μπορείτε να μου την ___;','— Φυσικά.'],
+   full:['— Δεν καταλαβαίνω αυτή την άσκηση.','— Μπορείτε να μου την εξηγήσετε;','— Φυσικά.'],
+   en:'Studying Greek',ru:'На занятии'},
+  {cat:'social', image:'assets/phrases/topics/social.png', answer:'καφέ',
+   lines:['— Τι θα κάνεις το απόγευμα;','— Δεν έχω σχέδια.','— Θέλεις να πάμε για ___;'],
+   full:['— Τι θα κάνεις το απόγευμα;','— Δεν έχω σχέδια.','— Θέλεις να πάμε για καφέ;'],
+   en:'Making plans with friends',ru:'Планы с друзьями'},
 ];
 
 /* ── Everyday Modern Greek for A2 exam prep ─────── */
@@ -272,6 +381,16 @@ const EXAM_PHRASES = [
   {cat:'daily', gr:'Μετά τη δουλειά πηγαίνω στο σπίτι.', en:'After work I go home.', ru:'После работы я иду домой.'},
   {cat:'daily', gr:'Το Σαββατοκύριακο ξεκουράζομαι.', en:'At the weekend I rest.', ru:'На выходных я отдыхаю.'},
   {cat:'daily', gr:'Συνήθως πηγαίνω με το λεωφορείο.', en:'I usually go by bus.', ru:'Обычно я езжу на автобусе.'},
+  {cat:'daily', gr:'Το πρωί φτιάχνω καφέ και τρώω πρωινό.', en:'In the morning I make coffee and eat breakfast.', ru:'Утром я готовлю кофе и завтракаю.'},
+  {cat:'daily', gr:'Φεύγω από το σπίτι στις οκτώ.', en:'I leave home at eight.', ru:'Я выхожу из дома в восемь.'},
+  {cat:'daily', gr:'Στο διάλειμμα μιλάω με τους συναδέλφους μου.', en:'During the break I talk with my colleagues.', ru:'На перерыве я разговариваю с коллегами.'},
+  {cat:'daily', gr:'Το απόγευμα ψωνίζω στο σούπερ μάρκετ.', en:'In the afternoon I shop at the supermarket.', ru:'Днём я делаю покупки в супермаркете.'},
+  {cat:'daily', gr:'Όταν γυρίζω σπίτι, μαγειρεύω το βραδινό.', en:'When I return home, I cook dinner.', ru:'Когда я возвращаюсь домой, я готовлю ужин.'},
+  {cat:'daily', gr:'Μετά το φαγητό πλένω τα πιάτα.', en:'After the meal I wash the dishes.', ru:'После еды я мою посуду.'},
+  {cat:'daily', gr:'Το βράδυ βλέπω τηλεόραση ή διαβάζω.', en:'In the evening I watch television or read.', ru:'Вечером я смотрю телевизор или читаю.'},
+  {cat:'daily', gr:'Πριν κοιμηθώ, ετοιμάζω τα πράγματά μου.', en:'Before sleeping, I prepare my things.', ru:'Перед сном я готовлю свои вещи.'},
+  {cat:'daily', gr:'Την Παρασκευή συναντώ τους φίλους μου.', en:'On Friday I meet my friends.', ru:'В пятницу я встречаюсь с друзьями.'},
+  {cat:'daily', gr:'Την Κυριακή καθαρίζω το σπίτι και ξεκουράζομαι.', en:'On Sunday I clean the house and rest.', ru:'В воскресенье я убираю дом и отдыхаю.'},
 
   {cat:'directions', gr:'Συγγνώμη, πού είναι η στάση;', en:'Excuse me, where is the bus stop?', ru:'Извините, где автобусная остановка?'},
   {cat:'directions', gr:'Πώς μπορώ να πάω στο κέντρο;', en:'How can I get to the centre?', ru:'Как мне добраться до центра?'},
@@ -353,26 +472,29 @@ const EXAM_PHRASES = [
 const I18N = {
   en: {
     page_title:'Greek Verbs', document_title:'Greek Verbs A2 — Trainer',
-    subtitle:'{count} A2 verbs · present, aorist, simple future',
+    subtitle:'{count} A2 verbs · present, past (aorist), simple future',
     nav_verbs:'📖 Verbs', nav_flash:'🃏 Flashcards', nav_practice:'🎯 Practice', nav_phrases:'💬 Phrases',
     lang_toggle:'RU', accent_label:'Train accents (τόνος)',
     accent_tip:'To type accents: press ; then a vowel (e.g. ;α → ά)',
-    tbl_present:'Present', tbl_past:'Aorist', tbl_future:'Simple future', tbl_trans:'Translation', tbl_audio:'🔊',
+    tbl_present:'Present', tbl_past:'Past (aorist)', tbl_future:'Simple future', tbl_trans:'Translation', tbl_audio:'🔊',
     all_verbs:'All Verbs',
     fc_front_label:'Greek · Present tense', fc_hint:'click to reveal', fc_back_label:'Translation', fc_show:'Show answer', fc_next:'Next →',
-    fc_shuffle:'🔀 Shuffle', fc_pres:'Pres.:', fc_past:'Aor.:', fc_fut:'Fut.:',
-    fc_audio:'🔊 Pronunciation',
+    fc_shuffle:'🔀 Shuffle', fc_pres:'Pres.:', fc_past:'Past (aor.):', fc_fut:'Fut.:',
+    fc_audio:'🔊 Listen to Greek',
     sub_quiz:'Translation', sub_match:'Matching', sub_tense:'Tense ID',
-    sub_conj:'Conjugation', sub_fill:'Fill Blank', sub_change:'Change Tense', sub_image:'Images',
+    sub_conj:'Conjugation', sub_fill:'Missing letters', sub_change:'Change Tense', sub_image:'Images', sub_situation:'Situations',
+    sub_person:'Person & Number', mixed_practice:'Mixed practice',
+    listen:'Listen', back_to_verbs:'← Back to verbs', listen_row:'Listen to this row',
     q_gr_to_lang:'What does this mean?', q_lang_to_gr:'Choose the Greek verb:',
     dir_gr_lang:'🔁 Switch: target → Greek', dir_lang_gr:'🔁 Switch: Greek → target',
     q_tense:'What tense is this?', q_conj:'Conjugate the verb:',
-    q_fill:'Fill in the correct verb form:', q_change:'Convert to the indicated tense:',
+    q_fill:'Type only the missing letters:', q_change:'Convert to the indicated tense:',
+    situation_prompt:'Complete the dialogue', situation_listen:'🔊 Listen to the dialogue', situation_context:'Situation:',
     q_image:'Match the image to the correct Greek sentence:',
     match_col_l:'Greek', match_col_r:'Translation',
     match_info:'Click a verb on the left, then its translation on the right.',
     match_all:'🎉 All matched!', match_restart:'🔄 New game',
-    pres_t:'Present', past_t:'Aorist', fut_t:'Simple future',
+    pres_t:'Present', past_t:'Past (aorist)', fut_t:'Simple future',
     correct:'✓ Correct!', wrong:'✗ Wrong.', almost:'⚡ Almost! Correct:', ans_correct:'Correct answer:',
     next:'Next →', restart:'Try again 🔄', check:'Check', hint:'Hint:',
     score_lbl:'Score:', of:'of',
@@ -385,30 +507,33 @@ const I18N = {
     search_verbs:'Search Greek or translation…', filter_all:'All verbs', group_a:'Α΄ conjugation', group_b1:'Β΄ conjugation — Type 1', group_b2:'Β΄ conjugation — Type 2', group_omai:'Verbs in -ομαι', group_irregular:'Irregular verbs',
     topic_all:'All topics', difficult_only:'Difficult cards', mark_difficult:'Mark as difficult', unmark_difficult:'Remove from difficult',
     practice_setup:'Practice setup', select_topic:'Topic', select_tense:'Tense', select_exercise:'Exercise', start_practice:'Start practice', my_mistakes:'My mistakes', mixed:'Mixed', empty_practice:'Not enough validated material for this selection. Try another topic or tense.',
-    progress_title:'Progress', sessions:'sessions', accuracy:'accuracy', mistakes:'difficult verbs', close:'Close', examples:'Examples', grammar_group:'Grammar group', irregular_label:'Irregular', aorist_unavailable:'No distinct aorist is taught for this verb; the common past form shown separately is imperfect.',
+    progress_title:'Progress', sessions:'sessions', accuracy:'accuracy', mistakes:'difficult verbs', correct_answers:'correct answers', streak_days:'day streak', missed_days:'missed days', progress_rule:'One session = 10 checked answers. Missed days are counted from your first day of practice.', close:'Close', examples:'Examples', grammar_group:'Grammar group', irregular_label:'Irregular', aorist_unavailable:'No distinct aorist is taught for this verb; the common past form shown separately is imperfect.',
   },
   ru: {
     page_title:'Греческие глаголы', document_title:'Греческие глаголы A2 — Тренажёр',
-    subtitle:'{count} глагола A2 · настоящее, аорист, простое будущее',
+    subtitle:'{count} глагола A2 · настоящее, прошедшее (аорист), простое будущее',
     nav_verbs:'📖 Глаголы', nav_flash:'🃏 Карточки', nav_practice:'🎯 Практика', nav_phrases:'💬 Фразы',
     lang_toggle:'EN', accent_label:'Тренировать ударения (τόνος)',
     accent_tip:'Для ввода ударений: нажмите Ж (или ;), затем гласную',
-    tbl_present:'Настоящее', tbl_past:'Аорист', tbl_future:'Простое будущее', tbl_trans:'Перевод', tbl_audio:'🔊',
+    tbl_present:'Настоящее', tbl_past:'Прошедшее (аорист)', tbl_future:'Простое будущее', tbl_trans:'Перевод', tbl_audio:'🔊',
     all_verbs:'Все глаголы',
     fc_front_label:'Греческий · Настоящее время', fc_hint:'нажмите, чтобы открыть', fc_back_label:'Перевод', fc_show:'Показать ответ', fc_next:'Следующая →',
-    fc_shuffle:'🔀 Перемешать', fc_pres:'Наст.:', fc_past:'Аор.:', fc_fut:'Буд.:',
-    fc_audio:'🔊 Произношение',
+    fc_shuffle:'🔀 Перемешать', fc_pres:'Наст.:', fc_past:'Прош. (аор.):', fc_fut:'Буд.:',
+    fc_audio:'🔊 Слушать по-гречески',
     sub_quiz:'Перевод', sub_match:'Совпадение', sub_tense:'Время',
-    sub_conj:'Спряжение', sub_fill:'Вписать слово', sub_change:'Изменить время', sub_image:'Картинки',
+    sub_conj:'Спряжение', sub_fill:'Пропущенные буквы', sub_change:'Изменить время', sub_image:'Картинки', sub_situation:'Ситуации',
+    sub_person:'Лицо и число', mixed_practice:'Смешанная практика',
+    listen:'Послушать', back_to_verbs:'← Назад к глаголам', listen_row:'Послушать эту строку',
     q_gr_to_lang:'Что значит это слово?', q_lang_to_gr:'Выберите греческий глагол:',
     dir_gr_lang:'🔁 Переключить: перевод → греческий', dir_lang_gr:'🔁 Переключить: греческий → перевод',
     q_tense:'Какое это время?', q_conj:'Проспрягайте глагол:',
-    q_fill:'Вставьте правильную форму глагола:', q_change:'Измените на указанное время:',
+    q_fill:'Введите только пропущенные буквы:', q_change:'Измените на указанное время:',
+    situation_prompt:'Дополните диалог', situation_listen:'🔊 Послушать диалог', situation_context:'Ситуация:',
     q_image:'Найдите греческое предложение для картинки:',
     match_col_l:'Греческий', match_col_r:'Перевод',
     match_info:'Выберите глагол слева, затем перевод справа.',
     match_all:'🎉 Все пары найдены!', match_restart:'🔄 Новая игра',
-    pres_t:'Настоящее', past_t:'Аорист', fut_t:'Простое будущее',
+    pres_t:'Настоящее', past_t:'Прошедшее (аорист)', fut_t:'Простое будущее',
     correct:'✓ Верно!', wrong:'✗ Неверно.', almost:'⚡ Почти! Правильно:', ans_correct:'Правильный ответ:',
     next:'Следующий →', restart:'Попробовать ещё раз 🔄', check:'Проверить', hint:'Подсказка:',
     score_lbl:'Счёт:', of:'из',
@@ -421,6 +546,6 @@ const I18N = {
     search_verbs:'Поиск по-гречески или по переводу…', filter_all:'Все глаголы', group_a:'Α΄ спряжение', group_b1:'Β΄ спряжение — тип 1', group_b2:'Β΄ спряжение — тип 2', group_omai:'Глаголы на -ομαι', group_irregular:'Неправильные глаголы',
     topic_all:'Все темы', difficult_only:'Трудные карточки', mark_difficult:'Отметить как трудную', unmark_difficult:'Убрать из трудных',
     practice_setup:'Настройка практики', select_topic:'Тема', select_tense:'Время', select_exercise:'Упражнение', start_practice:'Начать', my_mistakes:'Мои ошибки', mixed:'Смешанная практика', empty_practice:'Для этого выбора пока недостаточно проверенного материала. Выберите другую тему или время.',
-    progress_title:'Прогресс', sessions:'сессий', accuracy:'точность', mistakes:'трудных глаголов', close:'Закрыть', examples:'Примеры', grammar_group:'Группа', irregular_label:'Неправильный', aorist_unavailable:'Для этого глагола отдельный аорист не изучается; распространённая прошедшая форма относится к имперфекту.',
+    progress_title:'Прогресс', sessions:'сессий', accuracy:'точность', mistakes:'трудных глаголов', correct_answers:'верных ответов', streak_days:'дней подряд', missed_days:'пропущено дней', progress_rule:'Одна сессия = 10 проверенных ответов. Пропущенные дни считаются с первого дня занятий.', close:'Закрыть', examples:'Примеры', grammar_group:'Группа', irregular_label:'Неправильный', aorist_unavailable:'Для этого глагола отдельный аорист не изучается; распространённая прошедшая форма относится к имперфекту.',
   }
 };

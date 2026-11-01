@@ -5,11 +5,14 @@ let practicePool = ALL_VERBS.filter(v=>v.conj_pres);
 let selectedPracticeTense = 'mixed';
 let difficultMode = false;
 const difficultIds = new Set(JSON.parse(localStorage.getItem('greekDifficultVerbs') || '[]'));
-const progress = JSON.parse(localStorage.getItem('greekTrainerProgress') || '{"correct":0,"wrong":0,"sessions":0,"byTense":{},"mistakes":{}}');
+const progress = JSON.parse(localStorage.getItem('greekTrainerProgress') || '{}');
+Object.assign(progress,{correct:progress.correct||0,wrong:progress.wrong||0,sessions:progress.sessions||0,byTense:progress.byTense||{},mistakes:progress.mistakes||{},activityDays:progress.activityDays||{},sessionProgress:progress.sessionProgress||0,firstActivity:progress.firstActivity||null});
 
 const t = key => I18N[lang][key] || key;
 const verbTrans = v => lang === 'en' ? v.english : v.russian;
 const verbEx    = v => (lang === 'en' ? v.ex_en : v.ex_ru) || `${v.greek} — ${verbTrans(v)}`;
+const verbExGreek = v => v.ex_gr || v.greek;
+const verbExTranslation = v => (lang === 'en' ? v.ex_en : v.ex_ru) || verbTrans(v);
 
 function toggleLang() {
   setLang(lang === 'en' ? 'ru' : 'en');
@@ -57,17 +60,39 @@ function speakGreek(text, event) {
 }
 
 function saveProgress() { localStorage.setItem('greekTrainerProgress', JSON.stringify(progress)); }
+function localDayKey(date=new Date()) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
 function recordAnswer(v, tense, ok) {
   progress[ok?'correct':'wrong']++;
   const key=tense||'mixed'; progress.byTense[key] ||= {correct:0,wrong:0}; progress.byTense[key][ok?'correct':'wrong']++;
   if (v) progress.mistakes[v.id] = Math.max(0,(progress.mistakes[v.id]||0)+(ok?-1:1));
+  const today=localDayKey();
+  progress.firstActivity ||= today;
+  progress.activityDays[today]=(progress.activityDays[today]||0)+1;
+  progress.sessionProgress++;
+  if(progress.sessionProgress>=10){ progress.sessions++; progress.sessionProgress=0; }
   saveProgress();
 }
 function recordSession() { progress.sessions++; saveProgress(); }
+function progressCalendarStats(){
+  const active=new Set(Object.keys(progress.activityDays).filter(day=>progress.activityDays[day]>0));
+  const cursor=new Date(); cursor.setHours(12,0,0,0);
+  if(!active.has(localDayKey(cursor))) cursor.setDate(cursor.getDate()-1);
+  let streak=0;
+  while(active.has(localDayKey(cursor))){streak++;cursor.setDate(cursor.getDate()-1);}
+  if(!progress.firstActivity)return {streak:0,missed:0};
+  const first=new Date(progress.firstActivity+'T12:00:00');
+  const today=new Date(); today.setHours(12,0,0,0);
+  const lastCountedDay=new Date(today);
+  if(!active.has(localDayKey(today)))lastCountedDay.setDate(lastCountedDay.getDate()-1);
+  let elapsed=0;
+  for(const d=new Date(first);d<=lastCountedDay;d.setDate(d.getDate()+1))elapsed++;
+  const activeSince=[...active].filter(day=>day>=progress.firstActivity&&day<=localDayKey(lastCountedDay)).length;
+  return {streak,missed:Math.max(0,elapsed-activeSince)};
+}
 function showProgress() {
   const total=progress.correct+progress.wrong, accuracy=total?Math.round(progress.correct/total*100):0;
-  const hard=Object.values(progress.mistakes).filter(n=>n>0).length;
-  document.getElementById('progressContent').innerHTML=`<button class="dialog-close" onclick="progressDialog.close()">×</button><h2>${t('progress_title')}</h2><div class="progress-cards"><div><b>${progress.sessions}</b><span>${t('sessions')}</span></div><div><b>${accuracy}%</b><span>${t('accuracy')}</span></div><div><b>${hard}</b><span>${t('mistakes')}</span></div></div>`;
+  const {streak,missed}=progressCalendarStats();
+  document.getElementById('progressContent').innerHTML=`<button class="dialog-close" onclick="progressDialog.close()">×</button><h2>${t('progress_title')}</h2><div class="progress-cards"><div><b>${progress.correct}</b><span>${t('correct_answers')}</span></div><div><b>${progress.sessions}</b><span>${t('sessions')}</span></div><div><b>${streak} 🔥</b><span>${t('streak_days')}</span></div><div><b>${missed}</b><span>${t('missed_days')}</span></div></div><p class="progress-summary">${accuracy}% ${t('accuracy')} · ${progress.sessionProgress}/10<br>${t('progress_rule')}</p>`;
   document.getElementById('progressDialog').showModal();
 }
 
@@ -85,11 +110,12 @@ function refreshActiveExercise() {
   if (id === 'conj') renderConj();
   if (id === 'fill') renderFill();
   if (id === 'change') renderChange();
+  if (id === 'situation') renderSituation();
   if (id === 'match') {
     document.getElementById('matchColL').textContent = t('match_col_l');
     document.getElementById('matchColR').textContent = t('match_col_r');
     document.querySelectorAll('#matchRight .match-item').forEach(el => {
-      const v = VERBS.find(item => item.greek === el.dataset.key);
+      const v = ALL_VERBS.find(item => item.id === el.dataset.key);
       if (v) el.textContent = verbTrans(v);
     });
     document.getElementById('matchInfo').textContent = matchPaired === 6 ? t('match_all') : t('match_info');
@@ -144,12 +170,12 @@ function switchExercise(id) {
   if (id === 'conj')    initConj();
   if (id === 'fill')    initFill();
   if (id === 'change')  initChange();
+  if (id === 'situation') initSituation();
   if (id === 'image')   initImage();
 }
 
 /* ── Results helper ──────────────────────────────── */
 function showResults(exId, correct, total) {
-  recordSession();
   renderResults(exId, correct, total);
 }
 
@@ -178,7 +204,7 @@ function restartExercise(exId) {
   const exercise = document.getElementById('ex-'+exId);
   exercise.querySelector('.results-wrap')?.remove();
   [...exercise.children].forEach(child => { child.hidden = false; });
-  const starters = { quiz:initQuiz, tense:initTense, conj:initConj, fill:initFill, change:initChange };
+  const starters = { quiz:initQuiz, tense:initTense, conj:initConj, fill:initFill, change:initChange, situation:initSituation };
   starters[exId]?.();
 }
 
@@ -208,11 +234,7 @@ function renderTable() {
 }
 
 function openVerb(id) {
-  const v=ALL_VERBS.find(item=>item.id===id); if(!v)return;
-  const group=t('group_'+v.group);
-  const forms=v.conj_pres?PERSONS.map((p,i)=>`<tr><td>${p}</td><td>${v.conj_pres[i]}</td><td>${v.aoristSupported?v.conj_past[i]:'—'}</td><td>${v.conj_fut[i]}</td></tr>`).join(''):`<tr><td colspan="4">${t('empty_practice')}</td></tr>`;
-  document.getElementById('verbDialogContent').innerHTML=`<button class="dialog-close" onclick="document.getElementById('verbDialog').close()">×</button><h2>${v.greek} <button class="audio-btn" onclick="speakGreek('${v.greek.replaceAll("'","\\'")}',event)">🔊</button></h2><p>${verbTrans(v)}</p><div class="verb-badges"><span>${group}</span>${v.irregular?`<span>${t('irregular_label')}</span>`:''}</div>${!v.aoristSupported?`<p class="tense-note">${t('aorist_unavailable')}</p>`:''}<div class="tbl-wrap"><table><thead><tr><th></th><th>${t('pres_t')}</th><th>${t('past_t')}</th><th>${t('fut_t')}</th></tr></thead><tbody>${forms}</tbody></table></div>${v.ex_en?`<h3>${t('examples')}</h3><p class="example-line">${v.ex_gr||v.greek} — ${verbEx(v)}</p>`:''}`;
-  document.getElementById('verbDialog').showModal();
+  window.location.href=`verb.html?id=${encodeURIComponent(id)}`;
 }
 
 /* ── Flashcards ──────────────────────────────────── */
@@ -229,7 +251,8 @@ function renderFC() {
   document.getElementById('fcPastLbl').textContent  = t('fc_past') + ' ' + (v.aoristSupported?v.past:'—');
   document.getElementById('fcPresLbl').textContent  = t('fc_pres') + ' ' + v.greek;
   document.getElementById('fcFutLbl').textContent   = t('fc_fut')  + ' ' + v.future;
-  document.getElementById('fcExample').textContent  = verbEx(v);
+  document.getElementById('fcExampleGreek').textContent = verbExGreek(v);
+  document.getElementById('fcExample').textContent = verbExTranslation(v);
   document.getElementById('fcShowBtn').textContent  = t('fc_show');
   document.getElementById('fcNextBtn').textContent  = t('fc_next');
   document.getElementById('fcAudioBtn').textContent = t('fc_audio');
@@ -270,8 +293,10 @@ function fcShuffle() {
 
 function applyFlashFilter() {
   const topic=document.getElementById('flashTopic').value;
-  fcDeck=ALL_VERBS.filter(v=>(topic==='all'||v.topics.includes(topic))&&(!difficultMode||difficultIds.has(v.id)));
-  if(!fcDeck.length){ difficultMode=false; fcDeck=ALL_VERBS.filter(v=>topic==='all'||v.topics.includes(topic)); }
+  const group=document.getElementById('flashGroup').value;
+  const matches=v=>(topic==='all'||v.topics.includes(topic))&&(group==='all'||(group==='irregular'?v.irregular:v.group===group));
+  fcDeck=ALL_VERBS.filter(v=>matches(v)&&(!difficultMode||difficultIds.has(v.id)));
+  if(!fcDeck.length){ difficultMode=false; fcDeck=ALL_VERBS.filter(matches); }
   fcIdx=0; renderFC();
 }
 function toggleDifficultMode(){ difficultMode=!difficultMode; document.getElementById('difficultBtn').classList.toggle('active',difficultMode); applyFlashFilter(); }
@@ -372,12 +397,13 @@ function initMatch() {
   lCol.innerHTML=''; rCol.innerHTML='';
   document.getElementById('matchInfo').textContent = t('match_info');
   document.getElementById('matchRestart').classList.remove('show');
+  const matchForm=v=>selectedPracticeTense==='past'?v.past:selectedPracticeTense==='fut'?v.future:v.greek;
   lItems.forEach(v => {
-    const el = mkEl('div','match-item',v.greek); el.dataset.key=v.greek; el.dataset.side='left';
+    const el = mkEl('div','match-item',matchForm(v)); el.dataset.key=v.id; el.dataset.side='left';
     el.onclick = ()=>handleMatch(el); lCol.appendChild(el);
   });
   rItems.forEach(v => {
-    const el = mkEl('div','match-item ru',verbTrans(v)); el.dataset.key=v.greek; el.dataset.side='right';
+    const el = mkEl('div','match-item ru',verbTrans(v)); el.dataset.key=v.id; el.dataset.side='right';
     el.onclick = ()=>handleMatch(el); rCol.appendChild(el);
   });
 }
@@ -394,8 +420,10 @@ function handleMatch(el) {
   if (el.dataset.key===matchSel.dataset.key) {
     [el,matchSel].forEach(e=>{ e.classList.remove('selected'); e.classList.add('matched'); });
     matchPaired++;
+    recordAnswer(ALL_VERBS.find(v=>v.id===el.dataset.key),selectedPracticeTense,true);
     if (matchPaired===6) { document.getElementById('matchInfo').textContent=t('match_all'); document.getElementById('matchRestart').classList.add('show'); }
   } else {
+    recordAnswer(ALL_VERBS.find(v=>v.id===matchSel.dataset.key),selectedPracticeTense,false);
     [el,matchSel].forEach(e=>e.classList.add('wrong-flash'));
     const old=matchSel;
     setTimeout(()=>{ [el,old].forEach(e=>e.classList.remove('wrong-flash','selected')); },500);
@@ -498,16 +526,33 @@ function nextConj() { cjIdx++; cjIdx>=cjDeck.length ? showResults('conj',cjCorre
 /* ── Fill in Blank ───────────────────────────────── */
 let fDeck=[], fIdx=0, fCorrect=0, fAnswered=false;
 
-function initFill() { fDeck=[...FILL_BLANKS].sort(()=>Math.random()-0.5); fIdx=0; fCorrect=0; fAnswered=false; renderFill(); }
+function buildFillItems() {
+  const items=[];
+  practicePool.forEach(v=>[0,1,2,3,4,5].forEach(p=>{
+    const add=(tense,forms)=>{
+      const fullAnswer=forms[p];
+      const tokens=fullAnswer.split(/\s+/); const token=tokens.reduce((a,b)=>b.length>a.length?b:a,'');
+      const start=Math.max(1,Math.floor(token.length*.45));
+      const hiddenLength=Math.max(1,Math.min(3,token.length-start-(token.length>4?1:0)));
+      const missing=token.slice(start,start+hiddenLength);
+      const maskedToken=token.slice(0,start)+'_'.repeat(hiddenLength)+token.slice(start+hiddenLength);
+      const masked=fullAnswer.replace(token,maskedToken);
+      items.push({masked,answer:missing,fullAnswer,v,p,tense});
+    };
+    if(selectedPracticeTense==='mixed'||selectedPracticeTense==='pres')add('pres',v.conj_pres);
+    if(v.aoristSupported&&(selectedPracticeTense==='mixed'||selectedPracticeTense==='past'))add('past',v.conj_past);
+    if(selectedPracticeTense==='mixed'||selectedPracticeTense==='fut')add('fut',v.conj_fut);
+  }));
+  return items.sort(()=>Math.random()-0.5);
+}
+function initFill() { fDeck=buildFillItems(); fIdx=0; fCorrect=0; fAnswered=false; renderFill(); }
 
 function renderFill() {
   fAnswered=false;
   const item=fDeck[fIdx];
-  const sen = lang==='en' ? item.sen_en : item.sen_ru;
-  const hint = lang==='en' ? item.hint_en : item.hint_ru;
   document.getElementById('fillPrompt').textContent   = t('q_fill');
-  document.getElementById('fillSentence').textContent = sen;
-  document.getElementById('fillHint').textContent     = t('hint') + ' ' + hint;
+  document.getElementById('fillSentence').textContent = `${PERSONS[item.p]} ${item.masked}`;
+  document.getElementById('fillHint').textContent     = `${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`;
   document.getElementById('fillTip').textContent      = t('accent_tip');
   const inp = document.getElementById('fillInput');
   inp.value=''; inp.className='fill-input'; inp.focus();
@@ -525,11 +570,10 @@ function checkFill() {
   const item=fDeck[fIdx];
   const result = checkStr(inp.value, item.answer);
   const fb = document.getElementById('fillFeedback');
-  if (result==='correct') { fCorrect++; inp.className='fill-input correct'; fb.className='feedback correct'; fb.textContent=t('correct')+' '+item.answer; }
-  else if (result==='almost') { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('almost')} ${item.answer}`; }
-  else { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('wrong')} ${t('ans_correct')} ${item.answer}`; }
-  const sourceVerb=ALL_VERBS.find(v=>[v.greek,...(v.conj_pres||[]),...(v.conj_past||[]),...(v.conj_fut||[])].includes(item.answer));
-  recordAnswer(sourceVerb,'mixed',result==='correct');
+  if (result==='correct') { fCorrect++; inp.className='fill-input correct'; fb.className='feedback correct'; fb.textContent=t('correct')+' '+item.fullAnswer; }
+  else if (result==='almost') { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('almost')} ${item.answer} → ${item.fullAnswer}`; }
+  else { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('wrong')} ${t('ans_correct')} ${item.answer} → ${item.fullAnswer}`; }
+  recordAnswer(item.v,item.tense,result==='correct');
   document.getElementById('fillNext').classList.add('show');
   document.getElementById('fillScore').textContent=`${t('score_lbl')} ${fIdx+1}/${fDeck.length}`;
 }
@@ -538,6 +582,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.documentElement.lang = lang;
   document.title = t('document_title');
   document.getElementById('fillInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkFill(); });
+  document.getElementById('situationInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkSituation(); });
 });
 
 function nextFill() { fIdx++; fIdx>=fDeck.length ? showResults('fill',fCorrect,fDeck.length) : renderFill(); }
@@ -545,7 +590,21 @@ function nextFill() { fIdx++; fIdx>=fDeck.length ? showResults('fill',fCorrect,f
 /* ── Change the Tense ────────────────────────────── */
 let ctDeck=[], ctIdx=0, ctCorrect=0, ctAnswered=false;
 
-function initChange() { ctDeck=[...CHANGE_TENSES].sort(()=>Math.random()-0.5); ctIdx=0; ctCorrect=0; renderChange(); }
+function buildChangeItems() {
+  const labels={pres:['Present','Настоящее'],past:['Past (aorist)','Прошедшее (аорист)'],fut:['Simple future','Простое будущее']};
+  const items=[];
+  practicePool.forEach(v=>[0,1,2,3,4,5].forEach(p=>{
+    const forms={pres:v.conj_pres,past:v.conj_past,fut:v.conj_fut};
+    const available=['pres','fut',...(v.aoristSupported?['past']:[])];
+    available.forEach(from=>available.filter(to=>to!==from&&(selectedPracticeTense==='mixed'||to===selectedPracticeTense)).forEach(to=>{
+      const answer=forms[to][p];
+      const distractors=[forms[from][p],...forms[to].filter((_,i)=>i!==p)].filter((x,i,a)=>x!==answer&&a.indexOf(x)===i).slice(0,3);
+      items.push({dir_en:`${labels[from][0]} → ${labels[to][0]}`,dir_ru:`${labels[from][1]} → ${labels[to][1]}`,form:forms[from][p],opts:[answer,...distractors].sort(()=>Math.random()-0.5),answer,v,tense:to});
+    }));
+  }));
+  return items.sort(()=>Math.random()-0.5);
+}
+function initChange() { ctDeck=buildChangeItems(); ctIdx=0; ctCorrect=0; renderChange(); }
 
 function renderChange() {
   ctAnswered=false;
@@ -561,6 +620,7 @@ function renderChange() {
     if (ctAnswered) return; ctAnswered=true;
     const ok = chosen===correct;
     if (ok) ctCorrect++;
+    recordAnswer(item.v,item.tense,ok);
     lockMC('ctOpts', correct, btn);
     if (!ok) btn.classList.add('wrong');
     const fb=document.getElementById('ctFeedback');
@@ -572,6 +632,52 @@ function renderChange() {
 }
 
 function nextChange() { ctIdx++; ctIdx>=ctDeck.length ? showResults('change',ctCorrect,ctDeck.length) : renderChange(); }
+
+/* ── Picture situations & dialogues ─────────────── */
+let situationDeck=[], situationIdx=0, situationCorrect=0, situationAnswered=false;
+
+function initSituation(){
+  situationDeck=[...SITUATIONS].sort(()=>Math.random()-0.5);
+  situationIdx=0; situationCorrect=0; situationAnswered=false;
+  renderSituation();
+}
+
+function renderSituation(){
+  situationAnswered=false;
+  const item=situationDeck[situationIdx]; if(!item)return;
+  document.getElementById('situationImage').src=item.image;
+  document.getElementById('situationImage').alt=lang==='en'?item.en:item.ru;
+  document.getElementById('situationPrompt').textContent=t('situation_prompt');
+  document.getElementById('situationContext').textContent=`${t('situation_context')} ${lang==='en'?item.en:item.ru}`;
+  document.getElementById('situationDialogue').innerHTML=item.lines.map(line=>`<p>${line}</p>`).join('');
+  const audio=document.getElementById('situationAudio'); audio.textContent=t('situation_listen');
+  audio.onclick=event=>speakGreek(item.full.join(' '),event);
+  const input=document.getElementById('situationInput'); input.value=''; input.className='fill-input'; input.focus();
+  document.getElementById('situationCheck').textContent=t('check');
+  document.getElementById('situationFeedback').className='feedback';
+  document.getElementById('situationNext').textContent=t('next');
+  document.getElementById('situationNext').classList.remove('show');
+  document.getElementById('situationScore').textContent=`${t('score_lbl')} ${situationIdx}/${situationDeck.length}`;
+}
+
+function checkSituation(){
+  const input=document.getElementById('situationInput');
+  if(!input.value.trim()||situationAnswered)return;
+  situationAnswered=true;
+  const item=situationDeck[situationIdx]; const result=checkStr(input.value,item.answer); const ok=result==='correct';
+  if(ok)situationCorrect++;
+  input.className='fill-input '+(ok?'correct':'wrong');
+  const feedback=document.getElementById('situationFeedback'); feedback.className='feedback '+(ok?'correct':'wrong');
+  feedback.textContent=ok?`${t('correct')} ${item.answer}`:`${result==='almost'?t('almost'):t('wrong') } ${t('ans_correct')} ${item.answer}`;
+  recordAnswer(null,'situation',ok);
+  document.getElementById('situationNext').classList.add('show');
+  document.getElementById('situationScore').textContent=`${t('score_lbl')} ${situationIdx+1}/${situationDeck.length}`;
+}
+
+function nextSituation(){
+  situationIdx++;
+  situationIdx>=situationDeck.length?showResults('situation',situationCorrect,situationDeck.length):renderSituation();
+}
 
 /* ── Image Matching ──────────────────────────────── */
 let imgSel=null, imgPaired=0;
@@ -623,6 +729,33 @@ const PHRASE_CATEGORY_MAP = {
 };
 let phraseCategory = 'daily';
 
+const PHRASE_CATEGORY_EMOJI={daily:'⏰',food:'🍽️',personal:'🏠',greetings:'👋',directions:'🚌',shopping:'🛍️',health:'💊',doctor:'🩺',plans:'📅',opinion:'💬',work:'💼',picnic:'🧺',hotel:'🧳',holiday:'🏖️',visa:'📄',lost:'🎒'};
+function phraseEmoji(item){
+  const s=item.gr.toLowerCase();
+  const rules=[
+    [/λεωφορεί|στάση|κέντρο|ευθεία|στρίψ/, '🚌'],[/καφέ|πρωινό/, '☕'],[/νερό|χυμό/, '🥤'],[/φαγη|παραγγ|λογαριασμό|κρεμμύδι/, '🍽️'],
+    [/κάρτα|πληρώσ/, '💳'],[/μήλα|σούπερ|ψων/, '🛒'],[/γιατρ|πυρετό|πονά|λαιμός/, '🩺'],[/φαρμακ/, '💊'],[/ξενοδοχ|δωμάτιο|κράτηση|πετσέτες/, '🧳'],
+    [/διαβατ|έγγραφα|δικαιολογητικά|αίτησ|άδεια παραμονής/, '📄'],[/έχασα|τσάντα/, '🎒'],[/έκλεψαν|πορτοφόλι/, '👛'],[/δουλει|εργασία|συναδέλφ/, '💼'],
+    [/μήνυμα|τηλεφων/, '📱'],[/θάλασσα|παραλία|κολυμπ/, '🏖️'],[/πικνίκ/, '🧺'],[/σπίτι/, '🏠'],[/ώρα|επτά|οκτώ/, '🕗'],[/διαβάζ|ελληνικά|εξέταση|άσκηση/, '📚']
+  ];
+  return rules.find(([re])=>re.test(s))?.[1]||PHRASE_CATEGORY_EMOJI[item.cat]||'💬';
+}
+
+const PHRASE_VISUALS={
+  daily:['daily','center','⏰'],food:['food','center','🍽️'],home:['home','center','🏠'],work:['work','center','💼'],travel:['travel','center','🚌'],shopping:['shopping','center','🛍️'],health:['health','center','💊'],social:['social','center','💬'],picnic:['picnic','center','🧺'],doctor:['doctor','center','🩺'],hotel:['hotel','center','🧳'],holiday:['holiday','center','🏖️'],visa:['visa','center','📄'],lost:['lost','center','🎒']
+};
+function renderPhraseScene(){
+  const scene=document.getElementById('phraseScene'); if(!scene)return;
+  const [asset,position,emoji]=PHRASE_VISUALS[phraseCategory]||PHRASE_VISUALS.daily;
+  scene.style.backgroundImage=`url('assets/phrases/topics/${asset}.png')`;
+  scene.style.backgroundSize='contain';
+  scene.style.backgroundPosition=position;
+  scene.style.aspectRatio=['daily','shopping'].includes(asset)?'8 / 3':'1.5 / 1';
+  scene.style.backgroundColor='#111426';
+  scene.setAttribute('aria-label',topicLabel(phraseCategory));
+  document.getElementById('phraseSceneEmoji').textContent=emoji;
+}
+
 function renderPhraseSelect() {
   const sel=document.getElementById('phraseSelect');
   sel.innerHTML='';
@@ -635,6 +768,7 @@ function renderPhraseSelect() {
 
 function renderPhrases() {
   phraseCategory = document.getElementById('phraseSelect').value || phraseCategory;
+  renderPhraseScene();
   document.getElementById('phrasesTitle').textContent=t('phrases_title');
   const tbody=document.getElementById('phrasesTbody');
   tbody.innerHTML='';
@@ -642,7 +776,7 @@ function renderPhrases() {
   EXAM_PHRASES.filter(item=>sourceCats.includes(item.cat)).forEach(item=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td class="td-phrase-greek"><button class="audio-btn phrase-audio" onclick="speakGreek('${item.gr.replaceAll("'","\\'")}',event)">🔊</button>${item.gr}</td>
+      <td class="td-phrase-greek"><span class="phrase-emoji" aria-hidden="true">${phraseEmoji(item)}</span><button class="audio-btn phrase-audio" onclick="speakGreek('${item.gr.replaceAll("'","\\'")}',event)">🔊</button><span>${item.gr}</span></td>
       <td class="td-phrase-meaning">${lang==='en'?item.en:item.ru}</td>
       <td class="td-phrase-context">${topicLabel(phraseCategory)}</td>`;
     tbody.appendChild(tr);
@@ -662,9 +796,11 @@ function setupControls() {
   fillSelect(group,[['all',`${t('filter_all')} (${ALL_VERBS.length})`],['a',`${t('group_a')} (${count('a')})`],['b1',`${t('group_b1')} (${count('b1')})`],['b2',`${t('group_b2')} (${count('b2')})`],['omai',`${t('group_omai')} (${count('omai')})`],['irregular',`${t('group_irregular')} (${count('irregular')})`]],group?.value||'all');
   const topicOptions=[['all',t('topic_all')],...TOPICS.map(topic=>[topic.id,topic[lang]])];
   const flash=document.getElementById('flashTopic'); fillSelect(flash,topicOptions,flash?.value||'all');
+  const groupOptions=[['all',t('filter_all')],['a',t('group_a')],['b1',t('group_b1')],['b2',t('group_b2')],['omai',t('group_omai')],['irregular',t('group_irregular')]];
+  const flashGroup=document.getElementById('flashGroup'); fillSelect(flashGroup,groupOptions,flashGroup?.value||'all');
   const pTopic=document.getElementById('practiceTopic'); fillSelect(pTopic,[...topicOptions,['mistakes',t('my_mistakes')]],pTopic?.value||'all');
   const pTense=document.getElementById('practiceTense'); fillSelect(pTense,[['mixed',t('mixed')],['pres',t('pres_t')],['past',t('past_t')],['fut',t('fut_t')]],pTense?.value||'mixed');
-  const pType=document.getElementById('practiceType'); fillSelect(pType,[['quiz',t('sub_quiz')],['match',t('sub_match')],['tense',t('sub_tense')],['conj',t('sub_conj')],['fill',t('sub_fill')],['change',t('sub_change')],['person','Person & Number'],['mixed',t('mixed')]],pType?.value||'quiz');
+  const pType=document.getElementById('practiceType'); fillSelect(pType,[['quiz',t('sub_quiz')],['match',t('sub_match')],['tense',t('sub_tense')],['conj',t('sub_conj')],['change',t('sub_change')],['person',t('sub_person')],['situation',t('sub_situation')],['mixed',t('mixed_practice')],['fill',t('sub_fill')]],pType?.value||'quiz');
   document.getElementById('difficultBtn').textContent=t('difficult_only');
   renderTable();
 }
@@ -683,7 +819,7 @@ function startConfiguredPractice() {
   message.className='setup-message';
   let type=requested;
   if(type==='person')type='conj';
-  if(type==='mixed')type=['quiz','tense','conj'][Math.floor(Math.random()*3)];
+  if(type==='mixed')type=['quiz','match','tense','conj','change','situation','fill'][Math.floor(Math.random()*7)];
   switchExercise(type);
   document.getElementById('ex-'+type).scrollIntoView({behavior:'smooth',block:'start'});
 }
