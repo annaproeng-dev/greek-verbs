@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="theme-color" content="#f4f1e9">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Greek Verbs A2 — Trainer</title>
@@ -25,10 +26,12 @@
   </div>
   <div class="nav-settings">
     <button class="lang-btn" id="progressBtn" onclick="showProgress()" aria-label="Progress">📊</button>
+    <button class="lang-btn" id="olympusBtn" onclick="showOlympus()" aria-label="My Olympus">🏛️</button>
     <button class="lang-btn" id="langBtn" onclick="toggleLang()">RU</button>
     <label class="accent-toggle">
       <input type="checkbox" id="accentChk" onchange="toggleAccent()" />
       <span data-i18n="accent_label">Train accents</span>
+      <button class="accent-help" id="accentHelp" type="button" aria-label="Accent help" onclick="event.preventDefault();event.stopPropagation()">?</button>
     </label>
   </div>
 </nav>
@@ -129,7 +132,10 @@
     <div class="exercise active" id="ex-quiz">
       <div class="ex-card">
         <div class="ex-prompt" id="qPrompt">What does this mean?</div>
-        <div class="ex-verb"   id="qVerb"></div>
+        <div class="q-verb-audio">
+          <div class="ex-verb" id="qVerb"></div>
+          <button class="audio-btn" id="qAudioBtn" type="button" aria-label="Listen to the Greek verb">🔊</button>
+        </div>
         <div class="ex-sub"    id="qSub"></div>
         <button class="dir-btn" id="qDirBtn" onclick="toggleQDir()">🔁 Switch direction</button>
         <div class="opts-grid" id="qOpts"></div>
@@ -153,7 +159,10 @@
     <div class="exercise" id="ex-tense">
       <div class="ex-card">
         <div class="ex-prompt" id="tPrompt">What tense is this?</div>
-        <div class="ex-verb"   id="tForm"></div>
+        <div class="q-verb-audio">
+          <div class="ex-verb" id="tForm"></div>
+          <button class="audio-btn" id="tAudioBtn" type="button" aria-label="Listen to the Greek form">🔊</button>
+        </div>
         <div class="ex-sub"    id="tSub"></div>
         <div class="opts-grid" id="tOpts"></div>
         <div class="feedback"  id="tFeedback"></div>
@@ -213,6 +222,7 @@
           <div class="situation-context" id="situationContext"></div>
           <div class="situation-dialogue" id="situationDialogue"></div>
           <button class="dir-btn" id="situationAudio" type="button"></button>
+          <div class="fill-tip" id="situationAccentTip"></div>
           <div class="situation-answer-row">
             <input class="fill-input" id="situationInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="…" />
             <button class="fill-submit" id="situationCheck" onclick="checkSituation()"></button>
@@ -265,6 +275,8 @@
 
 <dialog id="verbDialog" class="verb-dialog"><div id="verbDialogContent"></div></dialog>
 <dialog id="progressDialog" class="verb-dialog"><div id="progressContent"></div></dialog>
+<dialog id="olympusDialog" class="verb-dialog olympus-dialog"><div id="olympusContent"></div></dialog>
+<dialog id="rewardDialog" class="verb-dialog reward-dialog"><div id="rewardContent"></div></dialog>
 
 
 <script src="data.js?v=expanded"></script>

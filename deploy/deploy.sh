@@ -7,7 +7,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
-STAGING_DIR="${SCRIPT_DIR}/.vercel-upload"
+STAGING_DIR=""
 
 PRODUCTION=false
 KEEP_STAGING=false
@@ -49,7 +49,7 @@ else
 fi
 
 cleanup() {
-  if [[ "$KEEP_STAGING" == false ]]; then
+  if [[ "$KEEP_STAGING" == false && -n "$STAGING_DIR" && -d "$STAGING_DIR" ]]; then
     rm -rf -- "$STAGING_DIR"
   fi
 }
@@ -68,7 +68,9 @@ if [[ ! -f "${PROJECT_ROOT}/.vercel/project.json" ]]; then
 fi
 
 printf 'Preparing a clean upload with rsync...\n'
-mkdir -p -- "$STAGING_DIR"
+# Keep staging outside the Git repository so Vercel does not attach local
+# commit-author metadata, which can block deployments for team projects.
+STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/greek-verbs-vercel-upload.XXXXXX")"
 rsync -a --delete \
   --exclude '/deploy/' \
   --exclude '/.git/' \

@@ -3,16 +3,20 @@ let lang = localStorage.getItem('greekTrainerLang') || 'en';
 let accentMode = false;
 let practicePool = ALL_VERBS.filter(v=>v.conj_pres);
 let selectedPracticeTense = 'mixed';
+const SESSION_SIZE = 10;
 let difficultMode = false;
 const difficultIds = new Set(JSON.parse(localStorage.getItem('greekDifficultVerbs') || '[]'));
 const progress = JSON.parse(localStorage.getItem('greekTrainerProgress') || '{}');
 Object.assign(progress,{correct:progress.correct||0,wrong:progress.wrong||0,sessions:progress.sessions||0,byTense:progress.byTense||{},mistakes:progress.mistakes||{},activityDays:progress.activityDays||{},sessionProgress:progress.sessionProgress||0,firstActivity:progress.firstActivity||null});
+let rewardSoundOn=localStorage.getItem('greekRewardSound')!=='off';
+let rewardVoiceOn=localStorage.getItem('greekRewardVoice')!=='off';
 
 const t = key => I18N[lang][key] || key;
 const verbTrans = v => lang === 'en' ? v.english : v.russian;
 const verbEx    = v => (lang === 'en' ? v.ex_en : v.ex_ru) || `${v.greek} — ${verbTrans(v)}`;
 const verbExGreek = v => v.ex_gr || v.greek;
 const verbExTranslation = v => (lang === 'en' ? v.ex_en : v.ex_ru) || verbTrans(v);
+const sessionProgressText = (index,total) => `${t('task_lbl')} ${Math.min(index+1,total)} ${t('of')} ${total}`;
 
 function toggleLang() {
   setLang(lang === 'en' ? 'ru' : 'en');
@@ -31,6 +35,7 @@ function setLang(l) {
   });
   document.getElementById('langBtn').textContent = t('lang_toggle');
   setupControls();
+  updateAccentHelp();
   document.querySelectorAll('.results-wrap').forEach(result => {
     const exercise = result.closest('.exercise');
     if (exercise) renderResults(exercise.id.replace('ex-',''), Number(result.dataset.correct), Number(result.dataset.total));
@@ -59,9 +64,25 @@ function speakGreek(text, event) {
   speechSynthesis.speak(utterance);
 }
 
+function speakGreekDialogue(lines, event) {
+  event?.stopPropagation();
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const greekVoices = speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('el'));
+  lines.forEach((line,index)=>{
+    const utterance = new SpeechSynthesisUtterance(line.replace(/^\s*[—–-]\s*/,''));
+    utterance.lang='el-GR';
+    utterance.voice=greekVoices[index%2] || greekVoices[0] || null;
+    utterance.rate=index%2===0 ? .78 : .9;
+    utterance.pitch=index%2===0 ? .92 : 1.08;
+    speechSynthesis.speak(utterance);
+  });
+}
+
 function saveProgress() { localStorage.setItem('greekTrainerProgress', JSON.stringify(progress)); }
 function localDayKey(date=new Date()) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
 function recordAnswer(v, tense, ok) {
+  const previousCorrect=progress.correct;
   progress[ok?'correct':'wrong']++;
   const key=tense||'mixed'; progress.byTense[key] ||= {correct:0,wrong:0}; progress.byTense[key][ok?'correct':'wrong']++;
   if (v) progress.mistakes[v.id] = Math.max(0,(progress.mistakes[v.id]||0)+(ok?-1:1));
@@ -71,6 +92,7 @@ function recordAnswer(v, tense, ok) {
   progress.sessionProgress++;
   if(progress.sessionProgress>=10){ progress.sessions++; progress.sessionProgress=0; }
   saveProgress();
+  if(ok)checkOlympusMilestones(previousCorrect,progress.correct);
 }
 function recordSession() { progress.sessions++; saveProgress(); }
 function progressCalendarStats(){
@@ -94,6 +116,62 @@ function showProgress() {
   const {streak,missed}=progressCalendarStats();
   document.getElementById('progressContent').innerHTML=`<button class="dialog-close" onclick="progressDialog.close()">×</button><h2>${t('progress_title')}</h2><div class="progress-cards"><div><b>${progress.correct}</b><span>${t('correct_answers')}</span></div><div><b>${progress.sessions}</b><span>${t('sessions')}</span></div><div><b>${streak} 🔥</b><span>${t('streak_days')}</span></div><div><b>${missed}</b><span>${t('missed_days')}</span></div></div><p class="progress-summary">${accuracy}% ${t('accuracy')} · ${progress.sessionProgress}/10<br>${t('progress_rule')}</p>`;
   document.getElementById('progressDialog').showModal();
+}
+
+const nikeReward=()=>({id:'nike',name:{ru:'Ника',en:'Nike'},gift:'🌿',giftName:{ru:'Лавровый лист',en:'Laurel leaf'},phrase:'Νέα νίκη! Έφτασες σε ένα ακόμη ορόσημο. Συνέχισε — τα καταφέρνεις υπέροχα!',text:{ru:'Новая победа! Ещё одна важная отметка достигнута. Продолжай — у тебя прекрасно получается!',en:'A new victory! You reached another milestone. Keep going — you are doing wonderfully!'},pitch:1.08});
+
+function setRewardOption(type){
+  if(type==='sound')rewardSoundOn=!rewardSoundOn;
+  if(type==='voice')rewardVoiceOn=!rewardVoiceOn;
+  localStorage.setItem('greekRewardSound',rewardSoundOn?'on':'off');
+  localStorage.setItem('greekRewardVoice',rewardVoiceOn?'on':'off');
+  showOlympus(true);
+}
+
+function speakReward(item){
+  if(!rewardVoiceOn)return;
+  const recorded=new Audio(`assets/olympus/voices/${item.id}.wav`); recorded.volume=.82;
+  recorded.play().catch(()=>{
+    if(!('speechSynthesis'in window))return;
+    speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(item.phrase);
+    utterance.lang='el-GR'; utterance.rate=.72; utterance.pitch=item.pitch||1;
+    const voice=speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith('el'));
+    if(voice)utterance.voice=voice;
+    speechSynthesis.speak(utterance);
+  });
+}
+
+function playReward(item){
+  if(!rewardSoundOn){speakReward(item);return;}
+  const src=item.id==='nike'?'assets/olympus/sounds/nike-victory.wav':'assets/olympus/sounds/olympian-unlock.wav';
+  const audio=new Audio(src); audio.volume=.55;
+  audio.onended=()=>setTimeout(()=>speakReward(item),180);
+  audio.play().catch(()=>speakReward(item));
+}
+
+function showReward(item){
+  const isNike=item.id==='nike';
+  const title=isNike?(lang==='ru'?'Победа с Никой!':'Victory with Nike!'):(lang==='ru'?`${item.name.ru} присоединяется к Олимпу!`:`${item.name.en} joins your Olympus!`);
+  const giftLabel=item.giftName[lang];
+  document.getElementById('rewardContent').innerHTML=`<div class="reward-layout"><div class="reward-visual"><img src="assets/olympus/mascots/${item.id}.png" alt="${item.name[lang]}"></div><div class="reward-copy"><button class="dialog-close" onclick="rewardDialog.close()">×</button><h2>${title}</h2><div class="reward-gift">${item.gift}</div><strong>${giftLabel}</strong><p class="reward-greek">${item.phrase}</p><p class="reward-translation">${item.text[lang]}</p><div class="reward-actions"><button class="fill-submit" onclick="playReward(${item.id==='nike'?'nikeReward()':`OLYMPIANS.find(x=>x.id==='${item.id}')`})">🔊 ${lang==='ru'?'Послушать снова':'Listen again'}</button><button class="tool-btn" onclick="rewardDialog.close();showOlympus()">🏛️ ${lang==='ru'?'Мой Олимп':'My Olympus'}</button></div></div></div>`;
+  const dialog=document.getElementById('rewardDialog');
+  if(!dialog.open)dialog.showModal();
+  setTimeout(()=>playReward(item),250);
+}
+
+function checkOlympusMilestones(before,after){
+  const unlocked=OLYMPIANS.find(item=>before<item.milestone&&after>=item.milestone);
+  if(unlocked){showReward(unlocked);return;}
+  if(Math.floor(after/20)>Math.floor(before/20))showReward(nikeReward());
+}
+
+function showOlympus(refresh=false){
+  const unlocked=OLYMPIANS.filter(item=>progress.correct>=item.milestone).length;
+  const laurels=Math.floor(progress.correct/20);
+  const cards=OLYMPIANS.map(item=>{const open=progress.correct>=item.milestone;return `<article class="olympian-card ${open?'open':'locked'}" ${open?`onclick="olympusDialog.close();showReward(OLYMPIANS.find(x=>x.id==='${item.id}'))"`:''}><img src="assets/olympus/mascots/${item.id}.png" alt="${open?item.name[lang]:''}">${open?'':`<span class="olympian-lock">🔒 ${item.milestone}</span>`}<h3>${open?item.name[lang]:'???'}</h3><p>${open?item.text[lang]:(lang==='ru'?`Откроется после ${item.milestone} правильных ответов`:`Unlocks after ${item.milestone} correct answers`)}</p>${open?`<span class="olympian-gift">${item.gift} ${item.giftName[lang]}</span>`:''}</article>`}).join('');
+  document.getElementById('olympusContent').innerHTML=`<button class="dialog-close" onclick="olympusDialog.close()">×</button><div class="olympus-head"><div><h2>${lang==='ru'?'Мой Олимп':'My Olympus'}</h2><p class="progress-summary">🌿 ${laurels} · ${lang==='ru'?'лавровых листьев':'laurel leaves'} &nbsp; · &nbsp; ${unlocked}/12 ${lang==='ru'?'олимпийцев':'Olympians'}</p></div><div class="olympus-tools"><button class="tool-btn ${rewardSoundOn?'active':''}" onclick="setRewardOption('sound')">${rewardSoundOn?'🔊':'🔇'} ${lang==='ru'?'Звуки':'Sounds'}</button><button class="tool-btn ${rewardVoiceOn?'active':''}" onclick="setRewardOption('voice')">${rewardVoiceOn?'🗣️':'🤫'} ${lang==='ru'?'Голоса':'Voices'}</button></div></div><div class="olympus-grid">${cards}</div>`;
+  const dialog=document.getElementById('olympusDialog'); if(!dialog.open)dialog.showModal();
 }
 
 function refreshActiveExercise() {
@@ -132,6 +210,18 @@ function refreshActiveExercise() {
 
 function toggleAccent() {
   accentMode = document.getElementById('accentChk').checked;
+  updateAccentHelp();
+}
+
+function accentRuleText() { return t(accentMode ? 'accent_rule_on' : 'accent_rule_off'); }
+function accentHelpText() { return `${accentRuleText()} ${t('accent_tip')}`; }
+function updateAccentHelp() {
+  const checkbox=document.getElementById('accentChk');
+  accentMode=Boolean(checkbox?.checked);
+  const help=document.getElementById('accentHelp');
+  if(help){ help.title=accentHelpText(); help.setAttribute('aria-label',accentHelpText()); }
+  const fillTip=document.getElementById('fillTip'); if(fillTip)fillTip.textContent=accentHelpText();
+  const situationTip=document.getElementById('situationAccentTip'); if(situationTip)situationTip.textContent=accentHelpText();
 }
 
 function stripAccents(s) {
@@ -139,6 +229,7 @@ function stripAccents(s) {
 }
 
 function checkStr(given, correct) {
+  accentMode=Boolean(document.getElementById('accentChk')?.checked);
   const g = given.normalize('NFC').trim().replace(/\s+/g,' '), c = correct.normalize('NFC').trim().replace(/\s+/g,' ');
   if (!accentMode) return stripAccents(g) === stripAccents(c) ? 'correct' : 'wrong';
   if (g === c) return 'correct';
@@ -331,7 +422,7 @@ function lockMC(containerId, correctAnswer, chosenBtn) {
 let qDeck=[], qIdx=0, qCorrect=0, qAnswered=false, qDir='gr';
 
 function initQuiz() {
-  qDeck = [...practicePool].sort(()=>Math.random()-0.5);
+  qDeck = [...practicePool].sort(()=>Math.random()-0.5).slice(0,SESSION_SIZE);
   qIdx=0; qCorrect=0; qAnswered=false;
   document.getElementById('qDirBtn').textContent = qDir === 'gr' ? t('dir_gr_lang') : t('dir_lang_gr');
   renderQuiz();
@@ -340,21 +431,26 @@ function initQuiz() {
 function renderQuiz() {
   qAnswered = false;
   const v = qDeck[qIdx];
+  const audioBtn=document.getElementById('qAudioBtn');
   document.getElementById('qFeedback').className = 'feedback';
   document.getElementById('qNext').classList.remove('show');
-  document.getElementById('qScore').textContent = `${t('score_lbl')} ${qIdx}/${qDeck.length}`;
+  document.getElementById('qScore').textContent = sessionProgressText(qIdx,qDeck.length);
 
   const others = practicePool.filter(x=>x!==v).sort(()=>Math.random()-0.5).slice(0,3);
   if (qDir === 'gr') {
     document.getElementById('qPrompt').textContent = t('q_gr_to_lang');
     document.getElementById('qVerb').textContent   = v.greek;
     document.getElementById('qSub').textContent    = '';
+    audioBtn.hidden=false;
+    audioBtn.setAttribute('aria-label',t('fc_audio'));
+    audioBtn.onclick=event=>speakGreek(v.greek,event);
     const opts = [v,...others].sort(()=>Math.random()-0.5).map(x=>verbTrans(x));
     renderMC(opts, verbTrans(v), 'qOpts', (btn, chosen, correct) => handleQuizAnswer(btn, chosen, verbTrans(v), v));
   } else {
     document.getElementById('qPrompt').textContent = t('q_lang_to_gr');
     document.getElementById('qVerb').textContent   = verbTrans(v);
     document.getElementById('qSub').textContent    = '';
+    audioBtn.hidden=true;
     const opts = [v,...others].sort(()=>Math.random()-0.5).map(x=>x.greek);
     renderMC(opts, v.greek, 'qOpts', (btn, chosen, correct) => handleQuizAnswer(btn, chosen, v.greek, v));
   }
@@ -371,7 +467,7 @@ function handleQuizAnswer(btn, chosen, correct, v) {
   fb.className = 'feedback ' + (ok ? 'correct' : 'wrong');
   fb.textContent = ok ? t('correct') + ' ' + verbEx(v) : t('wrong') + ' ' + t('ans_correct') + ' ' + correct;
   document.getElementById('qNext').classList.add('show');
-  document.getElementById('qScore').textContent = `${t('score_lbl')} ${qIdx+1}/${qDeck.length}`;
+  document.getElementById('qScore').textContent = sessionProgressText(qIdx,qDeck.length);
 }
 
 function toggleQDir() {
@@ -444,17 +540,21 @@ function buildTItems() {
   return a.sort(()=>Math.random()-0.5);
 }
 
-function initTense() { tItems=buildTItems(); tIdx=0; tCorrect=0; renderTense(); }
+function initTense() { tItems=buildTItems().slice(0,SESSION_SIZE); tIdx=0; tCorrect=0; renderTense(); }
 
 function renderTense() {
   tAnswered=false;
   const item=tItems[tIdx];
   document.getElementById('tPrompt').textContent = t('q_tense');
   document.getElementById('tForm').textContent   = item.form;
+  const audioBtn=document.getElementById('tAudioBtn');
+  audioBtn.hidden=false;
+  audioBtn.setAttribute('aria-label',t('fc_audio'));
+  audioBtn.onclick=event=>speakGreek(item.form,event);
   document.getElementById('tSub').textContent    = `(${verbTrans(item.v)})`;
   document.getElementById('tFeedback').className = 'feedback';
   document.getElementById('tNext').classList.remove('show');
-  document.getElementById('tScore').textContent  = `${t('score_lbl')} ${tIdx}/${tItems.length}`;
+  document.getElementById('tScore').textContent  = sessionProgressText(tIdx,tItems.length);
   const tenseMap = {pres:t('pres_t'), past:t('past_t'), fut:t('fut_t')};
   const correctLabel = tenseMap[item.tense];
   const opts = [t('pres_t'),t('past_t'),t('fut_t')];
@@ -470,7 +570,7 @@ function renderTense() {
     fb.textContent = ok ? t('correct') :
       `${t('wrong')} ${item.form}: ${t('pres_t')} ${item.v.greek} · ${t('past_t')} ${item.v.past} · ${t('fut_t')} ${item.v.future}`;
     document.getElementById('tNext').classList.add('show');
-    document.getElementById('tScore').textContent=`${t('score_lbl')} ${tIdx+1}/${tItems.length}`;
+    document.getElementById('tScore').textContent=sessionProgressText(tIdx,tItems.length);
   });
 }
 
@@ -489,7 +589,7 @@ function buildCjItems() {
   return a.sort(()=>Math.random()-0.5);
 }
 
-function initConj() { cjDeck=buildCjItems(); cjIdx=0; cjCorrect=0; renderConj(); }
+function initConj() { cjDeck=buildCjItems().slice(0,SESSION_SIZE); cjIdx=0; cjCorrect=0; renderConj(); }
 
 function renderConj() {
   cjAnswered=false;
@@ -498,7 +598,7 @@ function renderConj() {
   document.getElementById('cjVerb').textContent   = `${PERSONS[item.p]} + ${item.v.greek} · ${t(item.tense+'_t')} (${verbTrans(item.v)})`;
   document.getElementById('cjFeedback').className = 'feedback';
   document.getElementById('cjNext').classList.remove('show');
-  document.getElementById('cjScore').textContent  = `${t('score_lbl')} ${cjIdx}/${cjDeck.length}`;
+  document.getElementById('cjScore').textContent  = sessionProgressText(cjIdx,cjDeck.length);
   // Wrong options: other persons of same verb + one from another verb
   const forms=item.tense==='pres'?item.v.conj_pres:item.tense==='past'?item.v.conj_past:item.v.conj_fut;
   const wrongPool = forms.filter((_,i)=>i!==item.p);
@@ -517,7 +617,7 @@ function renderConj() {
     fb.className='feedback '+(ok?'correct':'wrong');
     fb.textContent = ok ? t('correct') : `${t('wrong')} ${t('ans_correct')} ${correct}`;
     document.getElementById('cjNext').classList.add('show');
-    document.getElementById('cjScore').textContent=`${t('score_lbl')} ${cjIdx+1}/${cjDeck.length}`;
+    document.getElementById('cjScore').textContent=sessionProgressText(cjIdx,cjDeck.length);
   });
 }
 
@@ -545,7 +645,7 @@ function buildFillItems() {
   }));
   return items.sort(()=>Math.random()-0.5);
 }
-function initFill() { fDeck=buildFillItems(); fIdx=0; fCorrect=0; fAnswered=false; renderFill(); }
+function initFill() { fDeck=buildFillItems().slice(0,SESSION_SIZE); fIdx=0; fCorrect=0; fAnswered=false; renderFill(); }
 
 function renderFill() {
   fAnswered=false;
@@ -553,14 +653,14 @@ function renderFill() {
   document.getElementById('fillPrompt').textContent   = t('q_fill');
   document.getElementById('fillSentence').textContent = `${PERSONS[item.p]} ${item.masked}`;
   document.getElementById('fillHint').textContent     = `${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`;
-  document.getElementById('fillTip').textContent      = t('accent_tip');
+  document.getElementById('fillTip').textContent      = accentHelpText();
   const inp = document.getElementById('fillInput');
   inp.value=''; inp.className='fill-input'; inp.focus();
   inp.placeholder = '…';
   document.getElementById('fillFeedback').className='feedback';
   document.getElementById('fillNext').classList.remove('show');
   document.getElementById('fillCheck').textContent = t('check');
-  document.getElementById('fillScore').textContent = `${t('score_lbl')} ${fIdx}/${fDeck.length}`;
+  document.getElementById('fillScore').textContent = sessionProgressText(fIdx,fDeck.length);
 }
 
 function checkFill() {
@@ -575,12 +675,13 @@ function checkFill() {
   else { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('wrong')} ${t('ans_correct')} ${item.answer} → ${item.fullAnswer}`; }
   recordAnswer(item.v,item.tense,result==='correct');
   document.getElementById('fillNext').classList.add('show');
-  document.getElementById('fillScore').textContent=`${t('score_lbl')} ${fIdx+1}/${fDeck.length}`;
+  document.getElementById('fillScore').textContent=sessionProgressText(fIdx,fDeck.length);
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
   document.documentElement.lang = lang;
   document.title = t('document_title');
+  updateAccentHelp();
   document.getElementById('fillInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkFill(); });
   document.getElementById('situationInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkSituation(); });
 });
@@ -604,7 +705,7 @@ function buildChangeItems() {
   }));
   return items.sort(()=>Math.random()-0.5);
 }
-function initChange() { ctDeck=buildChangeItems(); ctIdx=0; ctCorrect=0; renderChange(); }
+function initChange() { ctDeck=buildChangeItems().slice(0,SESSION_SIZE); ctIdx=0; ctCorrect=0; renderChange(); }
 
 function renderChange() {
   ctAnswered=false;
@@ -615,7 +716,7 @@ function renderChange() {
   document.getElementById('ctForm').textContent   = item.form;
   document.getElementById('ctFeedback').className = 'feedback';
   document.getElementById('ctNext').classList.remove('show');
-  document.getElementById('ctScore').textContent  = `${t('score_lbl')} ${ctIdx}/${ctDeck.length}`;
+  document.getElementById('ctScore').textContent  = sessionProgressText(ctIdx,ctDeck.length);
   renderMC(item.opts, item.answer, 'ctOpts', (btn, chosen, correct) => {
     if (ctAnswered) return; ctAnswered=true;
     const ok = chosen===correct;
@@ -627,7 +728,7 @@ function renderChange() {
     fb.className='feedback '+(ok?'correct':'wrong');
     fb.textContent = ok ? t('correct') : `${t('wrong')} ${t('ans_correct')} ${correct}`;
     document.getElementById('ctNext').classList.add('show');
-    document.getElementById('ctScore').textContent=`${t('score_lbl')} ${ctIdx+1}/${ctDeck.length}`;
+    document.getElementById('ctScore').textContent=sessionProgressText(ctIdx,ctDeck.length);
   });
 }
 
@@ -637,7 +738,7 @@ function nextChange() { ctIdx++; ctIdx>=ctDeck.length ? showResults('change',ctC
 let situationDeck=[], situationIdx=0, situationCorrect=0, situationAnswered=false;
 
 function initSituation(){
-  situationDeck=[...SITUATIONS].sort(()=>Math.random()-0.5);
+  situationDeck=[...SITUATIONS].sort(()=>Math.random()-0.5).slice(0,SESSION_SIZE);
   situationIdx=0; situationCorrect=0; situationAnswered=false;
   renderSituation();
 }
@@ -651,13 +752,14 @@ function renderSituation(){
   document.getElementById('situationContext').textContent=`${t('situation_context')} ${lang==='en'?item.en:item.ru}`;
   document.getElementById('situationDialogue').innerHTML=item.lines.map(line=>`<p>${line}</p>`).join('');
   const audio=document.getElementById('situationAudio'); audio.textContent=t('situation_listen');
-  audio.onclick=event=>speakGreek(item.full.join(' '),event);
+  audio.onclick=event=>speakGreekDialogue(item.full,event);
+  document.getElementById('situationAccentTip').textContent=accentHelpText();
   const input=document.getElementById('situationInput'); input.value=''; input.className='fill-input'; input.focus();
   document.getElementById('situationCheck').textContent=t('check');
   document.getElementById('situationFeedback').className='feedback';
   document.getElementById('situationNext').textContent=t('next');
   document.getElementById('situationNext').classList.remove('show');
-  document.getElementById('situationScore').textContent=`${t('score_lbl')} ${situationIdx}/${situationDeck.length}`;
+  document.getElementById('situationScore').textContent=sessionProgressText(situationIdx,situationDeck.length);
 }
 
 function checkSituation(){
@@ -671,7 +773,7 @@ function checkSituation(){
   feedback.textContent=ok?`${t('correct')} ${item.answer}`:`${result==='almost'?t('almost'):t('wrong') } ${t('ans_correct')} ${item.answer}`;
   recordAnswer(null,'situation',ok);
   document.getElementById('situationNext').classList.add('show');
-  document.getElementById('situationScore').textContent=`${t('score_lbl')} ${situationIdx+1}/${situationDeck.length}`;
+  document.getElementById('situationScore').textContent=sessionProgressText(situationIdx,situationDeck.length);
 }
 
 function nextSituation(){
