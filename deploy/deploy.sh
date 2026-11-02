@@ -75,6 +75,9 @@ rsync -a --delete \
   --exclude '/deploy/' \
   --exclude '/.git/' \
   --exclude '/node_modules/' \
+  --exclude '/.data/' \
+  --exclude '/tests/' \
+  --exclude '__pycache__/' \
   --exclude '/.env*' \
   --exclude '.DS_Store' \
   --exclude '*.log' \

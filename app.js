@@ -1,15 +1,29 @@
 /* ── Language & Accent ─────────────────────────────── */
-let lang = localStorage.getItem('greekTrainerLang') || 'en';
+const readStoredJSON = (key, fallback, valid) => { try { const value=JSON.parse(appStorage.getItem(key)); return valid(value)?value:fallback; } catch { return fallback; } };
+let lang = ['en','ru'].includes(appStorage.getItem('greekTrainerLang')) ? appStorage.getItem('greekTrainerLang') : 'en';
 let accentMode = false;
 let practicePool = ALL_VERBS.filter(v=>v.conj_pres);
 let selectedPracticeTense = 'mixed';
 const SESSION_SIZE = 10;
 let difficultMode = false;
-const difficultIds = new Set(JSON.parse(localStorage.getItem('greekDifficultVerbs') || '[]'));
-const progress = JSON.parse(localStorage.getItem('greekTrainerProgress') || '{}');
-Object.assign(progress,{correct:progress.correct||0,wrong:progress.wrong||0,sessions:progress.sessions||0,byTense:progress.byTense||{},mistakes:progress.mistakes||{},activityDays:progress.activityDays||{},sessionProgress:progress.sessionProgress||0,firstActivity:progress.firstActivity||null});
-let rewardSoundOn=localStorage.getItem('greekRewardSound')!=='off';
-let rewardVoiceOn=localStorage.getItem('greekRewardVoice')!=='off';
+const difficultIds = new Set();
+const progress = {};
+const nonNegativeNumber = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
+const plainRecord = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+const cleanCounts = value => Object.fromEntries(Object.entries(plainRecord(value)).filter(([key])=>key!=='__proto__').map(([key,count])=>[key,nonNegativeNumber(count)]));
+function normalizeProgress() {
+  progress.correct=nonNegativeNumber(progress.correct);
+  progress.wrong=nonNegativeNumber(progress.wrong);
+  progress.sessions=nonNegativeNumber(progress.sessions);
+  progress.sessionProgress=Math.min(nonNegativeNumber(progress.sessionProgress),SESSION_SIZE-1);
+  progress.mistakes=cleanCounts(progress.mistakes);
+  progress.activityDays=cleanCounts(progress.activityDays);
+  progress.byTense=Object.fromEntries(Object.entries(plainRecord(progress.byTense)).map(([key,value])=>[key,{correct:nonNegativeNumber(value?.correct),wrong:nonNegativeNumber(value?.wrong)}]));
+  progress.firstActivity=typeof progress.firstActivity==='string' && /^\d{4}-\d{2}-\d{2}$/.test(progress.firstActivity) && !Number.isNaN(Date.parse(progress.firstActivity+'T12:00:00')) ? progress.firstActivity : null;
+}
+normalizeProgress();
+let rewardSoundOn=appStorage.getItem('greekRewardSound')!=='off';
+let rewardVoiceOn=appStorage.getItem('greekRewardVoice')!=='off';
 
 const t = key => I18N[lang][key] || key;
 const verbTrans = v => lang === 'en' ? v.english : v.russian;
@@ -18,13 +32,28 @@ const verbExGreek = v => v.ex_gr || v.greek;
 const verbExTranslation = v => (lang === 'en' ? v.ex_en : v.ex_ru) || verbTrans(v);
 const sessionProgressText = (index,total) => `${t('task_lbl')} ${Math.min(index+1,total)} ${t('of')} ${total}`;
 
+function updateAccessibleNames() {
+  document.querySelectorAll('[data-i18n-aria]').forEach(el=>el.setAttribute('aria-label',t(el.dataset.i18nAria)));
+  document.getElementById('progressBtn').setAttribute('aria-label',t('progress_title'));
+  document.getElementById('olympusBtn').setAttribute('aria-label',lang==='ru'?'Мой Олимп':'My Olympus');
+}
+
+function showStorageNotice() {
+  if(!appStorage.unavailable)return;
+  let notice=document.getElementById('storageNotice');
+  if(!notice){ notice=document.createElement('div'); notice.id='storageNotice'; notice.className='storage-notice'; notice.setAttribute('role','status'); document.body.prepend(notice); }
+  notice.textContent=lang==='ru'?'Браузер не сохраняет данные: прогресс и настройки доступны только в текущей вкладке. Проверьте настройки хранилища.':'Your browser cannot save data. Progress and settings are available only in this tab; check your storage settings.';
+}
+document.addEventListener('storage-unavailable',showStorageNotice);
+
 function toggleLang() {
   setLang(lang === 'en' ? 'ru' : 'en');
 }
 
 function setLang(l) {
+  const previousLang=lang;
   lang = l;
-  localStorage.setItem('greekTrainerLang', l);
+  appStorage.setItem('greekTrainerLang', l);
   document.documentElement.lang = l;
   document.title = t('document_title');
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -33,6 +62,9 @@ function setLang(l) {
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPh);
   });
+  updateAccessibleNames();
+  showStorageNotice();
+  renderAuth();
   document.getElementById('langBtn').textContent = t('lang_toggle');
   setupControls();
   updateAccentHelp();
@@ -44,19 +76,21 @@ function setLang(l) {
   const active = document.querySelector('.section.active');
   if (active) {
     const id = active.id.replace('sec-','');
-    if (id === 'verbs')      renderTable();
     if (id === 'flashcards') renderFC();
     if (id === 'phrases')    { renderPhraseSelect(); renderPhrases(); }
-    if (id === 'practice') refreshActiveExercise();
+    if (id === 'practice') refreshActiveExercise(previousLang);
   }
 }
 
 const topicLabel = id => id === 'all' ? t('topic_all') : (TOPICS.find(topic=>topic.id===id)?.[lang] || id);
 
+let dialogueGeneration=0, dialogueAudio=null;
+// Fingerprints bind prerecorded speech to the exact dialogue text.
+const dialogueRecordings={"food":308950732,"travel":2725961565,"shopping":893381793,"doctor":3174056810,"hotel":438256719,"lost":462828587,"work":3370426012,"social":1008980366,"daily":2628875999,"visa":1042146168};
 function speakGreek(text, event) {
   event?.stopPropagation();
   if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
+  stopDialogue();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'el-GR'; utterance.rate = .82;
   const voice = speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith('el'));
@@ -64,22 +98,72 @@ function speakGreek(text, event) {
   speechSynthesis.speak(utterance);
 }
 
-function speakGreekDialogue(lines, event) {
+function stopDialogue() {
+  dialogueGeneration++;
+  if(dialogueAudio){dialogueAudio.pause(); dialogueAudio=null;}
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function playSituationDialogue(item,event){
   event?.stopPropagation();
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const greekVoices = speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('el'));
-  lines.forEach((line,index)=>{
-    const utterance = new SpeechSynthesisUtterance(line.replace(/^\s*[—–-]\s*/,''));
-    utterance.lang='el-GR';
-    utterance.voice=greekVoices[index%2] || greekVoices[0] || null;
-    utterance.rate=index%2===0 ? .78 : .9;
-    utterance.pitch=index%2===0 ? .92 : 1.08;
-    speechSynthesis.speak(utterance);
+  stopDialogue();
+  const fingerprint=Array.from(item.full.join('\n')).reduce((value,char)=>Math.imul(value^char.codePointAt(0),16777619)>>>0,2166136261);
+  if(dialogueRecordings[item.cat]!==fingerprint){speakGreekDialogue(item.full,event);return;}
+  const generation=dialogueGeneration;
+  const audio=new Audio(`assets/dialogues/${encodeURIComponent(item.cat)}.mp3?v=${fingerprint}`);
+  dialogueAudio=audio;
+  document.getElementById('situationVoiceStatus').textContent='';
+  audio.onended=()=>{if(dialogueAudio===audio)dialogueAudio=null;};
+  audio.play().catch(()=>{
+    if(generation!==dialogueGeneration)return;
+    dialogueAudio=null;
+    speakGreekDialogue(item.full,event);
   });
 }
 
-function saveProgress() { localStorage.setItem('greekTrainerProgress', JSON.stringify(progress)); }
+function speakGreekDialogue(lines, event) {
+  event?.stopPropagation();
+  if (!('speechSynthesis' in window)) return;
+  const generation=++dialogueGeneration;
+  speechSynthesis.cancel();
+  const start=()=>{
+    if(generation!==dialogueGeneration)return;
+    const voices=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('el'));
+    const first=voices[0] || null;
+    const second=voices.find(v=>v.voiceURI!==first?.voiceURI) || null;
+    const status=document.getElementById('situationVoiceStatus');
+    status.textContent=second ? '' : first ? (lang==='ru'
+      ? 'На этом устройстве доступен только один греческий голос. Реплики будут различаться высотой и скоростью; для двух голосов добавьте второй греческий голос в настройках устройства.'
+      : 'Only one Greek voice is available on this device. Speakers will differ in pitch and speed; add a second Greek voice in your device settings for two distinct voices.') : (lang==='ru'
+      ? 'Греческий голос не найден. Браузер попробует использовать голос по умолчанию; установите два греческих голоса в настройках устройства.'
+      : 'No Greek voice was found. The browser will try its default voice; install two Greek voices in your device settings.');
+    let index=0;
+    const next=()=>{
+      if(generation!==dialogueGeneration || index>=lines.length)return;
+      const speaker=index%2;
+      const utterance=new SpeechSynthesisUtterance(lines[index++].replace(/^\s*[—–-]\s*/,''));
+      utterance.lang='el-GR';
+      if(speaker===0 && first)utterance.voice=first;
+      if(speaker===1 && (second||first))utterance.voice=second||first;
+      utterance.rate=speaker===0 ? .78 : .9;
+      utterance.pitch=speaker===0 ? .88 : 1.15;
+      utterance.onend=next;
+      utterance.onerror=()=>{ if(generation===dialogueGeneration) status.textContent=lang==='ru'?'Не удалось воспроизвести диалог. Попробуйте ещё раз.':'Could not play the dialogue. Please try again.'; };
+      speechSynthesis.speak(utterance);
+    };
+    next();
+  };
+  if(speechSynthesis.getVoices().length) start();
+  else {
+    // Some browsers load the voice inventory asynchronously.
+    let started=false;
+    const ready=()=>{ if(started)return; started=true; speechSynthesis.removeEventListener('voiceschanged',ready); start(); };
+    speechSynthesis.addEventListener('voiceschanged',ready);
+    setTimeout(ready,1000);
+  }
+}
+
+function saveProgress() { LearningStore.save(progress, difficultIds).catch(() => learningNotice('storage')); }
 function localDayKey(date=new Date()) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
 function recordAnswer(v, tense, ok) {
   const previousCorrect=progress.correct;
@@ -123,8 +207,8 @@ const nikeReward=()=>({id:'nike',name:{ru:'Ника',en:'Nike'},gift:'🌿',gift
 function setRewardOption(type){
   if(type==='sound')rewardSoundOn=!rewardSoundOn;
   if(type==='voice')rewardVoiceOn=!rewardVoiceOn;
-  localStorage.setItem('greekRewardSound',rewardSoundOn?'on':'off');
-  localStorage.setItem('greekRewardVoice',rewardVoiceOn?'on':'off');
+  appStorage.setItem('greekRewardSound',rewardSoundOn?'on':'off');
+  appStorage.setItem('greekRewardVoice',rewardVoiceOn?'on':'off');
   showOlympus(true);
 }
 
@@ -151,6 +235,7 @@ function playReward(item){
 }
 
 function showReward(item){
+  stopDialogue();
   const isNike=item.id==='nike';
   const title=isNike?(lang==='ru'?'Победа с Никой!':'Victory with Nike!'):(lang==='ru'?`${item.name.ru} присоединяется к Олимпу!`:`${item.name.en} joins your Olympus!`);
   const giftLabel=item.giftName[lang];
@@ -169,12 +254,12 @@ function checkOlympusMilestones(before,after){
 function showOlympus(refresh=false){
   const unlocked=OLYMPIANS.filter(item=>progress.correct>=item.milestone).length;
   const laurels=Math.floor(progress.correct/20);
-  const cards=OLYMPIANS.map(item=>{const open=progress.correct>=item.milestone;return `<article class="olympian-card ${open?'open':'locked'}" ${open?`onclick="olympusDialog.close();showReward(OLYMPIANS.find(x=>x.id==='${item.id}'))"`:''}><img src="assets/olympus/mascots/${item.id}.png" alt="${open?item.name[lang]:''}">${open?'':`<span class="olympian-lock">🔒 ${item.milestone}</span>`}<h3>${open?item.name[lang]:'???'}</h3><p>${open?item.text[lang]:(lang==='ru'?`Откроется после ${item.milestone} правильных ответов`:`Unlocks after ${item.milestone} correct answers`)}</p>${open?`<span class="olympian-gift">${item.gift} ${item.giftName[lang]}</span>`:''}</article>`}).join('');
-  document.getElementById('olympusContent').innerHTML=`<button class="dialog-close" onclick="olympusDialog.close()">×</button><div class="olympus-head"><div><h2>${lang==='ru'?'Мой Олимп':'My Olympus'}</h2><p class="progress-summary">🌿 ${laurels} · ${lang==='ru'?'лавровых листьев':'laurel leaves'} &nbsp; · &nbsp; ${unlocked}/12 ${lang==='ru'?'олимпийцев':'Olympians'}</p></div><div class="olympus-tools"><button class="tool-btn ${rewardSoundOn?'active':''}" onclick="setRewardOption('sound')">${rewardSoundOn?'🔊':'🔇'} ${lang==='ru'?'Звуки':'Sounds'}</button><button class="tool-btn ${rewardVoiceOn?'active':''}" onclick="setRewardOption('voice')">${rewardVoiceOn?'🗣️':'🤫'} ${lang==='ru'?'Голоса':'Voices'}</button></div></div><div class="olympus-grid">${cards}</div>`;
+  const cards=OLYMPIANS.map(item=>{const open=progress.correct>=item.milestone;return `<article class="olympian-card ${open?'open':'locked'}" ${open?`role="button" tabindex="0" onclick="olympusDialog.close();showReward(OLYMPIANS.find(x=>x.id==='${item.id}'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"`:''}><img src="assets/olympus/mascots/${item.id}.png" alt="${open?item.name[lang]:''}">${open?'':`<span class="olympian-lock">🔒 ${item.milestone}</span>`}<h3>${open?item.name[lang]:'???'}</h3><p>${open?item.text[lang]:(lang==='ru'?`Откроется после ${item.milestone} правильных ответов`:`Unlocks after ${item.milestone} correct answers`)}</p>${open?`<span class="olympian-gift">${item.gift} ${item.giftName[lang]}</span>`:''}</article>`}).join('');
+  document.getElementById('olympusContent').innerHTML=`<button class="dialog-close" onclick="olympusDialog.close()">×</button><div class="olympus-head"><div><h2>${lang==='ru'?'Мой Олимп':'My Olympus'}</h2><p class="progress-summary">🌿 ${laurels} · ${lang==='ru'?'лавровых листьев':'laurel leaves'} &nbsp; · &nbsp; ${unlocked}/${OLYMPIANS.length} ${lang==='ru'?'олимпийцев':'Olympians'}</p></div><div class="olympus-tools"><button class="tool-btn ${rewardSoundOn?'active':''}" onclick="setRewardOption('sound')">${rewardSoundOn?'🔊':'🔇'} ${lang==='ru'?'Звуки':'Sounds'}</button><button class="tool-btn ${rewardVoiceOn?'active':''}" onclick="setRewardOption('voice')">${rewardVoiceOn?'🗣️':'🤫'} ${lang==='ru'?'Голоса':'Voices'}</button></div></div><div class="olympus-grid">${cards}</div>`;
   const dialog=document.getElementById('olympusDialog'); if(!dialog.open)dialog.showModal();
 }
 
-function refreshActiveExercise() {
+function refreshActiveExercise(previousLang) {
   const ex = document.querySelector('.exercise.active');
   if (!ex) return;
   const result = ex.querySelector('.results-wrap');
@@ -183,12 +268,17 @@ function refreshActiveExercise() {
     return;
   }
   const id = ex.id.replace('ex-','');
+  // Do not unlock an already recorded answer on language change.
+  const answered = {quiz:qAnswered,tense:tAnswered,conj:cjAnswered,fill:fAnswered,change:ctAnswered,situation:situationAnswered};
+  if (answered[id]) { translateAnsweredExercise(id,previousLang); return; }
+  const input=ex.querySelector('input'); const typed=input?.value;
   if (id === 'quiz') renderQuiz();
   if (id === 'tense') renderTense();
   if (id === 'conj') renderConj();
   if (id === 'fill') renderFill();
   if (id === 'change') renderChange();
   if (id === 'situation') renderSituation();
+  if (input && typed !== undefined) input.value=typed;
   if (id === 'match') {
     document.getElementById('matchColL').textContent = t('match_col_l');
     document.getElementById('matchColR').textContent = t('match_col_r');
@@ -196,7 +286,7 @@ function refreshActiveExercise() {
       const v = ALL_VERBS.find(item => item.id === el.dataset.key);
       if (v) el.textContent = verbTrans(v);
     });
-    document.getElementById('matchInfo').textContent = matchPaired === 6 ? t('match_all') : t('match_info');
+    document.getElementById('matchInfo').textContent = matchPaired === matchTotal ? t('match_all') : t('match_info');
   }
   if (id === 'image') {
     document.querySelectorAll('#imgLeft .img-card').forEach(el => {
@@ -205,6 +295,55 @@ function refreshActiveExercise() {
       if (item && label) label.textContent = lang === 'en' ? item.label_en : item.label_ru;
     });
     document.getElementById('imgInfo').textContent = imgPaired === IMAGE_EXERCISES.length ? t('match_all') : t('q_image');
+  }
+}
+
+function translateAnsweredExercise(id, previousLang) {
+  const set=(name,value)=>{document.getElementById(name).textContent=value;};
+  const fb=(name,correct,wrong)=>{ const el=document.getElementById(name); el.textContent=el.classList.contains('correct')?correct:wrong; };
+  const ex=document.getElementById('ex-'+id);
+  const next=ex.querySelector('.ex-next-btn'); if(next)next.textContent=t('next');
+  if(id==='quiz'){
+    const v=qDeck[qIdx];
+    set('qPrompt',t(qDir==='gr'?'q_gr_to_lang':'q_lang_to_gr'));
+    set('qDirBtn',t(qDir==='gr'?'dir_gr_lang':'dir_lang_gr'));
+    set('qVerb',qDir==='gr'?v.greek:verbTrans(v));
+    document.getElementById('qAudioBtn').setAttribute('aria-label',t('fc_audio'));
+    if(qDir==='gr') document.querySelectorAll('#qOpts .opt-btn').forEach(button=>{
+      const option=ALL_VERBS.find(item=>(previousLang==='en'?item.english:item.russian)===button.dataset.key);
+      if(option){button.textContent=verbTrans(option);button.dataset.key=verbTrans(option);}
+    });
+    fb('qFeedback',t('correct')+' '+verbEx(v),`${t('wrong')} ${t('ans_correct')} ${qDir==='gr'?verbTrans(v):v.greek}`);
+    set('qScore',sessionProgressText(qIdx,qDeck.length));
+  }
+  if(id==='tense'){
+    const item=tItems[tIdx]; set('tPrompt',t('q_tense')); set('tSub',`(${verbTrans(item.v)})`);
+    document.getElementById('tAudioBtn').setAttribute('aria-label',t('fc_audio'));
+    document.querySelectorAll('#tOpts .opt-btn').forEach((button,i)=>{button.textContent=t(['pres_t','past_t','fut_t'][i]);});
+    fb('tFeedback',t('correct'),`${t('wrong')} ${item.form}: ${t('pres_t')} ${item.v.greek} · ${t('past_t')} ${item.v.past} · ${t('fut_t')} ${item.v.future}`);
+    set('tScore',sessionProgressText(tIdx,tItems.length));
+  }
+  if(id==='conj'){
+    const item=cjDeck[cjIdx]; set('cjPrompt',t('q_conj')); set('cjVerb',`${PERSONS[item.p]} + ${item.v.greek} · ${t(item.tense+'_t')} (${verbTrans(item.v)})`);
+    fb('cjFeedback',t('correct'),`${t('wrong')} ${t('ans_correct')} ${item.correct}`); set('cjScore',sessionProgressText(cjIdx,cjDeck.length));
+  }
+  if(id==='change'){
+    const item=ctDeck[ctIdx]; set('ctPrompt',t('q_change')); set('ctDir',lang==='en'?item.dir_en:item.dir_ru);
+    fb('ctFeedback',t('correct'),`${t('wrong')} ${t('ans_correct')} ${item.answer}`); set('ctScore',sessionProgressText(ctIdx,ctDeck.length));
+  }
+  if(id==='fill'){
+    const item=fDeck[fIdx], result=document.getElementById('fillFeedback').dataset.result;
+    set('fillPrompt',t('q_fill')); set('fillHint',`${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`); set('fillCheck',t('check'));
+    set('fillFeedback',result==='correct'?`${t('correct')} ${item.fullAnswer}`:result==='almost'?`${t('almost')} ${item.answer} → ${item.fullAnswer}`:`${t('wrong')} ${t('ans_correct')} ${item.answer} → ${item.fullAnswer}`);
+    set('fillScore',sessionProgressText(fIdx,fDeck.length));
+  }
+  if(id==='situation'){
+    const item=situationDeck[situationIdx], result=document.getElementById('situationFeedback').dataset.result;
+    set('situationPrompt',t('situation_prompt')); set('situationContext',`${t('situation_context')} ${lang==='en'?item.en:item.ru}`);
+    document.getElementById('situationImage').alt=lang==='en'?item.en:item.ru;
+    set('situationAudio',t('situation_listen')); set('situationCheck',t('check'));
+    set('situationFeedback',result==='correct'?`${t('correct')} ${item.answer}`:`${result==='almost'?t('almost'):t('wrong')} ${t('ans_correct')} ${item.answer}`);
+    set('situationScore',sessionProgressText(situationIdx,situationDeck.length));
   }
 }
 
@@ -218,8 +357,6 @@ function accentHelpText() { return `${accentRuleText()} ${t('accent_tip')}`; }
 function updateAccentHelp() {
   const checkbox=document.getElementById('accentChk');
   accentMode=Boolean(checkbox?.checked);
-  const help=document.getElementById('accentHelp');
-  if(help){ help.title=accentHelpText(); help.setAttribute('aria-label',accentHelpText()); }
   const fillTip=document.getElementById('fillTip'); if(fillTip)fillTip.textContent=accentHelpText();
   const situationTip=document.getElementById('situationAccentTip'); if(situationTip)situationTip.textContent=accentHelpText();
 }
@@ -232,13 +369,16 @@ function checkStr(given, correct) {
   accentMode=Boolean(document.getElementById('accentChk')?.checked);
   const g = given.normalize('NFC').trim().replace(/\s+/g,' '), c = correct.normalize('NFC').trim().replace(/\s+/g,' ');
   if (!accentMode) return stripAccents(g) === stripAccents(c) ? 'correct' : 'wrong';
-  if (g === c) return 'correct';
+  if (g.toLocaleLowerCase('el') === c.toLocaleLowerCase('el')) return 'correct';
   if (stripAccents(g) === stripAccents(c)) return 'almost';
   return 'wrong';
 }
 
 /* ── Navigation ─────────────────────────────────── */
 function switchSection(id) {
+  document.body.classList.remove('account-page');
+  if (['#login','#register','#profile'].includes(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+  if(id!=='practice' && document.getElementById('ex-situation').classList.contains('active')) stopDialogue();
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
@@ -248,11 +388,20 @@ function switchSection(id) {
 }
 
 function switchExercise(id) {
+  if(id!=='situation' && document.getElementById('ex-situation').classList.contains('active')) stopDialogue();
+  if (id !== 'situation' && practicePool.length < 2) {
+    document.getElementById('practiceMessage').textContent=t('empty_practice');
+    document.getElementById('practiceMessage').className='setup-message show';
+    return;
+  }
   document.querySelectorAll('.exercise').forEach(e => e.classList.remove('active'));
   document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('ex-' + id).classList.add('active');
   document.getElementById('subtab-' + id).classList.add('active');
+  const activeTab = document.getElementById('subtab-' + id);
+  activeTab.parentElement.scrollLeft = Math.max(0, activeTab.offsetLeft - activeTab.parentElement.offsetLeft - 12);
   const exercise = document.getElementById('ex-' + id);
+  if(id==='fill'||id==='situation') document.getElementById(id==='fill'?'fillAccentSlot':'situationAccentSlot').appendChild(document.getElementById('accentSettings'));
   exercise.querySelector('.results-wrap')?.remove();
   [...exercise.children].forEach(child => { child.hidden = false; });
   if (id === 'quiz')    initQuiz();
@@ -312,12 +461,12 @@ function renderTable() {
   tbody.innerHTML = '';
   sorted.forEach(v => {
     const tr = document.createElement('tr');
-    tr.className='verb-row'; tr.tabIndex=0; tr.onclick=()=>openVerb(v.id); tr.onkeydown=e=>{if(e.key==='Enter')openVerb(v.id)};
+    tr.className='verb-row'; tr.tabIndex=0; tr.onclick=()=>openVerb(v.id); tr.onkeydown=e=>{if(e.target===tr && e.key==='Enter')openVerb(v.id)};
     tr.innerHTML = `
-      <td><button class="audio-btn" title="Pronunciation" onclick="speakGreek('${v.greek.replaceAll("'","\\'")}',event)">🔊</button></td>
+      <td><button class="audio-btn" aria-label="${t('fc_audio')}" onclick="speakGreek('${v.greek.replaceAll("'","\\'")}',event)">🔊</button></td>
       <td class="td-greek">${v.greek}</td>
-      <td class="td-tense">${v.aoristSupported?v.past:'—'}</td>
-      <td class="td-tense">${v.future}</td>
+      <td class="td-tense" data-label="${t('tbl_past')}">${v.aoristSupported?v.past:'—'}</td>
+      <td class="td-tense" data-label="${t('tbl_future')}">${v.future}</td>
       <td class="td-ru">${verbTrans(v)}</td>`;
     tbody.appendChild(tr);
   });
@@ -334,6 +483,15 @@ let fcDeck = [...ALL_VERBS], fcIdx = 0, fcRevealed = false;
 function renderFC() {
   fcRevealed = false;
   const v = fcDeck[fcIdx];
+  if(!v){
+    document.getElementById('fcCounter').textContent='0 / 0';
+    document.getElementById('fcVerb').textContent=t('empty_practice');
+    document.getElementById('fcCard').classList.remove('revealed');
+    ['fcShowBtn','fcNextBtn','markDifficultBtn','fcAudioBtn'].forEach(id=>document.getElementById(id).hidden=true);
+    return;
+  }
+  ['fcShowBtn','markDifficultBtn','fcAudioBtn'].forEach(id=>document.getElementById(id).hidden=false);
+  document.getElementById('fcNextBtn').hidden=false;
   document.getElementById('fcCard').classList.remove('revealed');
   document.getElementById('fcCounter').textContent = `${fcIdx+1} / ${fcDeck.length}`;
   document.getElementById('fcVerb').textContent = v.greek;
@@ -387,11 +545,10 @@ function applyFlashFilter() {
   const group=document.getElementById('flashGroup').value;
   const matches=v=>(topic==='all'||v.topics.includes(topic))&&(group==='all'||(group==='irregular'?v.irregular:v.group===group));
   fcDeck=ALL_VERBS.filter(v=>matches(v)&&(!difficultMode||difficultIds.has(v.id)));
-  if(!fcDeck.length){ difficultMode=false; fcDeck=ALL_VERBS.filter(matches); }
   fcIdx=0; renderFC();
 }
 function toggleDifficultMode(){ difficultMode=!difficultMode; document.getElementById('difficultBtn').classList.toggle('active',difficultMode); applyFlashFilter(); }
-function toggleCurrentDifficult(){ const id=fcDeck[fcIdx].id; difficultIds.has(id)?difficultIds.delete(id):difficultIds.add(id); localStorage.setItem('greekDifficultVerbs',JSON.stringify([...difficultIds])); renderFC(); }
+function toggleCurrentDifficult(){ const id=fcDeck[fcIdx].id; difficultIds.has(id)?difficultIds.delete(id):difficultIds.add(id); saveProgress(); if(difficultMode)applyFlashFilter(); else renderFC(); }
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fcCard').addEventListener('click', fcFlip);
@@ -479,11 +636,12 @@ function toggleQDir() {
 function nextQuiz() { qIdx++; qIdx>=qDeck.length ? showResults('quiz',qCorrect,qDeck.length) : renderQuiz(); }
 
 /* ── Matching (verb ↔ translation) ──────────────── */
-let matchSel=null, matchPaired=0;
+let matchSel=null, matchPaired=0, matchTotal=0;
 
 function initMatch() {
   matchSel=null; matchPaired=0;
   const sample = [...practicePool].sort(()=>Math.random()-0.5).slice(0,6);
+  matchTotal=sample.length;
   const lItems = [...sample].sort(()=>Math.random()-0.5);
   const rItems = [...sample].sort(()=>Math.random()-0.5);
   const lCol = document.getElementById('matchLeft');
@@ -495,11 +653,11 @@ function initMatch() {
   document.getElementById('matchRestart').classList.remove('show');
   const matchForm=v=>selectedPracticeTense==='past'?v.past:selectedPracticeTense==='fut'?v.future:v.greek;
   lItems.forEach(v => {
-    const el = mkEl('div','match-item',matchForm(v)); el.dataset.key=v.id; el.dataset.side='left';
+    const el = mkEl('button','match-item',matchForm(v)); el.dataset.key=v.id; el.dataset.side='left';
     el.onclick = ()=>handleMatch(el); lCol.appendChild(el);
   });
   rItems.forEach(v => {
-    const el = mkEl('div','match-item ru',verbTrans(v)); el.dataset.key=v.id; el.dataset.side='right';
+    const el = mkEl('button','match-item ru',verbTrans(v)); el.dataset.key=v.id; el.dataset.side='right';
     el.onclick = ()=>handleMatch(el); rCol.appendChild(el);
   });
 }
@@ -517,7 +675,7 @@ function handleMatch(el) {
     [el,matchSel].forEach(e=>{ e.classList.remove('selected'); e.classList.add('matched'); });
     matchPaired++;
     recordAnswer(ALL_VERBS.find(v=>v.id===el.dataset.key),selectedPracticeTense,true);
-    if (matchPaired===6) { document.getElementById('matchInfo').textContent=t('match_all'); document.getElementById('matchRestart').classList.add('show'); }
+    if (matchPaired===matchTotal) { document.getElementById('matchInfo').textContent=t('match_all'); document.getElementById('matchRestart').classList.add('show'); }
   } else {
     recordAnswer(ALL_VERBS.find(v=>v.id===matchSel.dataset.key),selectedPracticeTense,false);
     [el,matchSel].forEach(e=>e.classList.add('wrong-flash'));
@@ -582,9 +740,9 @@ let cjDeck=[], cjIdx=0, cjCorrect=0, cjAnswered=false;
 function buildCjItems() {
   const a=[];
   practicePool.forEach(v=>{ [0,1,2,3,4,5].forEach(p=>{
-    if(selectedPracticeTense==='mixed'||selectedPracticeTense==='pres')a.push({v,p,tense:'pres',correct:v.conj_pres[p]});
-    if(v.aoristSupported&&(selectedPracticeTense==='mixed'||selectedPracticeTense==='past'))a.push({v,p,tense:'past',correct:v.conj_past[p]});
-    if(selectedPracticeTense==='mixed'||selectedPracticeTense==='fut')a.push({v,p,tense:'fut',correct:v.conj_fut[p]});
+    if(v.conj_pres[p]&&(selectedPracticeTense==='mixed'||selectedPracticeTense==='pres'))a.push({v,p,tense:'pres',correct:v.conj_pres[p]});
+    if(v.aoristSupported&&v.conj_past[p]&&(selectedPracticeTense==='mixed'||selectedPracticeTense==='past'))a.push({v,p,tense:'past',correct:v.conj_past[p]});
+    if(v.conj_fut[p]&&(selectedPracticeTense==='mixed'||selectedPracticeTense==='fut'))a.push({v,p,tense:'fut',correct:v.conj_fut[p]});
   }); });
   return a.sort(()=>Math.random()-0.5);
 }
@@ -601,11 +759,11 @@ function renderConj() {
   document.getElementById('cjScore').textContent  = sessionProgressText(cjIdx,cjDeck.length);
   // Wrong options: other persons of same verb + one from another verb
   const forms=item.tense==='pres'?item.v.conj_pres:item.tense==='past'?item.v.conj_past:item.v.conj_fut;
-  const wrongPool = forms.filter((_,i)=>i!==item.p);
-  const otherVerbs=practicePool.filter(v=>v!==item.v&&v.conj_pres);
+  const wrongPool = [...new Set(forms.filter(form=>form&&form!==item.correct))];
+  const otherVerbs=practicePool.filter(v=>v!==item.v&&(item.tense==='pres'?v.conj_pres:item.tense==='past'?v.conj_past:v.conj_fut)?.[item.p]);
   const other=otherVerbs[Math.floor(Math.random()*otherVerbs.length)]||item.v;
-  const extra = (item.tense==='pres'?other.conj_pres:item.tense==='past'?other.conj_past:other.conj_fut)[item.p];
-  const opts = [item.correct, ...wrongPool.sort(()=>Math.random()-0.5).slice(0,2), extra].sort(()=>Math.random()-0.5);
+  const extra = (item.tense==='pres'?other.conj_pres:item.tense==='past'?other.conj_past:other.conj_fut)?.[item.p];
+  const opts = [...new Set([item.correct, ...wrongPool.sort(()=>Math.random()-0.5), extra].filter(Boolean))].slice(0,4).sort(()=>Math.random()-0.5);
   renderMC(opts, item.correct, 'cjOpts', (btn, chosen, correct) => {
     if (cjAnswered) return; cjAnswered=true;
     const ok = chosen===correct;
@@ -630,7 +788,8 @@ function buildFillItems() {
   const items=[];
   practicePool.forEach(v=>[0,1,2,3,4,5].forEach(p=>{
     const add=(tense,forms)=>{
-      const fullAnswer=forms[p];
+      const fullAnswer=forms?.[p];
+      if(!fullAnswer)return;
       const tokens=fullAnswer.split(/\s+/); const token=tokens.reduce((a,b)=>b.length>a.length?b:a,'');
       const start=Math.max(1,Math.floor(token.length*.45));
       const hiddenLength=Math.max(1,Math.min(3,token.length-start-(token.length>4?1:0)));
@@ -670,6 +829,7 @@ function checkFill() {
   const item=fDeck[fIdx];
   const result = checkStr(inp.value, item.answer);
   const fb = document.getElementById('fillFeedback');
+  fb.dataset.result=result;
   if (result==='correct') { fCorrect++; inp.className='fill-input correct'; fb.className='feedback correct'; fb.textContent=t('correct')+' '+item.fullAnswer; }
   else if (result==='almost') { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('almost')} ${item.answer} → ${item.fullAnswer}`; }
   else { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('wrong')} ${t('ans_correct')} ${item.answer} → ${item.fullAnswer}`; }
@@ -698,9 +858,11 @@ function buildChangeItems() {
     const forms={pres:v.conj_pres,past:v.conj_past,fut:v.conj_fut};
     const available=['pres','fut',...(v.aoristSupported?['past']:[])];
     available.forEach(from=>available.filter(to=>to!==from&&(selectedPracticeTense==='mixed'||to===selectedPracticeTense)).forEach(to=>{
-      const answer=forms[to][p];
-      const distractors=[forms[from][p],...forms[to].filter((_,i)=>i!==p)].filter((x,i,a)=>x!==answer&&a.indexOf(x)===i).slice(0,3);
-      items.push({dir_en:`${labels[from][0]} → ${labels[to][0]}`,dir_ru:`${labels[from][1]} → ${labels[to][1]}`,form:forms[from][p],opts:[answer,...distractors].sort(()=>Math.random()-0.5),answer,v,tense:to});
+      const answer=forms[to]?.[p];
+      if(!answer||!forms[from]?.[p])return;
+      const distractors=[forms[from][p],...forms[to].filter((_,i)=>i!==p)].filter((x,i,a)=>x&&x!==answer&&a.indexOf(x)===i).slice(0,3);
+      if(!distractors.length)return;
+      items.push({person:PERSONS[p],dir_en:`${labels[from][0]} → ${labels[to][0]}`,dir_ru:`${labels[from][1]} → ${labels[to][1]}`,form:forms[from][p],opts:[answer,...distractors].sort(()=>Math.random()-0.5),answer,v,tense:to});
     }));
   }));
   return items.sort(()=>Math.random()-0.5);
@@ -713,7 +875,7 @@ function renderChange() {
   const dir = lang==='en'? item.dir_en : item.dir_ru;
   document.getElementById('ctPrompt').textContent = t('q_change');
   document.getElementById('ctDir').textContent    = dir;
-  document.getElementById('ctForm').textContent   = item.form;
+  document.getElementById('ctForm').textContent   = `${item.person} ${item.form}`;
   document.getElementById('ctFeedback').className = 'feedback';
   document.getElementById('ctNext').classList.remove('show');
   document.getElementById('ctScore').textContent  = sessionProgressText(ctIdx,ctDeck.length);
@@ -744,6 +906,7 @@ function initSituation(){
 }
 
 function renderSituation(){
+  stopDialogue();
   situationAnswered=false;
   const item=situationDeck[situationIdx]; if(!item)return;
   document.getElementById('situationImage').src=item.image;
@@ -752,7 +915,8 @@ function renderSituation(){
   document.getElementById('situationContext').textContent=`${t('situation_context')} ${lang==='en'?item.en:item.ru}`;
   document.getElementById('situationDialogue').innerHTML=item.lines.map(line=>`<p>${line}</p>`).join('');
   const audio=document.getElementById('situationAudio'); audio.textContent=t('situation_listen');
-  audio.onclick=event=>speakGreekDialogue(item.full,event);
+  document.getElementById('situationVoiceStatus').textContent='';
+  audio.onclick=event=>playSituationDialogue(item,event);
   document.getElementById('situationAccentTip').textContent=accentHelpText();
   const input=document.getElementById('situationInput'); input.value=''; input.className='fill-input'; input.focus();
   document.getElementById('situationCheck').textContent=t('check');
@@ -769,7 +933,7 @@ function checkSituation(){
   const item=situationDeck[situationIdx]; const result=checkStr(input.value,item.answer); const ok=result==='correct';
   if(ok)situationCorrect++;
   input.className='fill-input '+(ok?'correct':'wrong');
-  const feedback=document.getElementById('situationFeedback'); feedback.className='feedback '+(ok?'correct':'wrong');
+  const feedback=document.getElementById('situationFeedback'); feedback.dataset.result=result; feedback.className='feedback '+(ok?'correct':'wrong');
   feedback.textContent=ok?`${t('correct')} ${item.answer}`:`${result==='almost'?t('almost'):t('wrong') } ${t('ans_correct')} ${item.answer}`;
   recordAnswer(null,'situation',ok);
   document.getElementById('situationNext').classList.add('show');
@@ -794,12 +958,12 @@ function initImage() {
   document.getElementById('imgInfo').textContent=t('q_image');
   document.getElementById('imgRestart').classList.remove('show');
   shuffledL.forEach(img=>{
-    const el=document.createElement('div'); el.className='img-card'; el.dataset.key=img.answer; el.dataset.side='left';
+    const el=document.createElement('button'); el.type='button'; el.className='img-card'; el.dataset.key=img.answer; el.dataset.side='left';
     el.innerHTML=`<div class="img-emoji">${img.emoji}</div><div class="img-label">${lang==='en'?img.label_en:img.label_ru}</div>`;
     el.onclick=()=>handleImg(el); lCol.appendChild(el);
   });
   shuffledR.forEach(img=>{
-    const el=document.createElement('div'); el.className='match-item ru'; el.dataset.key=img.answer; el.dataset.side='right';
+    const el=document.createElement('button'); el.type='button'; el.className='match-item ru'; el.dataset.key=img.answer; el.dataset.side='right';
     el.textContent=img.sentence; el.onclick=()=>handleImg(el); rCol.appendChild(el);
   });
 }
@@ -878,7 +1042,7 @@ function renderPhrases() {
   EXAM_PHRASES.filter(item=>sourceCats.includes(item.cat)).forEach(item=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td class="td-phrase-greek"><span class="phrase-emoji" aria-hidden="true">${phraseEmoji(item)}</span><button class="audio-btn phrase-audio" onclick="speakGreek('${item.gr.replaceAll("'","\\'")}',event)">🔊</button><span>${item.gr}</span></td>
+      <td class="td-phrase-greek"><span class="phrase-emoji" aria-hidden="true">${phraseEmoji(item)}</span><button class="audio-btn phrase-audio" aria-label="${t('fc_audio')}" onclick="speakGreek('${item.gr.replaceAll("'","\\'")}',event)">🔊</button><span>${item.gr}</span></td>
       <td class="td-phrase-meaning">${lang==='en'?item.en:item.ru}</td>
       <td class="td-phrase-context">${topicLabel(phraseCategory)}</td>`;
     tbody.appendChild(tr);
@@ -910,14 +1074,15 @@ function setupControls() {
 function startConfiguredPractice() {
   const topic=document.getElementById('practiceTopic').value;
   const requested=document.getElementById('practiceType').value;
-  selectedPracticeTense=document.getElementById('practiceTense').value;
-  practicePool=ALL_VERBS.filter(v=>v.conj_pres).filter(v=>{
+  const candidateTense=document.getElementById('practiceTense').value;
+  const candidatePool=ALL_VERBS.filter(v=>v.conj_pres).filter(v=>{
     if(topic==='all')return true;
     if(topic==='mistakes')return (progress.mistakes[v.id]||0)>0;
     return v.topics.includes(topic);
-  }).filter(v=>selectedPracticeTense!=='past'||v.aoristSupported);
+  }).filter(v=>candidateTense!=='past'||v.aoristSupported);
   const message=document.getElementById('practiceMessage');
-  if(practicePool.length<(requested==='match'?6:2)) { message.textContent=t('empty_practice'); message.className='setup-message show'; return; }
+  if(requested!=='situation' && candidatePool.length<2) { message.textContent=t('empty_practice'); message.className='setup-message show'; return; }
+  practicePool=candidatePool; selectedPracticeTense=candidateTense;
   message.className='setup-message';
   let type=requested;
   if(type==='person')type='conj';
@@ -927,14 +1092,21 @@ function startConfiguredPractice() {
 }
 
 /* ── Init ─────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', ()=>{
-  renderTable();
+document.addEventListener('DOMContentLoaded', async ()=>{
+  document.querySelector('.wrap').inert = true;
+  document.querySelector('nav').inert = true;
+  try { await initAccount(); } catch { learningNotice('storage'); renderAuth(); routeAccount(); }
+  document.querySelector('.wrap').inert = false;
+  document.querySelector('nav').inert = false;
   renderFC();
   switchExercise('quiz');
   renderPhraseSelect();
   renderPhrases();
   setupControls();
   if(!('speechSynthesis' in window)) document.querySelectorAll('.audio-btn').forEach(button=>button.hidden=true);
+  updateAccessibleNames();
+  showStorageNotice();
+  document.getElementById('langBtn').textContent=t('lang_toggle');
   // apply initial i18n
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n).replace('{count}',ALL_VERBS.length); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder=t(el.dataset.i18nPh); });

@@ -1,0 +1,6 @@
+.data/
+.env*
+__pycache__/
+tests/
+server.py
+BUGS_UXUI_AUDIT_*.md

@@ -1,3 +1,21 @@
+/* Storage is optional: keep the current session usable when the browser blocks it. */
+const appStorage = {
+  unavailable: false,
+  memory: Object.create(null),
+  unsaved: new Set(),
+  getItem(key) {
+    if (this.unsaved.has(key)) return this.memory[key];
+    try { return localStorage.getItem(key); }
+    catch { this.unavailable=true; return Object.hasOwn(this.memory,key) ? this.memory[key] : null; }
+  },
+  setItem(key,value) {
+    this.memory[key]=String(value);
+    try { localStorage.setItem(key,String(value)); this.unsaved.delete(key); }
+    catch { this.unavailable=true; this.unsaved.add(key); }
+    if (this.unavailable && typeof document !== 'undefined') document.dispatchEvent(new Event('storage-unavailable'));
+  }
+};
+
 /* ── Persons ──────────────────────────────────────── */
 const PERSONS = ['εγώ','εσύ','αυτός/η','εμείς','εσείς','αυτοί/ές'];
 
@@ -205,77 +223,13 @@ ALL_VERBS.forEach(v => {
   v.topics = TOPICS.filter(topic => (TOPIC_VERBS[topic.id] || []).includes(v.greek)).map(topic => topic.id);
 });
 
-/* Complete person/number forms for the shared practice pool. */
-const PRESENT_OVERRIDES = {
-  'γίνομαι':['γίνομαι','γίνεσαι','γίνεται','γινόμαστε','γίνεστε','γίνονται'],
-  'έρχομαι':['έρχομαι','έρχεσαι','έρχεται','ερχόμαστε','έρχεστε','έρχονται'],
-  'κάθομαι':['κάθομαι','κάθεσαι','κάθεται','καθόμαστε','κάθεστε','κάθονται'],
-  'σηκώνομαι':['σηκώνομαι','σηκώνεσαι','σηκώνεται','σηκωνόμαστε','σηκώνεστε','σηκώνονται'],
-  'σκέφτομαι':['σκέφτομαι','σκέφτεσαι','σκέφτεται','σκεφτόμαστε','σκέφτεστε','σκέφτονται'],
-  'χρειάζομαι':['χρειάζομαι','χρειάζεσαι','χρειάζεται','χρειαζόμαστε','χρειάζεστε','χρειάζονται'],
-  'παίρνω μέρος':['παίρνω μέρος','παίρνεις μέρος','παίρνει μέρος','παίρνουμε μέρος','παίρνετε μέρος','παίρνουν μέρος'],
-};
-
-function regularPresent(v) {
-  if (PRESENT_OVERRIDES[v.greek]) return PRESENT_OVERRIDES[v.greek];
-  const base=v.greek.split(' / ')[0];
-  if(v.group==='b1') {
-    const stem=base.endsWith('άω')?base.slice(0,-2):base.slice(0,-1);
-    return [base,stem+'άς',stem+'άει',stem+'άμε',stem+'άτε',stem+'άνε'];
-  }
-  if(v.group==='b2') {
-    const stem=base.slice(0,-1);
-    return [base,stem+'είς',stem+'εί',stem+'ούμε',stem+'είτε',stem+'ούν'];
-  }
-  const stem=base.endsWith('ω')?base.slice(0,-1):base;
-  return [base,stem+'εις',stem+'ει',stem+'ουμε',stem+'ετε',stem+'ουν'];
-}
-
-function conjugateAorist(form) {
-  if(!form)return null;
-  if(form.includes(' μέρος')) {
-    const first=form.replace(' μέρος','');
-    return conjugateAorist(first).map(x=>x+' μέρος');
-  }
-  if(!form.endsWith('α'))return [form,form,form,form,form,form];
-  const stem=form.slice(0,-1);
-  return [form,stem+'ες',stem+'ε',stem+'αμε',stem+'ατε',stem+'αν'];
-}
-
-const FUTURE_OVERRIDES = {
-  'θα δω':['θα δω','θα δεις','θα δει','θα δούμε','θα δείτε','θα δουν'],
-  'θα βρω':['θα βρω','θα βρεις','θα βρει','θα βρούμε','θα βρείτε','θα βρουν'],
-  'θα βγω':['θα βγω','θα βγεις','θα βγει','θα βγούμε','θα βγείτε','θα βγουν'],
-  'θα μπω':['θα μπω','θα μπεις','θα μπει','θα μπούμε','θα μπείτε','θα μπουν'],
-  'θα πω':['θα πω','θα πεις','θα πει','θα πούμε','θα πείτε','θα πουν'],
-  'θα πιω':['θα πιω','θα πιεις','θα πιει','θα πιούμε','θα πιείτε','θα πιουν'],
-  'θα πάω':['θα πάω','θα πας','θα πάει','θα πάμε','θα πάτε','θα πάνε'],
-  'θα φάω':['θα φάω','θα φας','θα φάει','θα φάμε','θα φάτε','θα φάνε'],
-  'θα πάρω μέρος':['θα πάρω μέρος','θα πάρεις μέρος','θα πάρει μέρος','θα πάρουμε μέρος','θα πάρετε μέρος','θα πάρουν μέρος'],
-};
-
-function conjugateFuture(form) {
-  if(FUTURE_OVERRIDES[form])return FUTURE_OVERRIDES[form];
-  const bare=form.replace(/^θα\s+/,'');
-  if(bare.endsWith('ομαι')) {
-    const fake={greek:bare,group:'omai'};
-    return regularPresent(fake).map(x=>'θα '+x);
-  }
-  if(bare.endsWith('ώ')) {
-    const stem=bare.slice(0,-1);
-    return [bare,stem+'είς',stem+'εί',stem+'ούμε',stem+'είτε',stem+'ούν'].map(x=>'θα '+x);
-  }
-  if(bare.endsWith('ω')) {
-    const stem=bare.slice(0,-1);
-    return [bare,stem+'εις',stem+'ει',stem+'ουμε',stem+'ετε',stem+'ουν'].map(x=>'θα '+x);
-  }
-  return Array(6).fill(form);
-}
-
+/* Complete paradigms are stored on the verb entries above. */
 ALL_VERBS.forEach(v=>{
-  v.conj_pres ||= regularPresent(v);
-  if(v.aoristSupported) v.conj_past ||= conjugateAorist(v.past);
-  v.conj_fut ||= conjugateFuture(v.future);
+  // Only explicitly supplied paradigms are trusted. A dictionary's first-person
+  // form is not enough to infer stress and irregular forms in every person.
+  v.conj_pres ||= [v.greek.split(' / ')[0], null, null, null, null, null];
+  if(v.aoristSupported) v.conj_past ||= [v.past, null, null, null, null, null];
+  v.conj_fut ||= [v.future, null, null, null, null, null];
 });
 
 /* ── Fill-in-blank exercises ─────────────────────── */
@@ -499,7 +453,7 @@ const I18N = {
     dir_gr_lang:'🔁 Switch: target → Greek', dir_lang_gr:'🔁 Switch: Greek → target',
     q_tense:'What tense is this?', q_conj:'Conjugate the verb:',
     q_fill:'Type only the missing letters:', q_change:'Convert to the indicated tense:',
-    situation_prompt:'Complete the dialogue', situation_listen:'🔊 Listen to the dialogue · 2 voices', situation_context:'Situation:',
+    situation_prompt:'Complete the dialogue', situation_listen:'🔊 Listen to the dialogue', situation_context:'Situation:',
     q_image:'Match the image to the correct Greek sentence:',
     match_col_l:'Greek', match_col_r:'Translation',
     match_info:'Click a verb on the left, then its translation on the right.',
@@ -517,7 +471,7 @@ const I18N = {
     search_verbs:'Search Greek or translation…', filter_all:'All verbs', group_a:'Α΄ conjugation', group_b1:'Β΄ conjugation — Type 1', group_b2:'Β΄ conjugation — Type 2', group_omai:'Verbs in -ομαι', group_irregular:'Irregular verbs',
     topic_all:'All topics', difficult_only:'Difficult cards', mark_difficult:'Mark as difficult', unmark_difficult:'Remove from difficult',
     practice_setup:'Practice setup', select_topic:'Topic', select_tense:'Tense', select_exercise:'Exercise', start_practice:'Start practice', my_mistakes:'My mistakes', mixed:'Mixed', empty_practice:'Not enough validated material for this selection. Try another topic or tense.',
-    progress_title:'Progress', sessions:'sessions', accuracy:'accuracy', mistakes:'difficult verbs', correct_answers:'correct answers', streak_days:'day streak', missed_days:'missed days', progress_rule:'One session = 10 checked answers. Missed days are counted from your first day of practice.', close:'Close', examples:'Examples', grammar_group:'Grammar group', irregular_label:'Irregular', aorist_unavailable:'No distinct aorist is taught for this verb; the common past form shown separately is imperfect.',
+    progress_title:'Progress', sessions:'sessions', accuracy:'accuracy', mistakes:'difficult verbs', correct_answers:'correct answers', streak_days:'day streak', missed_days:'missed days', progress_rule:'One session = 10 checked answers. Missed days are counted from your first day of practice.', close:'Close', examples:'Examples', grammar_group:'Grammar group', irregular_label:'Irregular', aorist_unavailable:'No distinct aorist is taught for this verb; the common past form shown separately is imperfect.', forms_unavailable:'A dash means this form has not yet been verified. Only available forms are used in practice.',
   },
   ru: {
     page_title:'Греческие глаголы', document_title:'Греческие глаголы A2 — Тренажёр',
@@ -540,7 +494,7 @@ const I18N = {
     dir_gr_lang:'🔁 Переключить: перевод → греческий', dir_lang_gr:'🔁 Переключить: греческий → перевод',
     q_tense:'Какое это время?', q_conj:'Проспрягайте глагол:',
     q_fill:'Введите только пропущенные буквы:', q_change:'Измените на указанное время:',
-    situation_prompt:'Дополните диалог', situation_listen:'🔊 Послушать диалог · 2 голоса', situation_context:'Ситуация:',
+    situation_prompt:'Дополните диалог', situation_listen:'🔊 Послушать диалог', situation_context:'Ситуация:',
     q_image:'Найдите греческое предложение для картинки:',
     match_col_l:'Греческий', match_col_r:'Перевод',
     match_info:'Выберите глагол слева, затем перевод справа.',
@@ -558,7 +512,7 @@ const I18N = {
     search_verbs:'Поиск по-гречески или по переводу…', filter_all:'Все глаголы', group_a:'Α΄ спряжение', group_b1:'Β΄ спряжение — тип 1', group_b2:'Β΄ спряжение — тип 2', group_omai:'Глаголы на -ομαι', group_irregular:'Неправильные глаголы',
     topic_all:'Все темы', difficult_only:'Трудные карточки', mark_difficult:'Отметить как трудную', unmark_difficult:'Убрать из трудных',
     practice_setup:'Настройка практики', select_topic:'Тема', select_tense:'Время', select_exercise:'Упражнение', start_practice:'Начать', my_mistakes:'Мои ошибки', mixed:'Смешанная практика', empty_practice:'Для этого выбора пока недостаточно проверенного материала. Выберите другую тему или время.',
-    progress_title:'Прогресс', sessions:'сессий', accuracy:'точность', mistakes:'трудных глаголов', correct_answers:'верных ответов', streak_days:'дней подряд', missed_days:'пропущено дней', progress_rule:'Одна сессия = 10 проверенных ответов. Пропущенные дни считаются с первого дня занятий.', close:'Закрыть', examples:'Примеры', grammar_group:'Группа', irregular_label:'Неправильный', aorist_unavailable:'Для этого глагола отдельный аорист не изучается; распространённая прошедшая форма относится к имперфекту.',
+    progress_title:'Прогресс', sessions:'сессий', accuracy:'точность', mistakes:'трудных глаголов', correct_answers:'верных ответов', streak_days:'дней подряд', missed_days:'пропущено дней', progress_rule:'Одна сессия = 10 проверенных ответов. Пропущенные дни считаются с первого дня занятий.', close:'Закрыть', examples:'Примеры', grammar_group:'Группа', irregular_label:'Неправильный', aorist_unavailable:'Для этого глагола отдельный аорист не изучается; распространённая прошедшая форма относится к имперфекту.', forms_unavailable:'Прочерк означает, что форма пока не проверена. В упражнения попадают только доступные формы.',
   }
 };
 
