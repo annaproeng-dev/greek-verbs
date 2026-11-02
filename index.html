@@ -9,9 +9,8 @@
   <link rel="icon" href="favicon.ico?v=olympus" sizes="16x16 32x32 48x48" />
   <link rel="icon" href="favicon.svg?v=olympus" type="image/svg+xml" sizes="any" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=olympus" sizes="180x180" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=auth" />
+  <script src="theme.js?v=20261102"></script>
+  <link rel="stylesheet" href="style.css?v=local-fonts-20261102" />
 </head>
 <body>
 
@@ -30,6 +29,7 @@
   <div class="nav-settings">
     <button class="lang-btn" id="progressBtn" onclick="showProgress()" aria-label="Progress">📊</button>
     <button class="lang-btn" id="olympusBtn" onclick="showOlympus()" aria-label="My Olympus">🏛️</button>
+    <button class="lang-btn theme-btn" id="themeBtn" onclick="toggleTheme()" type="button" aria-label="Switch to dark theme" aria-pressed="false">🌙</button>
     <button class="lang-btn" id="langBtn" onclick="toggleLang()">RU</button>
     <button class="account-button" id="accountBtn" onclick="location.hash=currentUser ? 'profile' : 'login'" aria-label="Log in">Log in</button>
   </div>
@@ -186,6 +186,7 @@
     <!-- Fill Blank -->
     <div class="exercise" id="ex-fill">
       <div class="ex-card">
+        <button class="exercise-back" id="fillPrev" type="button" onclick="previousFill()" data-i18n="previous">← Previous</button>
         <div class="ex-prompt"   id="fillPrompt">Fill in the correct verb form:</div>
         <div class="fill-sentence" id="fillSentence"></div>
         <div class="fill-hint"    id="fillHint"></div>
@@ -224,6 +225,7 @@
       <div class="situation-card">
         <img id="situationImage" class="situation-image" alt="" />
         <div class="situation-body">
+          <button class="exercise-back" id="situationPrev" type="button" onclick="previousSituation()" data-i18n="previous">← Previous</button>
           <div class="ex-prompt" id="situationPrompt"></div>
           <div class="situation-context" id="situationContext"></div>
           <div class="situation-dialogue" id="situationDialogue"></div>
@@ -319,9 +321,9 @@
 <dialog id="rewardDialog" class="verb-dialog reward-dialog"><div id="rewardContent"></div></dialog>
 
 
-<script src="data.js?v=expanded"></script>
-<script src="storage.js?v=auth"></script>
-<script src="auth.js?v=auth"></script>
-<script src="app.js?v=auth"></script>
+<script src="data.js?v=security-20261102"></script>
+<script src="storage.js?v=security-20261102"></script>
+<script src="auth.js?v=security-20261102"></script>
+<script src="app.js?v=security-20261102"></script>
 </body>
 </html>

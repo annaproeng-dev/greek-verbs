@@ -42,7 +42,9 @@ function learningNotice(key) {
 
 function applyLearning(record) {
   for (const key of Object.keys(progress)) delete progress[key];
-  Object.assign(progress, {correct: 0, wrong: 0, sessions: 0, byTense: {}, mistakes: {}, activityDays: {}, sessionProgress: 0, firstActivity: null}, plainRecord(record.progress));
+  const source = plainRecord(record.progress);
+  const defaults = {correct: 0, wrong: 0, sessions: 0, byTense: {}, mistakes: {}, activityDays: {}, sessionProgress: 0, firstActivity: null};
+  for (const key of Object.keys(defaults)) progress[key] = Object.hasOwn(source, key) ? source[key] : defaults[key];
   normalizeProgress();
   difficultIds.clear();
   for (const id of Array.isArray(record.difficult) ? record.difficult : []) difficultIds.add(id);
@@ -115,6 +117,7 @@ function setAuthMode(mode) {
 
 function routeAccount() {
   let route = location.hash.slice(1);
+  if (!['login', 'register'].includes(route)) document.getElementById('authForm').reset();
   if (!['login', 'register', 'profile'].includes(route)) {
     document.body.classList.remove('account-page');
     document.getElementById('sec-auth').classList.remove('active');
@@ -134,9 +137,11 @@ function routeAccount() {
 }
 
 async function changeAccount(user, adoptGuest = false) {
+  currentUser = user;
+  applyLearning({progress: {}, difficult: []});
+  renderAuth();
   await LearningStore.flush();
   const record = await LearningStore.load(user, adoptGuest);
-  currentUser = user;
   applyLearning(record);
   // Discard exercises started under the previous account.
   difficultMode = false;
@@ -149,6 +154,7 @@ async function changeAccount(user, adoptGuest = false) {
 }
 
 function announceAccountChange() {
+  authChannel?.postMessage('changed');
   appStorage.setItem('greekAuthChanged', String(Date.now()) + Math.random());
 }
 
@@ -166,10 +172,10 @@ async function submitAuth(event) {
   let user;
   try {
     user = await authRequest(authMode, {email, password, confirmPassword});
+    announceAccountChange();
     await changeAccount(user, authMode === 'register');
     document.getElementById('authForm').reset();
     location.hash = 'profile';
-    announceAccountChange();
   } catch (failure) {
     if (user) { learningNotice('storage'); location.reload(); return; }
     error.textContent = authT(failure.message);
@@ -184,15 +190,17 @@ async function logout() {
   setAccountBusy(true);
   document.getElementById('profileError').textContent = '';
   renderAuth();
+  let revoked = false;
   try {
-    await LearningStore.flush();
     await authRequest('logout');
+    revoked = true;
+    announceAccountChange();
     await changeAccount(null);
     document.getElementById('authForm').reset();
     location.hash = '';
     switchSection('verbs');
-    announceAccountChange();
   } catch (failure) {
+    if (revoked) { location.reload(); return; }
     document.getElementById('profileError').textContent = authT(failure.message);
   } finally {
     setAccountBusy(false);
@@ -200,17 +208,52 @@ async function logout() {
   }
 }
 
+let authChannel;
+let checkingSession = false;
+let accountReady = false;
+async function revalidateSession() {
+  if (!accountReady || authBusy || checkingSession) return;
+  checkingSession = true;
+  let switching = false;
+  try {
+    const user = await authRequest();
+    if (authBusy) return;
+    if (user?.id !== currentUser?.id) {
+      switching = true;
+      setAccountBusy(true);
+      await changeAccount(user);
+      routeAccount();
+    }
+  } catch {
+    learningNotice('session');
+  } finally {
+    checkingSession = false;
+    if (switching) setAccountBusy(false);
+  }
+}
+
 async function initAccount() {
-  // Import the old guest data before any account can adopt it.
-  await LearningStore.load(null);
-  let user = null;
-  try { user = await authRequest(); } catch { learningNotice('session'); }
-  currentUser = user;
-  applyLearning(await LearningStore.load(user));
-  renderAuth();
-  routeAccount();
   window.addEventListener('hashchange', routeAccount);
   window.addEventListener('storage', event => {
-    if (event.key === 'greekAuthChanged') location.reload();
+    if (event.key === 'greekAuthChanged') revalidateSession();
   });
+  if ('BroadcastChannel' in window) {
+    authChannel = new BroadcastChannel('greek-account');
+    authChannel.onmessage = () => revalidateSession();
+  }
+  window.addEventListener('focus', revalidateSession);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') revalidateSession();
+  });
+  try { currentUser = await authRequest(); } catch { learningNotice('session'); }
+  try {
+    // Preserve migration even when an existing account is already logged in.
+    await LearningStore.load(null);
+    applyLearning(await LearningStore.load(currentUser));
+  } catch {
+    learningNotice('storage');
+  }
+  renderAuth();
+  routeAccount();
+  accountReady = true;
 }

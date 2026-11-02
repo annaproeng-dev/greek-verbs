@@ -66,6 +66,7 @@ function setLang(l) {
   showStorageNotice();
   renderAuth();
   document.getElementById('langBtn').textContent = t('lang_toggle');
+  window.updateThemeControl?.();
   setupControls();
   updateAccentHelp();
   document.querySelectorAll('.results-wrap').forEach(result => {
@@ -110,7 +111,7 @@ function playSituationDialogue(item,event){
   const fingerprint=Array.from(item.full.join('\n')).reduce((value,char)=>Math.imul(value^char.codePointAt(0),16777619)>>>0,2166136261);
   if(dialogueRecordings[item.cat]!==fingerprint){speakGreekDialogue(item.full,event);return;}
   const generation=dialogueGeneration;
-  const audio=new Audio(`assets/dialogues/${encodeURIComponent(item.cat)}.mp3?v=${fingerprint}`);
+  const audio=new Audio(`assets/dialogues/${encodeURIComponent(item.cat)}.mp3?v=${fingerprint}-2`);
   dialogueAudio=audio;
   document.getElementById('situationVoiceStatus').textContent='';
   audio.onended=()=>{if(dialogueAudio===audio)dialogueAudio=null;};
@@ -376,6 +377,7 @@ function checkStr(given, correct) {
 
 /* ── Navigation ─────────────────────────────────── */
 function switchSection(id) {
+  if(id!=='practice') cancelAutoAdvance();
   document.body.classList.remove('account-page');
   if (['#login','#register','#profile'].includes(location.hash)) history.replaceState(null, '', location.pathname + location.search);
   if(id!=='practice' && document.getElementById('ex-situation').classList.contains('active')) stopDialogue();
@@ -388,6 +390,7 @@ function switchSection(id) {
 }
 
 function switchExercise(id) {
+  cancelAutoAdvance();
   if(id!=='situation' && document.getElementById('ex-situation').classList.contains('active')) stopDialogue();
   if (id !== 'situation' && practicePool.length < 2) {
     document.getElementById('practiceMessage').textContent=t('empty_practice');
@@ -437,6 +440,7 @@ function renderResults(exId, correct, total) {
       <div class="results-emoji">${em}</div>
       <div class="results-title">${title}</div>
       <div class="results-sub">${correct} ${t('of')} ${total} (${pct}%)</div>
+      ${['fill','situation'].includes(exId)?`<button class="exercise-back" type="button" onclick="returnToLast('${exId}')">${t('previous')}</button>`:''}
       <button class="restart-btn" onclick="restartExercise('${exId}')">${t('restart')}</button>`;
 }
 
@@ -782,7 +786,27 @@ function renderConj() {
 function nextConj() { cjIdx++; cjIdx>=cjDeck.length ? showResults('conj',cjCorrect,cjDeck.length) : renderConj(); }
 
 /* ── Fill in Blank ───────────────────────────────── */
-let fDeck=[], fIdx=0, fCorrect=0, fAnswered=false;
+let fDeck=[], fIdx=0, fCorrect=0, fAnswered=false, fStates=[];
+let autoAdvanceTimer=null, autoAdvanceGeneration=0;
+function cancelAutoAdvance(){ clearTimeout(autoAdvanceTimer); autoAdvanceGeneration++; }
+function scheduleAutoAdvance(exId,index,advance){
+  cancelAutoAdvance(); const generation=autoAdvanceGeneration;
+  const go=()=>{
+    if(generation!==autoAdvanceGeneration || !document.getElementById('sec-practice').classList.contains('active') || !document.getElementById('ex-'+exId).classList.contains('active'))return;
+    if((exId==='fill'?fIdx:situationIdx)!==index)return;
+    const reward=document.getElementById('rewardDialog');
+    if(reward.open){reward.addEventListener('close',go,{once:true});return;}
+    advance();
+  };
+  autoAdvanceTimer=setTimeout(go,1000);
+}
+function returnToLast(id){
+  cancelAutoAdvance(); const exercise=document.getElementById('ex-'+id);
+  exercise.querySelector('.results-wrap')?.remove();
+  [...exercise.children].forEach(child=>{child.hidden=false;});
+  if(id==='fill'){fIdx=fDeck.length-1;renderFill();}
+  else {situationIdx=situationDeck.length-1;renderSituation();}
+}
 
 function buildFillItems() {
   const items=[];
@@ -804,38 +828,35 @@ function buildFillItems() {
   }));
   return items.sort(()=>Math.random()-0.5);
 }
-function initFill() { fDeck=buildFillItems().slice(0,SESSION_SIZE); fIdx=0; fCorrect=0; fAnswered=false; renderFill(); }
+function initFill() { cancelAutoAdvance(); fDeck=buildFillItems().slice(0,SESSION_SIZE); fIdx=0; fCorrect=0; fAnswered=false; fStates=[]; renderFill(); }
 
 function renderFill() {
-  fAnswered=false;
-  const item=fDeck[fIdx];
-  document.getElementById('fillPrompt').textContent   = t('q_fill');
-  document.getElementById('fillSentence').textContent = `${PERSONS[item.p]} ${item.masked}`;
-  document.getElementById('fillHint').textContent     = `${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`;
-  document.getElementById('fillTip').textContent      = accentHelpText();
-  const inp = document.getElementById('fillInput');
-  inp.value=''; inp.className='fill-input'; inp.focus();
-  inp.placeholder = '…';
-  document.getElementById('fillFeedback').className='feedback';
-  document.getElementById('fillNext').classList.remove('show');
-  document.getElementById('fillCheck').textContent = t('check');
-  document.getElementById('fillScore').textContent = sessionProgressText(fIdx,fDeck.length);
+  const item=fDeck[fIdx], state=fStates[fIdx]||{};
+  fAnswered=Boolean(state.solved);
+  document.getElementById('fillPrompt').textContent=t('q_fill');
+  document.getElementById('fillSentence').textContent=`${PERSONS[item.p]} ${item.masked}`;
+  document.getElementById('fillHint').textContent=`${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`;
+  document.getElementById('fillTip').textContent=accentHelpText();
+  const input=document.getElementById('fillInput'); input.value=state.input||''; input.className='fill-input'+(state.solved?' correct':state.attempted?' wrong':'');
+  input.readOnly=Boolean(state.solved);
+  const feedback=document.getElementById('fillFeedback'); feedback.dataset.result=state.result||'';
+  feedback.className='feedback'+(state.solved?' correct':state.attempted?' wrong':'');
+  feedback.textContent=state.solved?`${t('correct')} ${item.fullAnswer}`:state.attempted?t(state.result==='almost'?'retry_accent':'retry'):'';
+  document.getElementById('fillNext').classList.toggle('show',Boolean(state.solved));
+  document.getElementById('fillPrev').disabled=fIdx===0;
+  document.getElementById('fillCheck').textContent=t('check');
+  document.getElementById('fillCheck').disabled=Boolean(state.solved);
+  document.getElementById('fillScore').textContent=sessionProgressText(fIdx,fDeck.length);
 }
 
 function checkFill() {
-  const inp = document.getElementById('fillInput');
-  if (!inp.value.trim() || fAnswered) return;
-  fAnswered=true;
-  const item=fDeck[fIdx];
-  const result = checkStr(inp.value, item.answer);
-  const fb = document.getElementById('fillFeedback');
-  fb.dataset.result=result;
-  if (result==='correct') { fCorrect++; inp.className='fill-input correct'; fb.className='feedback correct'; fb.textContent=t('correct')+' '+item.fullAnswer; }
-  else if (result==='almost') { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('almost')} ${item.answer} → ${item.fullAnswer}`; }
-  else { inp.className='fill-input wrong'; fb.className='feedback wrong'; fb.textContent=`${t('wrong')} ${t('ans_correct')} ${item.answer} → ${item.fullAnswer}`; }
-  recordAnswer(item.v,item.tense,result==='correct');
-  document.getElementById('fillNext').classList.add('show');
-  document.getElementById('fillScore').textContent=sessionProgressText(fIdx,fDeck.length);
+  const input=document.getElementById('fillInput'); if(!input.value.trim()||fAnswered)return;
+  const item=fDeck[fIdx], state=fStates[fIdx]||(fStates[fIdx]={});
+  const result=checkStr(input.value,item.answer), ok=result==='correct';
+  recordAnswer(item.v,item.tense,ok); if(ok)fCorrect++;
+  state.attempted=true; state.input=input.value; state.result=result; state.solved=ok;
+  renderFill();
+  if(ok)scheduleAutoAdvance('fill',fIdx,nextFill); else input.focus();
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -843,10 +864,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.title = t('document_title');
   updateAccentHelp();
   document.getElementById('fillInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkFill(); });
+  document.getElementById('fillInput').addEventListener('input', e=>{ (fStates[fIdx]||(fStates[fIdx]={})).input=e.target.value; });
   document.getElementById('situationInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkSituation(); });
+  document.getElementById('situationInput').addEventListener('input', e=>{ (situationStates[situationIdx]||(situationStates[situationIdx]={})).input=e.target.value; });
 });
 
-function nextFill() { fIdx++; fIdx>=fDeck.length ? showResults('fill',fCorrect,fDeck.length) : renderFill(); }
+function nextFill() { if(!fStates[fIdx]?.solved)return; cancelAutoAdvance(); fIdx++; fIdx>=fDeck.length ? showResults('fill',fCorrect,fDeck.length) : renderFill(); }
+function previousFill(){ if(fIdx<=0)return; cancelAutoAdvance(); fIdx--; renderFill(); }
 
 /* ── Change the Tense ────────────────────────────── */
 let ctDeck=[], ctIdx=0, ctCorrect=0, ctAnswered=false;
@@ -897,18 +921,18 @@ function renderChange() {
 function nextChange() { ctIdx++; ctIdx>=ctDeck.length ? showResults('change',ctCorrect,ctDeck.length) : renderChange(); }
 
 /* ── Picture situations & dialogues ─────────────── */
-let situationDeck=[], situationIdx=0, situationCorrect=0, situationAnswered=false;
+let situationDeck=[], situationIdx=0, situationCorrect=0, situationAnswered=false, situationStates=[];
 
 function initSituation(){
-  situationDeck=[...SITUATIONS].sort(()=>Math.random()-0.5).slice(0,SESSION_SIZE);
-  situationIdx=0; situationCorrect=0; situationAnswered=false;
+  cancelAutoAdvance(); situationDeck=[...SITUATIONS].sort(()=>Math.random()-0.5).slice(0,SESSION_SIZE);
+  situationIdx=0; situationCorrect=0; situationAnswered=false; situationStates=[];
   renderSituation();
 }
 
 function renderSituation(){
   stopDialogue();
-  situationAnswered=false;
-  const item=situationDeck[situationIdx]; if(!item)return;
+  const item=situationDeck[situationIdx], state=situationStates[situationIdx]||{}; if(!item)return;
+  situationAnswered=Boolean(state.solved);
   document.getElementById('situationImage').src=item.image;
   document.getElementById('situationImage').alt=lang==='en'?item.en:item.ru;
   document.getElementById('situationPrompt').textContent=t('situation_prompt');
@@ -918,32 +942,34 @@ function renderSituation(){
   document.getElementById('situationVoiceStatus').textContent='';
   audio.onclick=event=>playSituationDialogue(item,event);
   document.getElementById('situationAccentTip').textContent=accentHelpText();
-  const input=document.getElementById('situationInput'); input.value=''; input.className='fill-input'; input.focus();
+  const input=document.getElementById('situationInput'); input.value=state.input||''; input.className='fill-input'+(state.solved?' correct':state.attempted?' wrong':'');
+  input.readOnly=Boolean(state.solved);
+  const feedback=document.getElementById('situationFeedback'); feedback.dataset.result=state.result||'';
+  feedback.className='feedback'+(state.solved?' correct':state.attempted?' wrong':'');
+  feedback.textContent=state.solved?`${t('correct')} ${item.answer}`:state.attempted?t(state.result==='almost'?'retry_accent':'retry'):'';
   document.getElementById('situationCheck').textContent=t('check');
-  document.getElementById('situationFeedback').className='feedback';
+  document.getElementById('situationCheck').disabled=Boolean(state.solved);
+  document.getElementById('situationPrev').disabled=situationIdx===0;
   document.getElementById('situationNext').textContent=t('next');
-  document.getElementById('situationNext').classList.remove('show');
+  document.getElementById('situationNext').classList.toggle('show',Boolean(state.solved));
   document.getElementById('situationScore').textContent=sessionProgressText(situationIdx,situationDeck.length);
 }
 
 function checkSituation(){
-  const input=document.getElementById('situationInput');
-  if(!input.value.trim()||situationAnswered)return;
-  situationAnswered=true;
-  const item=situationDeck[situationIdx]; const result=checkStr(input.value,item.answer); const ok=result==='correct';
-  if(ok)situationCorrect++;
-  input.className='fill-input '+(ok?'correct':'wrong');
-  const feedback=document.getElementById('situationFeedback'); feedback.dataset.result=result; feedback.className='feedback '+(ok?'correct':'wrong');
-  feedback.textContent=ok?`${t('correct')} ${item.answer}`:`${result==='almost'?t('almost'):t('wrong') } ${t('ans_correct')} ${item.answer}`;
-  recordAnswer(null,'situation',ok);
-  document.getElementById('situationNext').classList.add('show');
-  document.getElementById('situationScore').textContent=sessionProgressText(situationIdx,situationDeck.length);
+  const input=document.getElementById('situationInput'); if(!input.value.trim()||situationAnswered)return;
+  const item=situationDeck[situationIdx], state=situationStates[situationIdx]||(situationStates[situationIdx]={});
+  const result=checkStr(input.value,item.answer), ok=result==='correct';
+  recordAnswer(null,'situation',ok); if(ok)situationCorrect++;
+  state.attempted=true; state.input=input.value; state.result=result; state.solved=ok;
+  renderSituation();
+  if(ok)scheduleAutoAdvance('situation',situationIdx,nextSituation); else input.focus();
 }
 
 function nextSituation(){
-  situationIdx++;
+  if(!situationStates[situationIdx]?.solved)return; cancelAutoAdvance(); situationIdx++;
   situationIdx>=situationDeck.length?showResults('situation',situationCorrect,situationDeck.length):renderSituation();
 }
+function previousSituation(){if(situationIdx<=0)return;cancelAutoAdvance();situationIdx--;renderSituation();}
 
 /* ── Image Matching ──────────────────────────────── */
 let imgSel=null, imgPaired=0;

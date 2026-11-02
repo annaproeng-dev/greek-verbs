@@ -4,3 +4,16 @@ __pycache__/
 tests/
 server.py
 BUGS_UXUI_AUDIT_*.md
+README.md
+deploy/
+animation-previews/
+audio-previews/
+SECURITY_AUDIT_*.md
+*.pem
+*.key
+*.sqlite*
+*.db
+*.bak
+*.log
+.npmrc
+.pypirc

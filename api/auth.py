@@ -2,6 +2,7 @@
 import hashlib
 import hmac
 import json
+import ipaddress
 import os
 import re
 import secrets
@@ -15,7 +16,15 @@ from urllib.parse import parse_qs, urlsplit
 
 ITERATIONS = 600_000
 SESSION_AGE = 30 * 24 * 60 * 60
-COOKIE = 'greek_session'
+COOKIE = '__Host-greek_session' if os.environ.get('VERCEL') else 'greek_session'
+SECURITY_HEADERS = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'no-referrer',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    # Existing UI uses inline event handlers. Inline script blocks remain blocked.
+    'Content-Security-Policy': "default-src 'self'; script-src 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+}
 
 
 @contextmanager
@@ -23,12 +32,17 @@ def database():
     url = os.environ.get('DATABASE_URL')
     if url:
         import psycopg
-        connection = psycopg.connect(url, connect_timeout=10)
+        connection = psycopg.connect(url, connect_timeout=10, **(
+            {'sslmode': 'verify-full', 'sslrootcert': os.environ.get('PGSSLROOTCERT', 'system')}
+            if os.environ.get('VERCEL') else {}
+        ))
     else:
         if os.environ.get('VERCEL'):
             raise RuntimeError('DATABASE_URL must be configured on Vercel')
         path = Path(os.environ.get('AUTH_DB_PATH', str(Path(__file__).resolve().parents[1] / '.data' / 'auth.sqlite3')))
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        path.touch(mode=0o600, exist_ok=True)
+        path.chmod(0o600)
         connection = sqlite3.connect(str(path), timeout=15)
     try:
         def execute(query, params=()):
@@ -36,6 +50,8 @@ def database():
         execute('CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at BIGINT NOT NULL)')
         execute('CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires_at BIGINT NOT NULL)')
         execute('CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires_at BIGINT NOT NULL)')
+        execute('CREATE INDEX IF NOT EXISTS sessions_expiry ON sessions (expires_at)')
+        execute('CREATE INDEX IF NOT EXISTS auth_attempts_expiry ON auth_attempts (expires_at)')
         yield execute
         connection.commit()
     except Exception:
@@ -57,6 +73,10 @@ def verify_password(password, encoded):
     return hmac.compare_digest(actual, expected)
 
 
+# One password derivation for both known and unknown addresses.
+DUMMY_PASSWORD_HASH = hash_password('unused-dummy-password', '0' * 32)
+
+
 class handler(BaseHTTPRequestHandler):
     def reply(self, status, payload, cookie=None):
         body = json.dumps(payload).encode()
@@ -64,7 +84,10 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Cache-Control', 'no-store, private')
         self.send_header('Vary', 'Cookie')
-        self.send_header('X-Content-Type-Options', 'nosniff')
+        for key, value in SECURITY_HEADERS.items():
+            self.send_header(key, value)
+        if os.environ.get('VERCEL'):
+            self.send_header('Strict-Transport-Security', 'max-age=31536000')
         self.send_header('Content-Length', str(len(body)))
         if cookie:
             self.send_header('Set-Cookie', cookie)
@@ -98,7 +121,9 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         # JSON-only and same-origin requests prevent cross-site form/login CSRF.
         origin = self.headers.get('Origin')
-        if (origin and urlsplit(origin).netloc != self.headers.get('Host')) or self.headers.get('Sec-Fetch-Site') == 'cross-site':
+        scheme = 'https' if os.environ.get('VERCEL') else 'http'
+        expected_origin = os.environ.get('APP_ORIGIN', scheme + '://' + self.headers.get('Host', ''))
+        if (origin is not None and origin != expected_origin) or self.headers.get('Sec-Fetch-Site') == 'cross-site':
             self.reply(403, {'error': 'forbidden'})
             return
         if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
@@ -143,6 +168,10 @@ class handler(BaseHTTPRequestHandler):
                         return
                     # Persist rate limits across processes and serverless invocations.
                     ip = self.headers.get('X-Forwarded-For', '').split(',')[0].strip() if os.environ.get('VERCEL') else self.client_address[0]
+                    try:
+                        ip = str(ipaddress.ip_address(ip))
+                    except ValueError:
+                        ip = 'unknown'
                     limits = [('ip:' + ip, 50), ('email:' + email, 15)]
                     limited = False
                     for key, maximum in limits:
@@ -161,7 +190,7 @@ class handler(BaseHTTPRequestHandler):
                             else:
                                 row = (user_id, email)
                                 result = None
-                        elif not verify_password(password, row[2] if row else hash_password('dummy-password', '0' * 32)) or not row:
+                        elif not verify_password(password, row[2] if row else DUMMY_PASSWORD_HASH) or not row:
                             result = (401, {'error': 'invalid_credentials'}, None)
                         else:
                             result = None

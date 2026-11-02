@@ -10,11 +10,16 @@ python3 server.py
 
 Откройте http://localhost:8000. Для локального запуска достаточно Python 3.9+; пользователи и сессии сохраняются в `.data/auth.sqlite3`. Не запускайте приложение через `file://` или обычный статический сервер: для регистрации нужен API.
 
-## Развёртывание на Vercel
+## DigitalOcean production
 
-Добавьте постоянную PostgreSQL-базу в проект Vercel и задайте серверную переменную `DATABASE_URL` (строка подключения провайдера, с SSL). Затем используйте существующий `deploy/deploy.sh`. Зависимости API устанавливаются из `requirements.txt`; таблицы создаются автоматически при первом обращении. Доступ к PostgreSQL проверяется только при реальном подключении; без `DATABASE_URL` API в Vercel вернёт 503 и не станет сохранять аккаунты во временной файловой системе.
+Live URL: https://greek-verbs.161.35.40.15.sslip.io/
 
-API использует Python runtime Vercel: https://vercel.com/docs/functions/runtimes/python
+`deploy/setup-server.sh` runs as root on Ubuntu after the initial upload. It configures the Python environment, the `greek-verbs` systemd service, Nginx, and a TLS certificate with automatic renewal. The application database is stored outside the code directory at `/var/lib/greek-verbs/auth.sqlite3`; back up this directory.
+
+`./deploy/deploy.sh` uploads code and restarts the service. Password authentication uses `sshpass` when installed, otherwise SSH_ASKPASS. The earlier instructions describing upload-only deployment are superseded by this production setup. Before re-running server setup, review the existing Nginx configuration.
+
+
+Configuration: `deploy/.env` (ignored by Git), template: `deploy/.env.example`. Preview: `./deploy/deploy.sh --dry-run`. Code uploads preserve remote data and do not transfer local secrets.
 
 ## Хранение данных
 
@@ -29,3 +34,11 @@ API использует Python runtime Vercel: https://vercel.com/docs/function
 ```sh
 python3 -m unittest discover -s tests -v
 ```
+
+Дополнительные проверки авторизации в браузерном коде (при установленном Node.js):
+
+```sh
+node tests/auth_security.test.cjs
+```
+
+Аудит безопасности и оставшиеся ограничения: [SECURITY_AUDIT_2026-11-02.md](SECURITY_AUDIT_2026-11-02.md).
