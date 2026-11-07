@@ -390,6 +390,7 @@ function switchSection(id) {
 }
 
 function switchExercise(id) {
+  updatePracticeTenseVisibility(id);
   cancelAutoAdvance();
   if(id!=='situation' && document.getElementById('ex-situation').classList.contains('active')) stopDialogue();
   if (id !== 'situation' && practicePool.length < 2) {
@@ -1082,6 +1083,12 @@ function fillSelect(select, options, current) {
   if(options.some(([value])=>value===current))select.value=current;
 }
 
+function updatePracticeTenseVisibility(exerciseType) {
+  const tense=document.getElementById('practiceTense');
+  const type=document.getElementById('practiceType');
+  if(tense?.parentElement && type)tense.parentElement.hidden=(exerciseType||type.value)==='situation';
+}
+
 function setupControls() {
   const group=document.getElementById('verbGroup');
   const count=key=>key==='irregular'?ALL_VERBS.filter(v=>v.irregular).length:ALL_VERBS.filter(v=>v.group===key).length;
@@ -1093,6 +1100,8 @@ function setupControls() {
   const pTopic=document.getElementById('practiceTopic'); fillSelect(pTopic,[...topicOptions,['mistakes',t('my_mistakes')]],pTopic?.value||'all');
   const pTense=document.getElementById('practiceTense'); fillSelect(pTense,[['mixed',t('mixed')],['pres',t('pres_t')],['past',t('past_t')],['fut',t('fut_t')]],pTense?.value||'mixed');
   const pType=document.getElementById('practiceType'); fillSelect(pType,[['quiz',t('sub_quiz')],['match',t('sub_match')],['tense',t('sub_tense')],['conj',t('sub_conj')],['change',t('sub_change')],['person',t('sub_person')],['situation',t('sub_situation')],['mixed',t('mixed_practice')],['fill',t('sub_fill')]],pType?.value||'quiz');
+  pType.onchange=()=>updatePracticeTenseVisibility();
+  updatePracticeTenseVisibility();
   document.getElementById('difficultBtn').textContent=t('difficult_only');
   renderTable();
 }
