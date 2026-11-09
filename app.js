@@ -1,3 +1,5 @@
+const isExamPage=()=>document.body?.dataset?.page==='exam';
+
 /* ── Language & Accent ─────────────────────────────── */
 const readStoredJSON = (key, fallback, valid) => { try { const value=JSON.parse(appStorage.getItem(key)); return valid(value)?value:fallback; } catch { return fallback; } };
 let lang = ['en','ru'].includes(appStorage.getItem('greekTrainerLang')) ? appStorage.getItem('greekTrainerLang') : 'en';
@@ -19,6 +21,7 @@ function normalizeProgress() {
   progress.mistakes=cleanCounts(progress.mistakes);
   progress.activityDays=cleanCounts(progress.activityDays);
   progress.byTense=Object.fromEntries(Object.entries(plainRecord(progress.byTense)).map(([key,value])=>[key,{correct:nonNegativeNumber(value?.correct),wrong:nonNegativeNumber(value?.wrong)}]));
+  if(typeof normalizeExamProgress==='function')normalizeExamProgress();
   progress.firstActivity=typeof progress.firstActivity==='string' && /^\d{4}-\d{2}-\d{2}$/.test(progress.firstActivity) && !Number.isNaN(Date.parse(progress.firstActivity+'T12:00:00')) ? progress.firstActivity : null;
 }
 normalizeProgress();
@@ -66,7 +69,11 @@ function setLang(l) {
   showStorageNotice();
   renderAuth();
   document.getElementById('langBtn').textContent = t('lang_toggle');
+  const tourButton=document.getElementById('profileTourBtn');
+  if(tourButton)tourButton.textContent=lang==='ru'?'🪽 Как работает сайт':'🪽 How the site works';
   window.updateThemeControl?.();
+  if(document.getElementById('onboardingDialog')?.open)renderOnboarding();
+  if(isExamPage()){window.updateThemeControl?.();renderExam();return;}
   setupControls();
   updateAccentHelp();
   document.querySelectorAll('.results-wrap').forEach(result => {
@@ -83,11 +90,181 @@ function setLang(l) {
   }
 }
 
+/* ── Hermes onboarding ───────────────────────────── */
+let onboardingStep=0;
+const ONBOARDING_STEPS={
+  ru:[
+    {icon:'👋',title:'Добро пожаловать!',text:'Я Гермес, твой проводник. Сначала познакомимся, а затем я покажу основные разделы прямо на сайте.',tip:'Καλώς ήρθες! Είμαι ο Ερμής, ο οδηγός σου.'}
+  ],
+  en:[
+    {icon:'👋',title:'Welcome!',text:'I am Hermes, your guide. First we will meet, and then I will point out the main sections directly on the site.',tip:'Καλώς ήρθες! Είμαι ο Ερμής, ο οδηγός σου.'}
+  ]
+};
+const TOUR_STEPS={
+  ru:[
+    {target:'nav-verbs',section:'verbs',title:'Глаголы',text:'Здесь ищут глагол, сравнивают три времени, открывают полное спряжение и озвучку.'},
+    {target:'nav-flashcards',section:'flashcards',title:'Карточки',text:'Здесь переворачивают карточки, слушают греческий и отмечают трудные глаголы.'},
+    {target:'nav-practice',section:'practice',title:'Практика',text:'Здесь выбирают тему, время и упражнение. Одна учебная сессия — 10 заданий.'},
+    {target:'nav-phrases',section:'phrases',title:'Фразы и ситуации',text:'Здесь изучают живые фразы с переводом, картинками, диалогами и озвучкой.'},
+    {target:'olympusBtn',section:'verbs',title:'Прогресс и Олимп',text:'Правильные ответы открывают награды и постепенно проявляют фигурки одну за другой.',demo:'olympus'}
+  ],
+  en:[
+    {target:'nav-verbs',section:'verbs',title:'Verbs',text:'Find a verb, compare three tenses, then open its full conjugation and audio.'},
+    {target:'nav-flashcards',section:'flashcards',title:'Flashcards',text:'Flip cards, listen to the Greek and mark difficult verbs for extra practice.'},
+    {target:'nav-practice',section:'practice',title:'Practice',text:'Choose a topic, tense and exercise here. One learning session is 10 tasks.'},
+    {target:'nav-phrases',section:'phrases',title:'Phrases and situations',text:'Learn living Greek with translations, pictures, dialogues and audio.'},
+    {target:'olympusBtn',section:'verbs',title:'Progress and Olympus',text:'Correct answers unlock rewards and gradually reveal figurines one by one.',demo:'olympus'}
+  ]
+};
+let tourIndex=0;
+function onboardingStorageKey(){return `greekOnboarding:${currentUser?.email||'guest'}`;}
+function playOnboardingHermes(event){
+  event?.stopPropagation();
+  stopDialogue();
+  const audio=new Audio('assets/olympus/voices/hermes-welcome-male.mp3?v=2');
+  dialogueAudio=audio;
+  audio.volume=.84;
+  audio.play().catch(()=>{
+    const button=document.querySelector('.onboarding-audio');
+    if(button)button.textContent=lang==='ru'?'Не удалось воспроизвести. Нажмите ещё раз':'Playback failed. Please try again';
+  });
+}
+function chooseOnboardingLanguage(language){
+  onboardingStep=0;
+  setLang(language);
+}
+
+function startOnboarding(replay=false){
+  if(!replay&&appStorage.getItem(onboardingStorageKey())==='done')return;
+  onboardingStep=-1;
+  renderOnboarding();
+  const dialog=document.getElementById('onboardingDialog');
+  if(!dialog.open)dialog.showModal();
+}
+function renderOnboarding(){
+  stopDialogue();
+  if(onboardingStep===-1){
+    document.getElementById('onboardingContent').innerHTML=`
+      <div class="onboarding-layout">
+        <div class="onboarding-hermes"><img src="assets/olympus/mascots/hermes.png" alt="Hermes / Гермес"></div>
+        <div class="onboarding-copy">
+          <h2 id="onboardingTitle">Выберите язык<br>Choose your language</h2>
+          <p>На каком языке показать сайт и подсказки?<br>Which language would you like for the site and tips?</p>
+          <div class="onboarding-actions">
+            <button class="fill-submit" type="button" onclick="chooseOnboardingLanguage('ru')">Русский</button>
+            <button class="fill-submit" type="button" onclick="chooseOnboardingLanguage('en')">English</button>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+  const steps=ONBOARDING_STEPS[lang],step=steps[onboardingStep];
+  const dots=Array.from({length:6},(_,index)=>`<span class="onboarding-dot ${index===0?'active':''}" aria-hidden="true"></span>`).join('');
+  document.getElementById('onboardingContent').innerHTML=`
+    <div class="onboarding-layout">
+      <div class="onboarding-hermes"><img src="assets/olympus/mascots/hermes.png" alt="${lang==='ru'?'Гермес':'Hermes'}"></div>
+      <div class="onboarding-copy">
+        <button class="dialog-close" type="button" onclick="finishOnboarding()" aria-label="${t('close')}">×</button>
+        <div class="onboarding-step">${lang==='ru'?'Шаг':'Step'} 1 / 6</div>
+        <div class="onboarding-icon" aria-hidden="true">${step.icon}</div>
+        <h2 id="onboardingTitle">${step.title}</h2>
+        <div class="onboarding-key">${step.tip}</div>
+        <p class="onboarding-detail">${step.text}</p>
+        ${onboardingStep===0?`<button class="audio-btn onboarding-audio" type="button" onclick="playOnboardingHermes(event)">🔊 ${lang==='ru'?'Послушать Гермеса':'Listen to Hermes'}</button>`:''}
+        <div class="onboarding-dots">${dots}</div>
+        <div class="onboarding-actions">
+          <button class="tool-btn" type="button" onclick="finishOnboarding()">${lang==='ru'?'Пропустить':'Skip'}</button>
+          ${onboardingStep?`<button class="tool-btn" type="button" onclick="onboardingStep--;renderOnboarding()">${lang==='ru'?'← Назад':'← Back'}</button>`:''}
+          <button class="fill-submit" type="button" onclick="showOnboardingRegistration()">${lang==='ru'?'Далее →':'Next →'}</button>
+        </div>
+      </div>
+    </div>`;
+}
+function showOnboardingRegistration(){
+  stopDialogue();
+  document.getElementById('onboardingContent').innerHTML=`
+    <div class="onboarding-layout">
+      <div class="onboarding-hermes"><img src="assets/olympus/mascots/hermes.png" alt="${lang==='ru'?'Гермес':'Hermes'}"></div>
+      <div class="onboarding-copy onboarding-register-copy">
+        <button class="dialog-close" type="button" onclick="finishOnboarding()" aria-label="${t('close')}">×</button>
+        <div class="onboarding-step">${lang==='ru'?'Перед обзором сайта':'Before the site tour'}</div>
+        <div class="onboarding-icon" aria-hidden="true">👤</div>
+        <h2 id="onboardingTitle">${lang==='ru'?'Сохранять прогресс?':'Save your progress?'}</h2>
+        <div class="onboarding-key">${lang==='ru'?'Аккаунт сохраняет ответы, награды и открытых персонажей.':'An account saves answers, rewards, and unlocked characters.'}</div>
+        <button class="fill-submit onboarding-register-primary" type="button" onclick="openOnboardingAccount('register')">${lang==='ru'?'Создать аккаунт':'Create an account'}</button>
+        <button class="onboarding-guest-link" type="button" onclick="continueOnboardingAsGuest()">${lang==='ru'?'Пройти онбординг без регистрации':'Continue onboarding without registration'}</button>
+        <button class="onboarding-login-link" type="button" onclick="openOnboardingAccount('login')">${lang==='ru'?'Уже есть аккаунт? Войти':'Already have an account? Log in'}</button>
+      </div>
+    </div>`;
+}
+function openOnboardingAccount(mode){
+  appStorage.setItem('greekOnboardingPending','tour');
+  document.getElementById('onboardingDialog')?.close();
+  location.hash=mode;
+}
+function continueOnboardingAsGuest(){
+  appStorage.setItem('greekGuestOnboarding','yes');
+  document.getElementById('onboardingDialog')?.close();
+  startContextTour();
+}
+function clearContextTour(){
+  document.querySelector('.tour-highlight')?.classList.remove('tour-highlight');
+  document.getElementById('contextTourTooltip')?.remove();
+  window.removeEventListener('resize',positionContextTour);
+}
+function startContextTour(){
+  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+  document.body.classList.remove('account-page');
+  tourIndex=0; renderContextTour();
+}
+function positionContextTour(){
+  const tooltip=document.getElementById('contextTourTooltip');
+  const target=document.querySelector('.tour-highlight');
+  if(!tooltip||!target)return;
+  const rect=target.getBoundingClientRect();
+  const width=Math.min(360,window.innerWidth-24);
+  let left=Math.max(12,Math.min(window.innerWidth-width-12,rect.left+rect.width/2-width/2));
+  let top=rect.bottom+22,side='top';
+  if(top+tooltip.offsetHeight>window.innerHeight-12){top=Math.max(12,rect.top-tooltip.offsetHeight-22);side='bottom';}
+  const arrowX=Math.max(26,Math.min(width-26,rect.left+rect.width/2-left));
+  tooltip.style.width=`${width}px`;tooltip.style.left=`${left}px`;tooltip.style.top=`${top}px`;tooltip.style.setProperty('--tour-arrow-x',`${arrowX}px`);tooltip.dataset.arrow=side;
+}
+function renderContextTour(){
+  clearContextTour();
+  const steps=TOUR_STEPS[lang],step=steps[tourIndex];
+  switchSection(step.section);
+  const target=document.getElementById(step.target);
+  if(!target){finishContextTour();return;}
+  target.classList.add('tour-highlight');
+  const tooltip=document.createElement('aside');
+  tooltip.id='contextTourTooltip';tooltip.className='context-tour-tooltip';tooltip.setAttribute('role','dialog');
+  const dots=Array.from({length:6},(_,index)=>`<span class="onboarding-dot ${index===tourIndex+1?'active':''}"></span>`).join('');
+  const demo=step.demo==='olympus'?`<div class="collection-reveal-demo" aria-label="${lang==='ru'?'Фигурки открываются одна за другой':'Figurines unlock one by one'}">${['hermes','athena','apollo','aphrodite','zeus'].map((id,index)=>`<span style="--reveal-index:${index}"><img src="assets/olympus/mascots/${id}.png" alt=""><i>✓</i></span>`).join('')}</div><small class="collection-demo-label">${lang==='ru'?'Каждый этап делает следующую фигуру видимой':'Each milestone reveals the next figurine'}</small>`:'';
+  tooltip.innerHTML=`<div class="context-tour-head"><img src="assets/olympus/mascots/hermes-login-v2.png" alt=""><div><span>${lang==='ru'?'Шаг':'Step'} ${tourIndex+2} / 6</span><h3>${step.title}</h3></div></div><p class="context-tour-message">${step.text}</p>${demo}<div class="context-tour-footer"><div class="onboarding-dots">${dots}</div><div class="context-tour-actions">${tourIndex?`<button class="tool-btn" onclick="tourIndex--;renderContextTour()">${lang==='ru'?'← Назад':'← Back'}</button>`:''}<button class="fill-submit" onclick="${tourIndex===steps.length-1?'finishContextTour()':'tourIndex++;renderContextTour()'}">${tourIndex===steps.length-1?(lang==='ru'?'Начать заниматься':'Start learning'):(lang==='ru'?'Далее →':'Next →')}</button></div></div>`;
+  document.body.appendChild(tooltip);positionContextTour();window.addEventListener('resize',positionContextTour);
+}
+function finishContextTour(){
+  clearContextTour();appStorage.setItem(onboardingStorageKey(),'done');switchSection('flashcards');
+}
+function showGuestRegistrationPrompt(){
+  if(currentUser)return;
+  stopDialogue();
+  document.getElementById('onboardingContent').innerHTML=`<div class="onboarding-layout guest-register-layout"><div class="onboarding-hermes"><img src="assets/olympus/mascots/hermes.png" alt="${lang==='ru'?'Гермес':'Hermes'}"></div><div class="onboarding-copy"><button class="dialog-close" onclick="onboardingDialog.close()">×</button><div class="onboarding-icon">🎉</div><h2 id="onboardingTitle">${lang==='ru'?'Первая сессия завершена!':'Your first session is complete!'}</h2><div class="onboarding-key">${lang==='ru'?'Создай аккаунт, чтобы сохранить результат, получать награды и открывать персонажей Олимпа.':'Create an account to keep your result, earn rewards, and unlock the Olympians.'}</div><button class="fill-submit onboarding-register-primary" onclick="openOnboardingAccount('register')">${lang==='ru'?'Создать аккаунт':'Create an account'}</button><button class="onboarding-login-link" onclick="openOnboardingAccount('login')">${lang==='ru'?'Войти':'Log in'}</button><button class="onboarding-guest-link" onclick="onboardingDialog.close()">${lang==='ru'?'Продолжить без аккаунта':'Continue without an account'}</button></div></div>`;
+  const dialog=document.getElementById('onboardingDialog');if(!dialog.open)dialog.showModal();
+}
+function finishOnboarding(goToCards=false){
+  stopDialogue();
+  appStorage.setItem(onboardingStorageKey(),'done');
+  document.getElementById('onboardingDialog')?.close();
+  if(goToCards){
+    if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+    switchSection('flashcards');
+  }
+}
+
 const topicLabel = id => id === 'all' ? t('topic_all') : (TOPICS.find(topic=>topic.id===id)?.[lang] || id);
 
 let dialogueGeneration=0, dialogueAudio=null;
-// Fingerprints bind prerecorded speech to the exact dialogue text.
-const dialogueRecordings={"food":308950732,"travel":2725961565,"shopping":893381793,"doctor":3174056810,"hotel":438256719,"lost":462828587,"work":3370426012,"social":1008980366,"daily":2628875999,"visa":1042146168};
 function speakGreek(text, event) {
   event?.stopPropagation();
   if (!('speechSynthesis' in window)) return;
@@ -105,63 +282,27 @@ function stopDialogue() {
   if('speechSynthesis' in window) speechSynthesis.cancel();
 }
 
-function playSituationDialogue(item,event){
-  event?.stopPropagation();
-  stopDialogue();
-  const fingerprint=Array.from(item.full.join('\n')).reduce((value,char)=>Math.imul(value^char.codePointAt(0),16777619)>>>0,2166136261);
-  if(dialogueRecordings[item.cat]!==fingerprint){speakGreekDialogue(item.full,event);return;}
-  const generation=dialogueGeneration;
-  const audio=new Audio(`assets/dialogues/${encodeURIComponent(item.cat)}.mp3?v=${fingerprint}-2`);
-  dialogueAudio=audio;
-  document.getElementById('situationVoiceStatus').textContent='';
-  audio.onended=()=>{if(dialogueAudio===audio)dialogueAudio=null;};
-  audio.play().catch(()=>{
-    if(generation!==dialogueGeneration)return;
-    dialogueAudio=null;
-    speakGreekDialogue(item.full,event);
-  });
+function situationAudioFingerprint(item){
+  const payload=item.full.join('\n')+'\n'+item.lineSpeakers.join(',')+'\n'+item.speakers.map(speaker=>speaker.gender).join(',');
+  return Array.from(payload).reduce((value,char)=>Math.imul(value^char.codePointAt(0),16777619)>>>0,2166136261);
 }
-
-function speakGreekDialogue(lines, event) {
-  event?.stopPropagation();
-  if (!('speechSynthesis' in window)) return;
-  const generation=++dialogueGeneration;
-  speechSynthesis.cancel();
-  const start=()=>{
-    if(generation!==dialogueGeneration)return;
-    const voices=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('el'));
-    const first=voices[0] || null;
-    const second=voices.find(v=>v.voiceURI!==first?.voiceURI) || null;
-    const status=document.getElementById('situationVoiceStatus');
-    status.textContent=second ? '' : first ? (lang==='ru'
-      ? 'На этом устройстве доступен только один греческий голос. Реплики будут различаться высотой и скоростью; для двух голосов добавьте второй греческий голос в настройках устройства.'
-      : 'Only one Greek voice is available on this device. Speakers will differ in pitch and speed; add a second Greek voice in your device settings for two distinct voices.') : (lang==='ru'
-      ? 'Греческий голос не найден. Браузер попробует использовать голос по умолчанию; установите два греческих голоса в настройках устройства.'
-      : 'No Greek voice was found. The browser will try its default voice; install two Greek voices in your device settings.');
-    let index=0;
-    const next=()=>{
-      if(generation!==dialogueGeneration || index>=lines.length)return;
-      const speaker=index%2;
-      const utterance=new SpeechSynthesisUtterance(lines[index++].replace(/^\s*[—–-]\s*/,''));
-      utterance.lang='el-GR';
-      if(speaker===0 && first)utterance.voice=first;
-      if(speaker===1 && (second||first))utterance.voice=second||first;
-      utterance.rate=speaker===0 ? .78 : .9;
-      utterance.pitch=speaker===0 ? .88 : 1.15;
-      utterance.onend=next;
-      utterance.onerror=()=>{ if(generation===dialogueGeneration) status.textContent=lang==='ru'?'Не удалось воспроизвести диалог. Попробуйте ещё раз.':'Could not play the dialogue. Please try again.'; };
-      speechSynthesis.speak(utterance);
-    };
-    next();
-  };
-  if(speechSynthesis.getVoices().length) start();
-  else {
-    // Some browsers load the voice inventory asynchronously.
-    let started=false;
-    const ready=()=>{ if(started)return; started=true; speechSynthesis.removeEventListener('voiceschanged',ready); start(); };
-    speechSynthesis.addEventListener('voiceschanged',ready);
-    setTimeout(ready,1000);
+function playSituationDialogue(item,event){
+  event?.stopPropagation();stopDialogue();
+  const status=document.getElementById('situationVoiceStatus');
+  const recording=SITUATION_RECORDINGS[item.id];
+  if(!recording||recording.fingerprint!==situationAudioFingerprint(item)){
+    status.textContent=situationText('The recording needs updating for this dialogue.','Запись этого диалога нужно обновить.');return;
   }
+  const generation=dialogueGeneration;
+  const audio=new Audio(`${recording.src}?v=${recording.fingerprint}`);dialogueAudio=audio;
+  status.textContent='';
+  const failed=()=>{
+    if(generation!==dialogueGeneration)return;
+    if(dialogueAudio===audio){audio.pause();dialogueAudio=null;}
+    status.textContent=situationText('Could not load the dialogue. Please try listening again.','Не удалось загрузить диалог. Нажмите «Послушать диалог» ещё раз.');
+  };
+  audio.onerror=failed;audio.onended=()=>{if(dialogueAudio===audio)dialogueAudio=null;};
+  audio.play().catch(failed);
 }
 
 function saveProgress() { LearningStore.save(progress, difficultIds).catch(() => learningNotice('storage')); }
@@ -178,6 +319,10 @@ function recordAnswer(v, tense, ok) {
   if(progress.sessionProgress>=10){ progress.sessions++; progress.sessionProgress=0; }
   saveProgress();
   if(ok)checkOlympusMilestones(previousCorrect,progress.correct);
+  if(!currentUser&&appStorage.getItem('greekGuestOnboarding')==='yes'&&previousCorrect<10&&progress.correct>=10&&appStorage.getItem('greekGuestRegistrationPrompt')!=='shown'){
+    appStorage.setItem('greekGuestRegistrationPrompt','shown');
+    setTimeout(showGuestRegistrationPrompt,450);
+  }
 }
 function recordSession() { progress.sessions++; saveProgress(); }
 function progressCalendarStats(){
@@ -215,16 +360,12 @@ function setRewardOption(type){
 
 function speakReward(item){
   if(!rewardVoiceOn)return;
-  const recorded=new Audio(`assets/olympus/voices/${item.id}.wav`); recorded.volume=.82;
-  recorded.play().catch(()=>{
-    if(!('speechSynthesis'in window))return;
-    speechSynthesis.cancel();
-    const utterance=new SpeechSynthesisUtterance(item.phrase);
-    utterance.lang='el-GR'; utterance.rate=.72; utterance.pitch=item.pitch||1;
-    const voice=speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith('el'));
-    if(voice)utterance.voice=voice;
-    speechSynthesis.speak(utterance);
-  });
+  stopDialogue();
+  const recorded=new Audio(`assets/olympus/voices/${item.id}-v2.mp3`);
+  dialogueAudio=recorded;
+  recorded.volume=.82;
+  // Keep each character's recorded voice; never substitute a device's default voice.
+  recorded.play().catch(()=>{});
 }
 
 function playReward(item){
@@ -255,7 +396,7 @@ function checkOlympusMilestones(before,after){
 function showOlympus(refresh=false){
   const unlocked=OLYMPIANS.filter(item=>progress.correct>=item.milestone).length;
   const laurels=Math.floor(progress.correct/20);
-  const cards=OLYMPIANS.map(item=>{const open=progress.correct>=item.milestone;return `<article class="olympian-card ${open?'open':'locked'}" ${open?`role="button" tabindex="0" onclick="olympusDialog.close();showReward(OLYMPIANS.find(x=>x.id==='${item.id}'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"`:''}><img src="assets/olympus/mascots/${item.id}.png" alt="${open?item.name[lang]:''}">${open?'':`<span class="olympian-lock">🔒 ${item.milestone}</span>`}<h3>${open?item.name[lang]:'???'}</h3><p>${open?item.text[lang]:(lang==='ru'?`Откроется после ${item.milestone} правильных ответов`:`Unlocks after ${item.milestone} correct answers`)}</p>${open?`<span class="olympian-gift">${item.gift} ${item.giftName[lang]}</span>`:''}</article>`}).join('');
+  const cards=OLYMPIANS.map(item=>{const open=progress.correct>=item.milestone;return `<article class="olympian-card ${open?'open':'locked'}" ${open?`role="button" tabindex="0" onclick="olympusDialog.close();showReward(OLYMPIANS.find(x=>x.id==='${item.id}'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"`:''}><img src="assets/olympus/mascots/${item.id}.png" alt="${item.name[lang]}">${open?'':`<span class="olympian-lock">🔒 ${item.milestone}</span>`}<h3 class="olympian-name">${item.name[lang]}</h3><p>${open?item.text[lang]:(lang==='ru'?`Откроется после ${item.milestone} правильных ответов`:`Unlocks after ${item.milestone} correct answers`)}</p>${open?`<span class="olympian-gift">${item.gift} ${item.giftName[lang]}</span>`:''}</article>`}).join('');
   document.getElementById('olympusContent').innerHTML=`<button class="dialog-close" onclick="olympusDialog.close()">×</button><div class="olympus-head"><div><h2>${lang==='ru'?'Мой Олимп':'My Olympus'}</h2><p class="progress-summary">🌿 ${laurels} · ${lang==='ru'?'лавровых листьев':'laurel leaves'} &nbsp; · &nbsp; ${unlocked}/${OLYMPIANS.length} ${lang==='ru'?'олимпийцев':'Olympians'}</p></div><div class="olympus-tools"><button class="tool-btn ${rewardSoundOn?'active':''}" onclick="setRewardOption('sound')">${rewardSoundOn?'🔊':'🔇'} ${lang==='ru'?'Звуки':'Sounds'}</button><button class="tool-btn ${rewardVoiceOn?'active':''}" onclick="setRewardOption('voice')">${rewardVoiceOn?'🗣️':'🤫'} ${lang==='ru'?'Голоса':'Voices'}</button></div></div><div class="olympus-grid">${cards}</div>`;
   const dialog=document.getElementById('olympusDialog'); if(!dialog.open)dialog.showModal();
 }
@@ -334,18 +475,11 @@ function translateAnsweredExercise(id, previousLang) {
   }
   if(id==='fill'){
     const item=fDeck[fIdx], result=document.getElementById('fillFeedback').dataset.result;
-    set('fillPrompt',t('q_fill')); set('fillHint',`${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`); set('fillCheck',t('check'));
+    set('fillPrompt',t('q_fill')); set('fillHint',`${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`); set('fillCheck',t(fStates[fIdx]?.attempted&&!fStates[fIdx]?.solved?'try_again':'check'));
     set('fillFeedback',result==='correct'?`${t('correct')} ${item.fullAnswer}`:result==='almost'?`${t('almost')} ${item.answer} → ${item.fullAnswer}`:`${t('wrong')} ${t('ans_correct')} ${item.answer} → ${item.fullAnswer}`);
     set('fillScore',sessionProgressText(fIdx,fDeck.length));
   }
-  if(id==='situation'){
-    const item=situationDeck[situationIdx], result=document.getElementById('situationFeedback').dataset.result;
-    set('situationPrompt',t('situation_prompt')); set('situationContext',`${t('situation_context')} ${lang==='en'?item.en:item.ru}`);
-    document.getElementById('situationImage').alt=lang==='en'?item.en:item.ru;
-    set('situationAudio',t('situation_listen')); set('situationCheck',t('check'));
-    set('situationFeedback',result==='correct'?`${t('correct')} ${item.answer}`:`${result==='almost'?t('almost'):t('wrong')} ${t('ans_correct')} ${item.answer}`);
-    set('situationScore',sessionProgressText(situationIdx,situationDeck.length));
-  }
+  if(id==='situation') renderSituation();
 }
 
 function toggleAccent() {
@@ -377,10 +511,11 @@ function checkStr(given, correct) {
 
 /* ── Navigation ─────────────────────────────────── */
 function switchSection(id) {
+  if(isExamPage()&&id!=='exam'){navigateLearningPage('index.html?section='+encodeURIComponent(id));return;}
   if(id!=='practice') cancelAutoAdvance();
   document.body.classList.remove('account-page');
   if (['#login','#register','#profile'].includes(location.hash)) history.replaceState(null, '', location.pathname + location.search);
-  if(id!=='practice' && document.getElementById('ex-situation').classList.contains('active')) stopDialogue();
+  if(id!=='practice' && document.getElementById('ex-situation')?.classList.contains('active')) stopDialogue();
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
@@ -390,14 +525,16 @@ function switchSection(id) {
 }
 
 function switchExercise(id) {
-  updatePracticeTenseVisibility(id);
   cancelAutoAdvance();
-  if(id!=='situation' && document.getElementById('ex-situation').classList.contains('active')) stopDialogue();
+  if(id!=='situation' && document.getElementById('ex-situation')?.classList.contains('active')) stopDialogue();
   if (id !== 'situation' && practicePool.length < 2) {
     document.getElementById('practiceMessage').textContent=t('empty_practice');
     document.getElementById('practiceMessage').className='setup-message show';
     return;
   }
+  const typeSelect=document.getElementById('practiceType');
+  if(id!=='image')typeSelect.value=id;
+  updatePracticeSetup(id);
   document.querySelectorAll('.exercise').forEach(e => e.classList.remove('active'));
   document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('ex-' + id).classList.add('active');
@@ -556,7 +693,7 @@ function toggleDifficultMode(){ difficultMode=!difficultMode; document.getElemen
 function toggleCurrentDifficult(){ const id=fcDeck[fcIdx].id; difficultIds.has(id)?difficultIds.delete(id):difficultIds.add(id); saveProgress(); if(difficultMode)applyFlashFilter(); else renderFC(); }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('fcCard').addEventListener('click', fcFlip);
+  document.getElementById('fcCard')?.addEventListener('click', fcFlip);
 });
 
 /* ── Generic scored MC helper ──────────────────────── */
@@ -835,17 +972,25 @@ function renderFill() {
   const item=fDeck[fIdx], state=fStates[fIdx]||{};
   fAnswered=Boolean(state.solved);
   document.getElementById('fillPrompt').textContent=t('q_fill');
-  document.getElementById('fillSentence').textContent=`${PERSONS[item.p]} ${item.masked}`;
+  const gap=item.masked.match(/_+/);
+  document.getElementById('fillPerson').textContent=PERSONS[item.p];
+  document.getElementById('fillWordBefore').textContent=item.masked.slice(0,gap.index);
+  document.getElementById('fillWordAfter').textContent=item.masked.slice(gap.index+gap[0].length);
+  const audio=document.getElementById('fillAudio');
+  audio.hidden=!('speechSynthesis' in window);
+  audio.setAttribute('aria-label',t('fc_audio'));
+  audio.onclick=event=>speakGreek(item.fullAnswer,event);
   document.getElementById('fillHint').textContent=`${t('hint')} ${verbTrans(item.v)} · ${t(item.tense+'_t')}`;
   document.getElementById('fillTip').textContent=accentHelpText();
   const input=document.getElementById('fillInput'); input.value=state.input||''; input.className='fill-input'+(state.solved?' correct':state.attempted?' wrong':'');
   input.readOnly=Boolean(state.solved);
+  document.getElementById('fillInputMeasure').textContent=input.value||'_'.repeat(item.answer.length);
   const feedback=document.getElementById('fillFeedback'); feedback.dataset.result=state.result||'';
   feedback.className='feedback'+(state.solved?' correct':state.attempted?' wrong':'');
-  feedback.textContent=state.solved?`${t('correct')} ${item.fullAnswer}`:state.attempted?t(state.result==='almost'?'retry_accent':'retry'):'';
+  feedback.textContent=state.solved?`${t('correct')} ${item.fullAnswer}`:state.attempted?`${t(state.result==='almost'?'retry_accent':'retry')} ${t('ans_correct')} ${item.answer}${item.fullAnswer?' → '+item.fullAnswer:''}`:'';
   document.getElementById('fillNext').classList.toggle('show',Boolean(state.solved));
   document.getElementById('fillPrev').disabled=fIdx===0;
-  document.getElementById('fillCheck').textContent=t('check');
+  document.getElementById('fillCheck').textContent=t(state.attempted&&!state.solved?'try_again':'check');
   document.getElementById('fillCheck').disabled=Boolean(state.solved);
   document.getElementById('fillScore').textContent=sessionProgressText(fIdx,fDeck.length);
 }
@@ -857,17 +1002,17 @@ function checkFill() {
   recordAnswer(item.v,item.tense,ok); if(ok)fCorrect++;
   state.attempted=true; state.input=input.value; state.result=result; state.solved=ok;
   renderFill();
-  if(ok)scheduleAutoAdvance('fill',fIdx,nextFill); else input.focus();
+  if(ok)scheduleAutoAdvance('fill',fIdx,nextFill); else { input.focus(); input.select(); }
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
   document.documentElement.lang = lang;
   document.title = t('document_title');
   updateAccentHelp();
-  document.getElementById('fillInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkFill(); });
-  document.getElementById('fillInput').addEventListener('input', e=>{ (fStates[fIdx]||(fStates[fIdx]={})).input=e.target.value; });
-  document.getElementById('situationInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkSituation(); });
-  document.getElementById('situationInput').addEventListener('input', e=>{ (situationStates[situationIdx]||(situationStates[situationIdx]={})).input=e.target.value; });
+  document.getElementById('fillInput')?.addEventListener('keydown', e=>{ if(e.key==='Enter') checkFill(); });
+  document.getElementById('fillInput')?.addEventListener('input', e=>{ (fStates[fIdx]||(fStates[fIdx]={})).input=e.target.value; document.getElementById('fillInputMeasure').textContent=e.target.value||'_'.repeat(fDeck[fIdx].answer.length); });
+  document.getElementById('situationInput')?.addEventListener('keydown', e=>{ if(e.key==='Enter') checkSituation(); });
+  document.getElementById('situationInput')?.addEventListener('input', e=>{ (situationStates[situationIdx]||(situationStates[situationIdx]={})).input=e.target.value; });
 });
 
 function nextFill() { if(!fStates[fIdx]?.solved)return; cancelAutoAdvance(); fIdx++; fIdx>=fDeck.length ? showResults('fill',fCorrect,fDeck.length) : renderFill(); }
@@ -923,54 +1068,143 @@ function nextChange() { ctIdx++; ctIdx>=ctDeck.length ? showResults('change',ctC
 
 /* ── Picture situations & dialogues ─────────────── */
 let situationDeck=[], situationIdx=0, situationCorrect=0, situationAnswered=false, situationStates=[];
-
+let situationMode='drag', situationCategory='all', situationSelectedWord=null;
+const SITUATION_LABELS={food:['Café & restaurant','Кафе и ресторан'],travel:['City & transport','Город и транспорт'],shopping:['Shopping','Покупки'],doctor:['At the doctor','У врача'],hotel:['Hotel','Отель'],lost:['Lost items','Потерянные вещи'],work:['Work & study','Работа и учёба'],social:['Meeting friends','Встречи с друзьями'],daily:['Daily routine','Распорядок дня'],visa:['Documents','Документы']};
+const situationText=(en,ru)=>lang==='ru'?ru:en;
+const escapeSituationValue=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const normalizeSituationLine=value=>String(value).replace(/^—\s*/,'').replace(/[.!;?]+$/,'').trim().toLocaleLowerCase('el');
+function situationLineTranslation(item,lineIndex){
+  const explicit=item.translations?.[lang]?.[lineIndex];
+  if(explicit)return explicit;
+  const complete=item.full?.[lineIndex]||'';
+  const match=EXAM_PHRASES.find(phrase=>normalizeSituationLine(phrase.gr)===normalizeSituationLine(complete));
+  return match?.[lang]||'';
+}
+const situationAnswers=item=>item.answers||[item.answer];
 function initSituation(){
-  cancelAutoAdvance(); situationDeck=[...SITUATIONS].sort(()=>Math.random()-0.5).slice(0,SESSION_SIZE);
-  situationIdx=0; situationCorrect=0; situationAnswered=false; situationStates=[];
+  cancelAutoAdvance();
+  const categories=Object.keys(SITUATION_LABELS).filter(cat=>situationCategory==='all'||cat===situationCategory);
+  situationDeck=categories.flatMap(cat=>SITUATIONS.filter(item=>item.cat===cat));
+  situationIdx=0; situationCorrect=0; situationAnswered=false; situationStates=[]; situationSelectedWord=null;
   renderSituation();
 }
-
-function renderSituation(){
-  stopDialogue();
-  const item=situationDeck[situationIdx], state=situationStates[situationIdx]||{}; if(!item)return;
+function changeSituationTopic(category){situationCategory=category;initSituation();}
+function setSituationMode(mode){
+  if(!['type','drag'].includes(mode))return;
+  situationMode=mode; situationSelectedWord=null; renderSituation(true);
+}
+function situationState(){
+  const state=situationStates[situationIdx]||(situationStates[situationIdx]={});
+  if(!state.slots)state.slots=situationAnswers(situationDeck[situationIdx]).map(()=>null);
+  if(!state.inputs)state.inputs=situationAnswers(situationDeck[situationIdx]).map(()=>"");
+  if(!state.bankOrder)state.bankOrder=situationAnswers(situationDeck[situationIdx]).map((_,i)=>i).sort(()=>Math.random()-.5);
+  return state;
+}
+function placeSituationWord(slot,word){
+  const state=situationState(), answers=situationAnswers(situationDeck[situationIdx]);
+  if(state.solved||!Number.isInteger(slot)||slot<0||slot>=answers.length||!Number.isInteger(word)||word<0||word>=answers.length)return;
+  state.slots=state.slots.map(value=>value===word?null:value);
+  state.slots[slot]=word;state.attempted=false;situationSelectedWord=null;
+  renderSituation(true);
+}
+function selectSituationGap(slot){
+  const state=situationState();if(state.solved)return;
+  if(situationSelectedWord!==null){placeSituationWord(slot,situationSelectedWord);return;}
+  state.slots[slot]=null;state.attempted=false;renderSituation(true);
+}
+function selectSituationWord(word){
+  if(situationState().solved)return;
+  situationSelectedWord=situationSelectedWord===word?null:word;renderSituation(true);
+}
+function renderSituation(preserveAudio=false){
+  if(!preserveAudio)stopDialogue();
+  const item=situationDeck[situationIdx];if(!item)return;
+  const state=situationState(),answers=situationAnswers(item),drag=situationMode==='drag';
   situationAnswered=Boolean(state.solved);
+  const topic=document.getElementById('situationTopic');
+  topic.innerHTML='<option value="all">'+t('topic_all')+'</option>'+Object.entries(SITUATION_LABELS).map(([cat,label])=>`<option value="${cat}">${label[lang==='ru'?1:0]}</option>`).join('');
+  topic.value=situationCategory;
+  document.getElementById('situationTopicLabel').textContent=situationText('Situation','Ситуация');
+  document.getElementById('situationModeLabel').textContent=situationText('Answer mode','Режим ответа');
+  for(const mode of ['drag','type']){
+    const button=document.getElementById(mode==='drag'?'situationDragMode':'situationTypeMode');
+    button.textContent=mode==='drag'?situationText('Drag words','Перетащить слова'):situationText('Type words','Вписать слова');
+    button.setAttribute('aria-pressed',String(mode===situationMode));button.classList.toggle('active',mode===situationMode);
+  }
+  document.querySelector('.situation-card').classList.toggle('is-solved',situationAnswered);
   document.getElementById('situationImage').src=item.image;
   document.getElementById('situationImage').alt=lang==='en'?item.en:item.ru;
   document.getElementById('situationPrompt').textContent=t('situation_prompt');
-  document.getElementById('situationContext').textContent=`${t('situation_context')} ${lang==='en'?item.en:item.ru}`;
-  document.getElementById('situationDialogue').innerHTML=item.lines.map(line=>`<p>${line}</p>`).join('');
-  const audio=document.getElementById('situationAudio'); audio.textContent=t('situation_listen');
-  document.getElementById('situationVoiceStatus').textContent='';
-  audio.onclick=event=>playSituationDialogue(item,event);
+  document.getElementById('situationContext').textContent=`${SITUATION_LABELS[item.cat][lang==='ru'?1:0]} · ${lang==='en'?item.en:item.ru}`;
+  document.getElementById('situationInstructions').textContent=drag
+    ?situationText('Drag words into the gaps, or select a word and then a gap. Select a filled gap to clear it.','Перетащите слова в пропуски или нажмите на слово, затем на пропуск. Нажмите на заполненный пропуск, чтобы очистить его.')
+    :situationText('Type each missing word directly into its gap.','Введите каждое пропущенное слово прямо в соответствующий пропуск.');
+  let gap=0;
+  document.getElementById('situationDialogue').innerHTML=item.lines.map((line,lineIndex)=>'<p tabindex="0"><span class="situation-speaker">'+item.speakers[item.lineSpeakers[lineIndex]][lang]+'</span>'+line.replaceAll('___',()=>{
+    const slot=gap++, value=state.solved?answers[slot]:(drag&&state.slots[slot]!==null?answers[state.slots[slot]]:'');
+    if(!drag){
+      const answerWidth=Math.max(9,answers[slot].length+3);
+      return `<input class="situation-inline-input${state.solved?' correct':state.attempted?' wrong':''}" style="--answer-width:${answerWidth}ch" data-input-slot="${slot}" value="${escapeSituationValue(state.inputs[slot]||'')}" ${state.solved?'readonly':''} autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="${situationText('Gap','Пропуск')} ${slot+1}" placeholder="${slot+1} …">`;
+    }
+    return `<button type="button" class="situation-blank ${value?'filled':''}" data-slot="${slot}" ${state.solved?'disabled':''} aria-label="${situationText('Gap','Пропуск')} ${slot+1}">${value||String(slot+1)+' …'}</button>`;
+  })+(()=>{const translation=situationLineTranslation(item,lineIndex);return translation?`<span class="situation-line-translation">${escapeSituationValue(translation)}</span>`:'';})()+'</p>').join('');
+  document.getElementById('situationDialogue').querySelectorAll('[data-slot]').forEach(button=>{
+    button.onclick=()=>selectSituationGap(Number(button.dataset.slot));
+    button.ondragover=event=>{if(drag&&!state.solved)event.preventDefault();};
+    button.ondrop=event=>{event.preventDefault();const value=event.dataTransfer.getData('text/plain');if(/^\d+$/.test(value))placeSituationWord(Number(button.dataset.slot),Number(value));};
+  });
+  document.getElementById('situationDialogue').querySelectorAll('[data-input-slot]').forEach(input=>{
+    input.oninput=()=>{state.inputs[Number(input.dataset.inputSlot)]=input.value;state.attempted=false;};
+    input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();checkSituation();}};
+  });
+  const bank=document.getElementById('situationWordBank');bank.hidden=!drag;
+  bank.setAttribute('aria-label',situationText('Words for the gaps','Слова для пропусков'));
+  bank.innerHTML=drag?state.bankOrder.map(index=>`<button type="button" class="tool-btn situation-word ${situationSelectedWord===index?'active':''}" data-word="${index}" draggable="${!state.solved}" aria-pressed="${situationSelectedWord===index}" ${state.solved||state.slots.includes(index)?'disabled':''}>${answers[index]}</button>`).join(''):'';
+  bank.querySelectorAll('[data-word]').forEach(button=>{
+    button.onclick=()=>selectSituationWord(Number(button.dataset.word));
+    button.ondragstart=event=>{event.dataTransfer.setData('text/plain',button.dataset.word);event.dataTransfer.effectAllowed='move';};
+  });
+  const audio=document.getElementById('situationAudio');
+  const voiceStatus=document.getElementById('situationVoiceStatus');
+  const recording=SITUATION_RECORDINGS[item.id];
+  const recordingReady=recording&&recording.fingerprint===situationAudioFingerprint(item);
+  const audioSource=recordingReady?`${recording.src}?v=${recording.fingerprint}`:'';
+  if(audio.dataset.source!==audioSource){audio.pause();audio.dataset.source=audioSource;if(audioSource)audio.src=audioSource;else audio.removeAttribute('src');audio.load();}
+  audio.hidden=!recordingReady;
+  dialogueAudio=recordingReady?audio:null;
+  if(!preserveAudio)voiceStatus.textContent=recordingReady?'':situationText('The recording needs updating for this dialogue.','Запись этого диалога нужно обновить.');
+  audio.onerror=()=>{voiceStatus.textContent=situationText('Could not load the dialogue. Please try again.','Не удалось загрузить диалог. Попробуйте ещё раз.');};
   document.getElementById('situationAccentTip').textContent=accentHelpText();
-  const input=document.getElementById('situationInput'); input.value=state.input||''; input.className='fill-input'+(state.solved?' correct':state.attempted?' wrong':'');
-  input.readOnly=Boolean(state.solved);
-  const feedback=document.getElementById('situationFeedback'); feedback.dataset.result=state.result||'';
+  document.getElementById('situationAccentTip').hidden=drag;
+  document.getElementById('situationAccentSlot').hidden=drag;
+  const input=document.getElementById('situationInput');input.value=state.inputs.join(' ');
+  const feedback=document.getElementById('situationFeedback');feedback.dataset.result=state.result||'';
   feedback.className='feedback'+(state.solved?' correct':state.attempted?' wrong':'');
-  feedback.textContent=state.solved?`${t('correct')} ${item.answer}`:state.attempted?t(state.result==='almost'?'retry_accent':'retry'):'';
-  document.getElementById('situationCheck').textContent=t('check');
+  feedback.textContent=state.solved?`${t('correct')} ${item.answer}`:state.attempted?`${t(state.result==='almost'?'retry_accent':'retry')} ${t('ans_correct')} ${item.answer}`:'';
+  document.getElementById('situationCheck').textContent=t(state.attempted&&!state.solved?'try_again':'check');
   document.getElementById('situationCheck').disabled=Boolean(state.solved);
   document.getElementById('situationPrev').disabled=situationIdx===0;
-  document.getElementById('situationNext').textContent=t('next');
+  const categoryItems=situationDeck.filter(other=>other.cat===item.cat), number=categoryItems.indexOf(item)+1;
+  document.getElementById('situationNext').textContent=number===categoryItems.length&&situationIdx<situationDeck.length-1?situationText('Next situation →','Следующая ситуация →'):t('next');
   document.getElementById('situationNext').classList.toggle('show',Boolean(state.solved));
-  document.getElementById('situationScore').textContent=sessionProgressText(situationIdx,situationDeck.length);
+  document.getElementById('situationScore').textContent=situationText(`Dialogue ${number} / ${categoryItems.length}`,`Диалог ${number} / ${categoryItems.length}`);
 }
-
 function checkSituation(){
-  const input=document.getElementById('situationInput'); if(!input.value.trim()||situationAnswered)return;
-  const item=situationDeck[situationIdx], state=situationStates[situationIdx]||(situationStates[situationIdx]={});
-  const result=checkStr(input.value,item.answer), ok=result==='correct';
-  recordAnswer(null,'situation',ok); if(ok)situationCorrect++;
-  state.attempted=true; state.input=input.value; state.result=result; state.solved=ok;
+  if(situationAnswered)return;
+  const item=situationDeck[situationIdx],state=situationState(),answers=situationAnswers(item);
+  const given=situationMode==='drag'?state.slots.map(index=>index===null?'':answers[index]).join(' '):state.inputs.join(' ');
+  if(situationMode==='drag'?state.slots.some(index=>index===null):state.inputs.some(value=>!value.trim()))return;
+  const result=checkStr(given,item.answer),ok=result==='correct';
+  recordAnswer(null,'situation',ok);if(ok)situationCorrect++;
+  state.attempted=true;state.result=result;state.solved=ok;
   renderSituation();
-  if(ok)scheduleAutoAdvance('situation',situationIdx,nextSituation); else input.focus();
+  if(ok)document.getElementById('situationNext').focus();else if(situationMode==='type'){const first=document.querySelector('.situation-inline-input');if(first){first.focus();first.select();}}
 }
-
 function nextSituation(){
-  if(!situationStates[situationIdx]?.solved)return; cancelAutoAdvance(); situationIdx++;
+  if(!situationStates[situationIdx]?.solved)return;cancelAutoAdvance();situationIdx++;situationSelectedWord=null;
   situationIdx>=situationDeck.length?showResults('situation',situationCorrect,situationDeck.length):renderSituation();
 }
-function previousSituation(){if(situationIdx<=0)return;cancelAutoAdvance();situationIdx--;renderSituation();}
+function previousSituation(){if(situationIdx<=0)return;cancelAutoAdvance();situationIdx--;situationSelectedWord=null;renderSituation();}
 
 /* ── Image Matching ──────────────────────────────── */
 let imgSel=null, imgPaired=0;
@@ -1040,12 +1274,9 @@ const PHRASE_VISUALS={
 function renderPhraseScene(){
   const scene=document.getElementById('phraseScene'); if(!scene)return;
   const [asset,position,emoji]=PHRASE_VISUALS[phraseCategory]||PHRASE_VISUALS.daily;
-  scene.style.backgroundImage=`url('assets/phrases/topics/${asset}.png')`;
-  scene.style.backgroundSize='contain';
-  scene.style.backgroundPosition=position;
-  scene.style.aspectRatio=['daily','shopping'].includes(asset)?'8 / 3':'1.5 / 1';
-  scene.style.backgroundColor='#111426';
-  scene.setAttribute('aria-label',topicLabel(phraseCategory));
+  const image=document.getElementById('phraseSceneImage');
+  image.src=`assets/phrases/topics/${asset}.png`;
+  image.alt=topicLabel(phraseCategory);
   document.getElementById('phraseSceneEmoji').textContent=emoji;
 }
 
@@ -1069,7 +1300,7 @@ function renderPhrases() {
   EXAM_PHRASES.filter(item=>sourceCats.includes(item.cat)).forEach(item=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td class="td-phrase-greek"><span class="phrase-emoji" aria-hidden="true">${phraseEmoji(item)}</span><button class="audio-btn phrase-audio" aria-label="${t('fc_audio')}" onclick="speakGreek('${item.gr.replaceAll("'","\\'")}',event)">🔊</button><span>${item.gr}</span></td>
+      <td class="td-phrase-greek"><div class="phrase-line"><span class="phrase-emoji" aria-hidden="true">${phraseEmoji(item)}</span><button class="audio-btn phrase-audio" aria-label="${t('fc_audio')}" onclick="speakGreek('${item.gr.replaceAll("'","\\'")}',event)">🔊</button><span class="phrase-text">${item.gr}</span></div></td>
       <td class="td-phrase-meaning">${lang==='en'?item.en:item.ru}</td>
       <td class="td-phrase-context">${topicLabel(phraseCategory)}</td>`;
     tbody.appendChild(tr);
@@ -1083,10 +1314,11 @@ function fillSelect(select, options, current) {
   if(options.some(([value])=>value===current))select.value=current;
 }
 
-function updatePracticeTenseVisibility(exerciseType) {
-  const tense=document.getElementById('practiceTense');
-  const type=document.getElementById('practiceType');
-  if(tense?.parentElement && type)tense.parentElement.hidden=(exerciseType||type.value)==='situation';
+function updatePracticeSetup(type=document.getElementById('practiceType').value) {
+  const isSituation=type==='situation';
+  document.getElementById('practiceTenseField').hidden=isSituation;
+  document.getElementById('practiceTense').disabled=isSituation;
+  document.getElementById('practiceSetup').classList.toggle('without-tense',isSituation);
 }
 
 function setupControls() {
@@ -1100,8 +1332,7 @@ function setupControls() {
   const pTopic=document.getElementById('practiceTopic'); fillSelect(pTopic,[...topicOptions,['mistakes',t('my_mistakes')]],pTopic?.value||'all');
   const pTense=document.getElementById('practiceTense'); fillSelect(pTense,[['mixed',t('mixed')],['pres',t('pres_t')],['past',t('past_t')],['fut',t('fut_t')]],pTense?.value||'mixed');
   const pType=document.getElementById('practiceType'); fillSelect(pType,[['quiz',t('sub_quiz')],['match',t('sub_match')],['tense',t('sub_tense')],['conj',t('sub_conj')],['change',t('sub_change')],['person',t('sub_person')],['situation',t('sub_situation')],['mixed',t('mixed_practice')],['fill',t('sub_fill')]],pType?.value||'quiz');
-  pType.onchange=()=>updatePracticeTenseVisibility();
-  updatePracticeTenseVisibility();
+  updatePracticeSetup();
   document.getElementById('difficultBtn').textContent=t('difficult_only');
   renderTable();
 }
@@ -1109,7 +1340,7 @@ function setupControls() {
 function startConfiguredPractice() {
   const topic=document.getElementById('practiceTopic').value;
   const requested=document.getElementById('practiceType').value;
-  const candidateTense=document.getElementById('practiceTense').value;
+  const candidateTense=requested==='situation'?'mixed':document.getElementById('practiceTense').value;
   const candidatePool=ALL_VERBS.filter(v=>v.conj_pres).filter(v=>{
     if(topic==='all')return true;
     if(topic==='mistakes')return (progress.mistakes[v.id]||0)>0;
@@ -1133,11 +1364,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   try { await initAccount(); } catch { learningNotice('storage'); renderAuth(); routeAccount(); }
   document.querySelector('.wrap').inert = false;
   document.querySelector('nav').inert = false;
-  renderFC();
-  switchExercise('quiz');
-  renderPhraseSelect();
-  renderPhrases();
-  setupControls();
+  if(!isExamPage()){
+    renderFC();switchExercise('quiz');renderPhraseSelect();renderPhrases();setupControls();
+    const section=new URLSearchParams(location.search).get('section');
+    if(['verbs','flashcards','practice','phrases'].includes(section))switchSection(section);
+  }
   if(!('speechSynthesis' in window)) document.querySelectorAll('.audio-btn').forEach(button=>button.hidden=true);
   updateAccessibleNames();
   showStorageNotice();
@@ -1145,4 +1376,28 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   // apply initial i18n
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n).replace('{count}',ALL_VERBS.length); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder=t(el.dataset.i18nPh); });
+  if(isExamPage())initExamPage();
+  if(!isExamPage()&&new URLSearchParams(location.search).get('exercise')==='situation')switchExercise('situation');
+  if(new URLSearchParams(location.search).get('onboarding')==='1')setTimeout(()=>startOnboarding(true),0);
 });
+
+// Flush account-scoped learning data before moving between the two trainers.
+async function navigateLearningPage(path){
+  if(isExamPage()&&typeof flushExamDrafts==='function')flushExamDrafts();
+  try{await LearningStore.flush();}catch{learningNotice('storage');return;}
+  location.href=path;
+}
+
+let refreshingLearning=false;
+async function refreshSharedLearning(){
+  if(!accountReady||authBusy||refreshingLearning)return;
+  refreshingLearning=true;
+  try{
+    if(isExamPage()&&typeof flushExamDrafts==='function')flushExamDrafts();
+    await LearningStore.flush();
+    applyLearning(await LearningStore.load(currentUser));
+    if(isExamPage())renderExam();
+  }catch{learningNotice('storage');}finally{refreshingLearning=false;}
+}
+window.addEventListener?.('pageshow',event=>{if(event.persisted)refreshSharedLearning();});
+window.addEventListener?.('focus',refreshSharedLearning);

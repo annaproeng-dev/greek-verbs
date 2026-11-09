@@ -18,7 +18,7 @@ function context() {
     document: {getElementById: node, querySelector: node, querySelectorAll: () => [], body: {classList: {remove() {}, add() {}}}},
     location: {hash: '', reload() {scope.reloads++;}}, reloads: 0,
     window: {}, console, setTimeout, clearTimeout, AbortController,
-    appStorage: {setItem() {}}, ALL_VERBS: [],
+    appStorage: {setItem() {}, getItem() {return null;}}, ALL_VERBS: [],
     applyFlashFilter() {}, switchExercise() {}, switchSection() {},
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'auth.js'), 'utf8'), scope);

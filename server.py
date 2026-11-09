@@ -27,7 +27,7 @@ class Handler(SimpleHTTPRequestHandler, AuthHandler):
 
     def public_path(self):
         path = unquote(urlsplit(self.path).path)
-        public_files = {'/', '/index.html', '/verb.html', '/app.js', '/data.js', '/auth.js', '/storage.js', '/verb-page.js', '/style.css', '/favicon.ico', '/favicon.svg', '/apple-touch-icon.png'}
+        public_files = {'/', '/index.html', '/exam.html', '/exam.js', '/exam-data.js', '/exam.css', '/verb.html', '/app.js', '/data.js', '/auth.js', '/storage.js', '/verb-page.js', '/theme.js', '/style.css', '/favicon.ico', '/favicon.svg', '/apple-touch-icon.png'}
         asset = path.startswith('/assets/') and Path(path).suffix.lower() in {'.png', '.jpg', '.jpeg', '.webp', '.svg', '.wav', '.mp3', '.ogg', '.woff2', '.woff', '.ttf'}
         candidate = ROOT / path.lstrip('/')
         if any(part.startswith('.') for part in path.split('/') if part) or not (path in public_files or asset):

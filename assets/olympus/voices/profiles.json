@@ -1,0 +1,98 @@
+{
+  "athena": {
+    "voice": "el-GR-AthinaNeural",
+    "gender": "Female",
+    "rate": "-8%",
+    "pitch": "-2Hz",
+    "text": "Έφτασες σε ένα νέο επίπεδο γνώσης! Συνέχισε — η σοφία χτίζεται βήμα βήμα.",
+    "file": "athena-v2.mp3"
+  },
+  "hermes": {
+    "voice": "el-GR-NestorasNeural",
+    "gender": "Male",
+    "rate": "+10%",
+    "pitch": "+8Hz",
+    "text": "Έφτασες σε ένα νέο επίπεδο! Συνέχισε — προχωράς πιο γρήγορα από τον άνεμο!",
+    "file": "hermes-v2.mp3"
+  },
+  "demeter": {
+    "voice": "el-GR-AthinaNeural",
+    "gender": "Female",
+    "rate": "-15%",
+    "pitch": "-10Hz",
+    "text": "Έφτασες σε ένα νέο επίπεδο! Κάθε προσπάθεια φέρνει καρπούς.",
+    "file": "demeter-v2.mp3"
+  },
+  "apollo": {
+    "voice": "el-GR-NestorasNeural",
+    "gender": "Male",
+    "rate": "+0%",
+    "pitch": "+14Hz",
+    "text": "Έφτασες σε ένα νέο επίπεδο! Άφησε το φως της γνώσης να σε οδηγήσει.",
+    "file": "apollo-v2.mp3"
+  },
+  "artemis": {
+    "voice": "el-GR-AthinaNeural",
+    "gender": "Female",
+    "rate": "+8%",
+    "pitch": "+5Hz",
+    "text": "Πέτυχες έναν ακόμη στόχο! Κράτησε τον επόμενο στόχο μπροστά σου.",
+    "file": "artemis-v2.mp3"
+  },
+  "aphrodite": {
+    "voice": "el-GR-AthinaNeural",
+    "gender": "Female",
+    "rate": "-10%",
+    "pitch": "+12Hz",
+    "text": "Έφτασες σε ένα νέο επίπεδο! Η πρόοδός σου σε κάνει να λάμπεις.",
+    "file": "aphrodite-v2.mp3"
+  },
+  "poseidon": {
+    "voice": "el-GR-NestorasNeural",
+    "gender": "Male",
+    "rate": "-12%",
+    "pitch": "-14Hz",
+    "text": "Κατέκτησες ένα νέο επίπεδο! Συνέχισε δυνατά, σαν κύμα που δεν σταματά!",
+    "file": "poseidon-v2.mp3"
+  },
+  "hephaestus": {
+    "voice": "el-GR-NestorasNeural",
+    "gender": "Male",
+    "rate": "-17%",
+    "pitch": "-8Hz",
+    "text": "Κατέκτησες ένα νέο επίπεδο! Με υπομονή σφυρηλατείς τη γνώση σου.",
+    "file": "hephaestus-v2.mp3"
+  },
+  "ares": {
+    "voice": "el-GR-NestorasNeural",
+    "gender": "Male",
+    "rate": "+12%",
+    "pitch": "-6Hz",
+    "text": "Κατέκτησες ένα νέο επίπεδο! Συνέχισε με θάρρος και δύναμη.",
+    "file": "ares-v2.mp3"
+  },
+  "hera": {
+    "voice": "el-GR-AthinaNeural",
+    "gender": "Female",
+    "rate": "-5%",
+    "pitch": "-16Hz",
+    "text": "Έφτασες σε ένα νέο επίπεδο! Η επιμονή σου αξίζει τον σεβασμό.",
+    "file": "hera-v2.mp3"
+  },
+  "dionysus": {
+    "voice": "el-GR-NestorasNeural",
+    "gender": "Male",
+    "rate": "+15%",
+    "pitch": "+20Hz",
+    "text": "Κατέκτησες ένα νέο επίπεδο! Γιόρτασε την πρόοδό σου και συνέχισε!",
+    "file": "dionysus-v2.mp3"
+  },
+  "zeus": {
+    "voice": "el-GR-NestorasNeural",
+    "gender": "Male",
+    "rate": "-20%",
+    "pitch": "-22Hz",
+    "text": "Κατέκτησες τον Όλυμπο! Προχώρα με θάρρος — η γνώση είναι η δύναμή σου!",
+    "file": "zeus-v2.mp3"
+  }
+}

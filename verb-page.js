@@ -50,6 +50,7 @@ document.addEventListener('storage-unavailable',showPageStorageNotice);
 function renderVerbPage(){
   showPageStorageNotice();
   document.documentElement.lang=pageLang;
+  window.updateThemeControl?.();
   document.getElementById('verbBack').textContent=pageT('back_to_verbs');
   const id=new URLSearchParams(location.search).get('id');
   const v=ALL_VERBS.find(item=>item.id===id);
@@ -57,10 +58,11 @@ function renderVerbPage(){
   document.title=`${v.greek} — ${pageT('page_title')}`;
   const translation=pageLang==='en'?v.english:v.russian;
   const group=pageT('group_'+v.group);
+  const pastLabel=pageT(v.aoristSupported?'past_t':'past_imperfect');
   const rows=PERSONS.map((person,i)=>{
-    const present=v.conj_pres[i] || '—', past=v.aoristSupported?(v.conj_past[i] || '—'):'—', future=v.conj_fut[i] || '—';
+    const present=v.conj_pres[i] || '—', past=v.conj_past[i] || '—', future=v.conj_fut[i] || '—';
     const speech=[person,present,past,future].filter(form=>form!=='—').join('|');
-    return `<tr><td class="td-person">${person}</td><td data-label="${pageT('pres_t')}">${present}</td><td data-label="${pageT('past_t')}">${past}</td><td data-label="${pageT('fut_t')}">${future}</td><td class="td-listen"><button class="audio-btn row-audio" title="${pageT('listen_row')}" aria-label="${pageT('listen_row')}" data-speech="${speech}">🔊 <span>${pageT('listen')}</span></button></td></tr>`;
+    return `<tr><td class="td-person">${person}</td><td data-label="${pageT('pres_t')}">${present}</td><td data-label="${pastLabel}">${past}</td><td data-label="${pageT('fut_t')}">${future}</td><td class="td-listen"><button class="audio-btn row-audio" title="${pageT('listen_row')}" aria-label="${pageT('listen_row')}" data-speech="${speech}">🔊 <span>${pageT('listen')}</span></button></td></tr>`;
   }).join('');
   document.getElementById('verbDetail').innerHTML=`
     <header class="verb-detail-head"><div><h1>${v.greek} <button class="audio-btn" id="headAudio" aria-label="${pageT('fc_audio')}">🔊</button></h1><p>${translation}</p></div></header>
@@ -68,7 +70,7 @@ function renderVerbPage(){
     ${!v.aoristSupported?`<p class="tense-note">${pageT('aorist_unavailable')}</p>`:''}
     ${[v.conj_pres,v.conj_fut,...(v.aoristSupported?[v.conj_past]:[])].some(forms=>forms.some(form=>!form))?`<p class="tense-note">${pageT('forms_unavailable')}</p>`:''}
     <div class="speech-speed"><span>${pageT('audio_speed')}</span><button class="tool-btn speech-speed-btn" data-speed="slow">${pageT('audio_slow')}</button><button class="tool-btn speech-speed-btn" data-speed="normal">${pageT('audio_normal')}</button></div>
-    <div class="tbl-wrap"><table class="conjugation-table"><thead><tr><th></th><th>${pageT('pres_t')}</th><th>${pageT('past_t')}</th><th>${pageT('fut_t')}</th><th>${pageT('listen')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <div class="tbl-wrap"><table class="conjugation-table"><thead><tr><th></th><th>${pageT('pres_t')}</th><th>${pastLabel}</th><th>${pageT('fut_t')}</th><th>${pageT('listen')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   document.getElementById('headAudio').onclick=e=>speakPageGreek(v.greek,e);
   document.querySelectorAll('.row-audio').forEach(button=>button.onclick=e=>speakPageRow(button.dataset.speech.split('|'),e));
   document.querySelectorAll('.speech-speed-btn').forEach(button=>button.onclick=()=>setPageSpeechSpeed(button.dataset.speed));

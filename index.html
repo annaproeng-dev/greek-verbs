@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta name="theme-color" content="#f4f1e9">
+  <meta name="color-scheme" content="only light">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Greek Verbs A2 — Trainer</title>
@@ -9,8 +10,9 @@
   <link rel="icon" href="favicon.ico?v=olympus" sizes="16x16 32x32 48x48" />
   <link rel="icon" href="favicon.svg?v=olympus" type="image/svg+xml" sizes="any" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=olympus" sizes="180x180" />
-  <script src="theme.js?v=20261102"></script>
-  <link rel="stylesheet" href="style.css?v=local-fonts-20261102" />
+  <script src="theme.js?v=20261104-light-fix1"></script>
+  <link rel="stylesheet" href="style.css?v=20261109-exam1" />
+<link rel="stylesheet" href="exam.css?v=20261109-exam1">
 </head>
 <body>
 
@@ -25,6 +27,7 @@
     <button class="nav-link"        id="nav-flashcards" onclick="switchSection('flashcards')" data-i18n="nav_flash">🃏 Flashcards</button>
     <button class="nav-link"        id="nav-practice"   onclick="switchSection('practice')"   data-i18n="nav_practice">🎯 Practice</button>
     <button class="nav-link"        id="nav-phrases"    onclick="switchSection('phrases')"    data-i18n="nav_phrases">💬 Phrases</button>
+    <a class="nav-link" id="nav-exam" href="exam.html" onclick="event.preventDefault();navigateLearningPage(this.href)" data-i18n="nav_exam">🏛️ Exam A2</a>
   </div>
   <div class="nav-settings">
     <button class="lang-btn" id="progressBtn" onclick="showProgress()" aria-label="Progress">📊</button>
@@ -44,6 +47,7 @@
 
   <!-- ══ VERBS TABLE ════════════════════════════════ -->
   <div class="section active" id="sec-verbs">
+    <a class="exam-entry" href="exam.html" onclick="event.preventDefault();navigateLearningPage(this.href)"><span data-i18n="exam_entry">🏛️ Prepare for the A2 exam</span><span aria-hidden="true">→</span></a>
     <p class="section-title" data-i18n="all_verbs">All Verbs</p>
     <div class="verb-tools">
       <input id="verbSearch" data-i18n-aria="search_verbs" class="tool-input" type="search" data-i18n-ph="search_verbs" oninput="renderTable()" />
@@ -111,21 +115,21 @@
       <strong data-i18n="practice_setup">Practice setup</strong>
       <div class="setup-grid">
         <label><span data-i18n="select_topic">Topic</span><select id="practiceTopic" class="phrase-select"></select></label>
-        <label><span data-i18n="select_tense">Tense</span><select id="practiceTense" class="phrase-select"></select></label>
-        <label><span data-i18n="select_exercise">Exercise</span><select id="practiceType" class="phrase-select"></select></label>
+        <label id="practiceTenseField"><span data-i18n="select_tense">Tense</span><select id="practiceTense" class="phrase-select"></select></label>
+        <label><span data-i18n="select_exercise">Exercise</span><select id="practiceType" class="phrase-select" onchange="updatePracticeSetup()"></select></label>
         <button class="fill-submit" onclick="startConfiguredPractice()" data-i18n="start_practice">Start practice</button>
       </div>
       <div class="setup-message" id="practiceMessage"></div>
     </div>
     <div class="sub-tabs">
-      <button class="sub-tab active" id="subtab-quiz"   onclick="switchExercise('quiz')"   data-i18n="sub_quiz">Translation</button>
-      <button class="sub-tab"        id="subtab-match"  onclick="switchExercise('match')"  data-i18n="sub_match">Matching</button>
-      <button class="sub-tab"        id="subtab-tense"  onclick="switchExercise('tense')"  data-i18n="sub_tense">Tense ID</button>
-      <button class="sub-tab"        id="subtab-conj"   onclick="switchExercise('conj')"   data-i18n="sub_conj">Conjugation</button>
-      <button class="sub-tab"        id="subtab-change" onclick="switchExercise('change')" data-i18n="sub_change">Change Tense</button>
-      <button class="sub-tab"        id="subtab-situation" onclick="switchExercise('situation')" data-i18n="sub_situation">Situations</button>
-      <button class="sub-tab"        id="subtab-fill"   onclick="switchExercise('fill')"   data-i18n="sub_fill">Missing letters</button>
-      <button class="sub-tab" hidden id="subtab-image"  onclick="switchExercise('image')"  data-i18n="sub_image">Images</button>
+      <button class="sub-tab active" id="subtab-quiz" onclick="switchExercise('quiz')" data-i18n="sub_quiz">Translation</button>
+      <button class="sub-tab" id="subtab-match" onclick="switchExercise('match')" data-i18n="sub_match">Matching</button>
+      <button class="sub-tab" id="subtab-tense" onclick="switchExercise('tense')" data-i18n="sub_tense">Tense ID</button>
+      <button class="sub-tab" id="subtab-conj" onclick="switchExercise('conj')" data-i18n="sub_conj">Conjugation</button>
+      <button class="sub-tab" id="subtab-change" onclick="switchExercise('change')" data-i18n="sub_change">Change Tense</button>
+      <button class="sub-tab" id="subtab-situation" onclick="switchExercise('situation')" data-i18n="sub_situation">Situations</button>
+      <button class="sub-tab" id="subtab-fill" onclick="switchExercise('fill')" data-i18n="sub_fill">Missing letters</button>
+      <button class="sub-tab" hidden id="subtab-image" onclick="switchExercise('image')" data-i18n="sub_image">Images</button>
     </div>
 
     <!-- Quiz -->
@@ -188,7 +192,10 @@
       <div class="ex-card">
         <button class="exercise-back" id="fillPrev" type="button" onclick="previousFill()" data-i18n="previous">← Previous</button>
         <div class="ex-prompt"   id="fillPrompt">Fill in the correct verb form:</div>
-        <div class="fill-sentence" id="fillSentence"></div>
+        <div class="fill-word-row">
+          <div class="fill-sentence" id="fillSentence"><span id="fillPerson"></span> <span class="fill-word"><span id="fillWordBefore"></span><span class="fill-gap"><span id="fillInputMeasure" aria-hidden="true"></span><input class="fill-input" id="fillInput" aria-labelledby="fillPrompt fillPerson" type="text" lang="el" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="…" /></span><span id="fillWordAfter"></span></span></div>
+          <button class="audio-btn" id="fillAudio" type="button" aria-label="Listen to Greek">🔊</button>
+        </div>
         <div class="fill-hint"    id="fillHint"></div>
         <div id="fillAccentSlot" class="accent-slot">
           <label class="accent-toggle" id="accentSettings">
@@ -197,9 +204,6 @@
           </label>
         </div>
         <div class="fill-tip" id="fillTip"></div>
-        <input class="fill-input" id="fillInput" aria-labelledby="fillPrompt" type="text"
-               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-               placeholder="…" />
         <button class="fill-submit" id="fillCheck" onclick="checkFill()">Check</button>
         <div class="feedback" id="fillFeedback" role="status" aria-live="polite"></div>
         <button class="ex-next-btn" id="fillNext" onclick="nextFill()">Next →</button>
@@ -223,23 +227,37 @@
     <!-- Picture situations -->
     <div class="exercise" id="ex-situation">
       <div class="situation-card">
-        <img id="situationImage" class="situation-image" alt="" />
-        <div class="situation-body">
+        <div class="situation-header">
           <button class="exercise-back" id="situationPrev" type="button" onclick="previousSituation()" data-i18n="previous">← Previous</button>
-          <div class="ex-prompt" id="situationPrompt"></div>
           <div class="situation-context" id="situationContext"></div>
+          <div class="ex-score" id="situationScore"></div>
+        </div>
+        <div class="situation-visual"><img id="situationImage" class="situation-image" alt="" /></div>
+        <div class="situation-body">
+          <div class="situation-controls">
+            <label><span id="situationTopicLabel"></span><select id="situationTopic" onchange="changeSituationTopic(this.value)"></select></label>
+            <div class="situation-modes" role="group" aria-labelledby="situationModeLabel">
+              <span id="situationModeLabel"></span>
+              <button class="tool-btn" id="situationDragMode" type="button" onclick="setSituationMode('drag')"></button>
+              <button class="tool-btn" id="situationTypeMode" type="button" onclick="setSituationMode('type')"></button>
+            </div>
+          </div>
+          <audio class="situation-audio-top" id="situationAudio" controls preload="metadata"></audio>
+          <div class="ex-prompt" id="situationPrompt"></div>
+          <div class="fill-tip" id="situationInstructions"></div>
+          <div class="situation-word-bank" id="situationWordBank" role="group"></div>
           <div class="situation-dialogue" id="situationDialogue"></div>
-          <button class="dir-btn" id="situationAudio" type="button"></button>
           <div id="situationVoiceStatus" class="fill-tip" role="status" aria-live="polite"></div>
           <div id="situationAccentSlot" class="accent-slot"></div>
           <div class="fill-tip" id="situationAccentTip"></div>
           <div class="situation-answer-row">
-            <input class="fill-input" id="situationInput" aria-labelledby="situationPrompt" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="…" />
-            <button class="fill-submit" id="situationCheck" onclick="checkSituation()"></button>
+            <input id="situationInput" type="hidden" />
+            <div class="situation-action">
+              <button class="fill-submit" id="situationCheck" onclick="checkSituation()"></button>
+              <button class="ex-next-btn" id="situationNext" onclick="nextSituation()"></button>
+            </div>
           </div>
           <div class="feedback" id="situationFeedback" role="status" aria-live="polite"></div>
-          <button class="ex-next-btn" id="situationNext" onclick="nextSituation()"></button>
-          <div class="ex-score" id="situationScore"></div>
         </div>
       </div>
     </div>
@@ -265,7 +283,7 @@
       <select id="phraseSelect" onchange="renderPhrases()" class="phrase-select"></select>
     </div>
     <div class="phrase-scenes" aria-label="Everyday Greek situations">
-      <div class="phrase-scene" id="phraseScene" role="img"><span id="phraseSceneEmoji"></span></div>
+      <div class="phrase-scene" id="phraseScene"><img id="phraseSceneImage" alt="" /><span id="phraseSceneEmoji" aria-hidden="true"></span></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -284,7 +302,10 @@
   <section class="section account-section" id="sec-auth" aria-labelledby="authTitle">
     <a class="account-back" href="#" data-auth-text="back">← Back to verbs</a>
     <div class="account-card">
-      <div class="account-emblem" aria-hidden="true">α</div>
+      <div class="auth-hermes-hero">
+        <div class="auth-hermes-portrait"><img src="assets/olympus/mascots/hermes-login-v2.png" alt="Hermes / Гермес"></div>
+        <div><strong id="authHeroTitle">10 заданий в день — и ты на шаг ближе к Олимпу</strong><span id="authHeroText">Гермес сохранит твой прогресс и награды Олимпа.</span></div>
+      </div>
       <div class="auth-tabs" aria-label="Account">
         <button type="button" id="authTab-login" class="active" onclick="setAuthMode('login')" data-auth-text="login" aria-pressed="true">Log in</button>
         <button type="button" id="authTab-register" onclick="setAuthMode('register')" data-auth-text="register" aria-pressed="false">Sign up</button>
@@ -295,8 +316,31 @@
         <label class="account-field"><span data-auth-text="email">Email</span><input id="authEmail" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required /></label>
         <label class="account-field"><span data-auth-text="password">Password</span><input id="authPassword" name="password" type="password" autocomplete="current-password" maxlength="128" required aria-describedby="passwordHelp" /><small id="passwordHelp" data-auth-text="passwordHelp" hidden>8–128 characters</small></label>
         <label class="account-field" id="confirmField" hidden><span data-auth-text="confirm">Confirm password</span><input id="authConfirm" name="confirmPassword" type="password" autocomplete="new-password" maxlength="128" disabled /></label>
+        <fieldset class="avatar-picker" id="registrationAvatarPicker" hidden>
+          <legend id="registrationAvatarTitle">Выберите персонажа профиля</legend>
+          <div class="avatar-options" data-avatar-picker="registration"></div>
+        </fieldset>
         <p class="account-error" id="authError" role="alert" aria-live="polite"></p>
+        <p class="account-success" id="authSuccess" role="status" aria-live="polite"></p>
         <button class="account-primary" id="authSubmit" type="submit">Log in</button>
+      </form>
+      <button class="forgot-password-link" id="forgotPasswordBtn" type="button" onclick="openPasswordRecovery()">Forgot password?</button>
+      <form id="forgotForm" class="password-recovery-form" onsubmit="requestPasswordReset(event)" hidden>
+        <h2 id="forgotTitle">Reset password</h2>
+        <p class="account-intro" id="forgotIntro">Enter your email and we will send a reset link.</p>
+        <label class="account-field"><span id="forgotEmailLabel">Email</span><input id="forgotEmail" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required /></label>
+        <p class="account-error" id="forgotError" role="alert" aria-live="polite"></p>
+        <p class="account-success" id="forgotSuccess" role="status" aria-live="polite"></p>
+        <button class="account-primary" id="forgotSubmit" type="submit">Send reset link</button>
+        <button class="password-back-link" type="button" onclick="closePasswordRecovery()">← Back to login</button>
+      </form>
+      <form id="resetForm" class="password-recovery-form" onsubmit="submitNewPassword(event)" hidden>
+        <h2 id="resetTitle">Create a new password</h2>
+        <p class="account-intro" id="resetIntro">Use at least 8 characters.</p>
+        <label class="account-field"><span id="resetPasswordLabel">New password</span><input id="resetPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required /></label>
+        <label class="account-field"><span id="resetConfirmLabel">Confirm password</span><input id="resetConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" required /></label>
+        <p class="account-error" id="resetError" role="alert" aria-live="polite"></p>
+        <button class="account-primary" id="resetSubmit" type="submit">Save new password</button>
       </form>
       <p class="account-note" data-auth-text="localProgress">Your progress is saved in this browser. Other devices have their own progress.</p>
     </div>
@@ -304,11 +348,16 @@
   <section class="section account-section" id="sec-profile" aria-labelledby="profileTitle">
     <a class="account-back" href="#" data-auth-text="back">← Back to verbs</a>
     <div class="account-card profile-card">
-      <div class="profile-avatar" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></div>
+      <div class="profile-avatar" id="profileAvatar" aria-hidden="true"></div>
       <h2 id="profileTitle" data-auth-text="profile">Profile</h2>
       <dl class="profile-details"><dt data-auth-text="email">Email</dt><dd id="profileEmail"></dd></dl>
+      <fieldset class="avatar-picker profile-avatar-picker">
+        <legend id="profileAvatarTitle">Персонаж профиля</legend>
+        <div class="avatar-options" data-avatar-picker="profile"></div>
+      </fieldset>
       <p class="account-note" data-auth-text="localProgress">Your progress is saved in this browser. Other devices have their own progress.</p>
       <p class="account-error" id="profileError" role="alert"></p>
+      <button class="tool-btn profile-tour-btn" id="profileTourBtn" type="button" onclick="startOnboarding(true)">🪽 How the site works</button>
       <button class="account-primary" id="logoutBtn" type="button" onclick="logout()" data-auth-text="logout">Log out</button>
     </div>
   </section>
@@ -319,11 +368,12 @@
 <dialog id="progressDialog" class="verb-dialog"><div id="progressContent"></div></dialog>
 <dialog id="olympusDialog" class="verb-dialog olympus-dialog"><div id="olympusContent"></div></dialog>
 <dialog id="rewardDialog" class="verb-dialog reward-dialog"><div id="rewardContent"></div></dialog>
+<dialog id="onboardingDialog" class="verb-dialog onboarding-dialog" aria-labelledby="onboardingTitle"><div id="onboardingContent"></div></dialog>
 
 
-<script src="data.js?v=security-20261102"></script>
-<script src="storage.js?v=security-20261102"></script>
-<script src="auth.js?v=security-20261102"></script>
-<script src="app.js?v=security-20261102"></script>
+<script src="data.js?v=20261109-exam1"></script>
+<script src="storage.js?v=20261102-theme-fix1"></script>
+<script src="auth.js?v=20261107-profile-layout3"></script>
+<script src="app.js?v=20261109-exam1"></script>
 </body>
 </html>

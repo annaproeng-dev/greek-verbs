@@ -95,12 +95,36 @@ class AuthTests(unittest.TestCase):
         with sqlite3.connect(self.db) as db:
             db.execute('DELETE FROM auth_attempts')
 
+    def test_password_reset_is_private_one_time_and_revokes_sessions(self):
+        data = {'email': 'reset@example.com', 'password': 'old-password-123', 'confirmPassword': 'old-password-123'}
+        status, headers, result = self.request('register', data)
+        self.assertEqual(status, 200)
+        old_cookie = headers['Set-Cookie'].split(';')[0]
+        delivered = []
+        smtp_env = {'SMTP_HOST': 'smtp.test', 'SMTP_FROM': 'test@example.com', 'APP_ORIGIN': 'http://localhost'}
+        with patch.dict(os.environ, smtp_env), patch('api.auth.send_reset_email', side_effect=lambda email, token: delivered.append((email, token))):
+            self.assertEqual(self.request('request_reset', {'email': data['email']})[0], 200)
+        self.assertEqual(delivered[0][0], data['email'])
+        # Unknown addresses receive the same generic response and no message.
+        with patch.dict(os.environ, smtp_env), patch('api.auth.send_reset_email') as sender:
+            self.assertEqual(self.request('request_reset', {'email': 'absent-reset@example.com'})[2], {'ok': True})
+            sender.assert_not_called()
+        token = delivered[0][1]
+        replacement = {'token': token, 'password': 'new-password-456', 'confirmPassword': 'new-password-456'}
+        self.assertEqual(self.request('reset_password', replacement)[0], 200)
+        self.assertIsNone(self.request(cookie=old_cookie)[2]['user'])
+        self.assertEqual(self.request('login', {'email': data['email'], 'password': data['password']})[0], 401)
+        self.assertEqual(self.request('login', {'email': data['email'], 'password': replacement['password']})[0], 200)
+        self.assertEqual(self.request('reset_password', replacement)[2]['error'], 'invalid_reset_token')
+
     def test_private_files_blocked_for_get_and_head(self):
         for method in ('GET', 'HEAD'):
             for path in ('/.env.local', '/.git/config', '/.data/auth.sqlite3', '/README.md', '/server.py', '/api/auth.py', '/tests/test_auth.py', '/%2eenv.local', '/assets/../.env.local', '/assets/%2e%2e/.env.local'):
                 with self.subTest(method=method, path=path):
                     self.assertEqual(self.request(path=path, method=method)[0], 404)
         self.assertEqual(self.request(path='/index.html', method='HEAD')[0], 200)
+        for method in ('GET', 'HEAD'):
+            self.assertEqual(self.request(path='/theme.js', method=method)[0], 200)
         self.assertEqual(self.request(path='/auth.js')[0], 200)
 
     def test_dns_rebinding_and_origin_scheme(self):

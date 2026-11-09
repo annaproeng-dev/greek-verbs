@@ -1,31 +1,47 @@
-"""Ensure recorded dialogue audio matches the text shipped with the app."""
-import ast
+"""Check that every illustrated dialogue has a recording and explicit speaker roles."""
 import json
-import re
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def data_constant(name):
+    source = (ROOT / 'data.js').read_text(encoding='utf-8')
+    return json.JSONDecoder().raw_decode(source.split('const ' + name + ' = ', 1)[1])[0]
+
+
 class DialogueAudioTests(unittest.TestCase):
-    def test_recordings_match_text_and_exist(self):
-        data = (ROOT / 'data.js').read_text(encoding='utf-8')
-        block = data.split('const SITUATIONS = [', 1)[1].split('\n];', 1)[0]
-        dialogues = re.findall(r"\{cat:'([^']+)'[\s\S]*?full:(\[[^\]]+\])", block)
-        code = (ROOT / 'app.js').read_text(encoding='utf-8')
-        fingerprints = json.loads(re.search(r'const dialogueRecordings=(\{[^;]+\});', code).group(1))
-        self.assertEqual(set(fingerprints), {cat for cat, _ in dialogues})
-        for category, raw_lines in dialogues:
-            fingerprint = 2166136261
-            for char in '\n'.join(ast.literal_eval(raw_lines)):
-                fingerprint = ((fingerprint ^ ord(char)) * 16777619) & 0xffffffff
-            self.assertEqual(fingerprints[category], fingerprint, category)
-            audio = ROOT / 'assets' / 'dialogues' / (category + '.mp3')
-            self.assertGreater(audio.stat().st_size, 1024, category)
-            with audio.open('rb') as stream:
-                header = stream.read(3)
-            self.assertTrue(header == b'ID3' or header[:1] == b'\xff', category)
+    def test_all_dialogues_have_recordings_and_roles(self):
+        speakers = data_constant('SITUATION_SPEAKERS')
+        recordings = data_constant('SITUATION_RECORDINGS')
+        self.assertEqual(len(recordings), 30)
+        self.assertEqual(set(recordings), set(speakers))
+        for dialogue_id, recording in recordings.items():
+            with self.subTest(dialogue=dialogue_id):
+                audio = ROOT / recording['src']
+                self.assertGreater(audio.stat().st_size, 1024)
+                with audio.open('rb') as stream:
+                    header = stream.read(3)
+                self.assertTrue(header == b'ID3' or header[:1] == b'\xff')
+                roles = speakers[dialogue_id]
+                self.assertEqual(len(roles['speakers']), 2)
+                self.assertTrue(all(turn in (0, 1) for turn in roles['lineSpeakers']))
+
+    def test_roles_match_illustrations_and_consecutive_turns(self):
+        speakers = data_constant('SITUATION_SPEAKERS')
+        expected = {'food': ['male', 'female'], 'travel': ['male', 'female'],
+                    'shopping': ['female', 'male'], 'doctor': ['male', 'female'],
+                    'hotel': ['female', 'female'], 'lost': ['male', 'male'],
+                    'work': ['female', 'male'], 'social': ['male', 'female'],
+                    'daily': ['male', 'male'], 'visa': ['female', 'female']}
+        for category, genders in expected.items():
+            for number in range(1, 4):
+                roles = speakers[f'{category}-{number}']
+                self.assertEqual([role['gender'] for role in roles['speakers']], genders)
+        # A greeting and the following request belong to the same person.
+        self.assertEqual(speakers['hotel-1']['lineSpeakers'], [0, 0, 1])
+        self.assertEqual(speakers['work-1']['lineSpeakers'], [0, 0, 1])
 
 
 if __name__ == '__main__':

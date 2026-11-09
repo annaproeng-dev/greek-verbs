@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="theme-color" content="#f4f1e9">
+  <meta name="color-scheme" content="only light">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Greek A2 — Exam preparation</title>
+  <meta name="description" content="Greek A2 exam practice: picture descriptions, speaking, reading, writing, phrases and verbs with shared Olympus rewards." />
+  <link rel="icon" href="favicon.ico?v=olympus" sizes="16x16 32x32 48x48" />
+  <link rel="icon" href="favicon.svg?v=olympus" type="image/svg+xml" sizes="any" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=olympus" sizes="180x180" />
+  <script src="theme.js?v=20261104-light-fix1"></script>
+  <link rel="stylesheet" href="style.css?v=20261109-exam1" />
+  <link rel="stylesheet" href="exam.css?v=20261109-exam1">
+</head>
+<body data-page="exam">
+<div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
+<nav>
+  <div class="nav-logo">🇬🇷 <span>ελληνικά</span> A2</div>
+  <div class="nav-links">
+    <button class="nav-link" id="nav-verbs"      onclick="navigateLearningPage('index.html?section=verbs')"      data-i18n="nav_verbs">📖 Verbs</button>
+    <button class="nav-link"        id="nav-flashcards" onclick="navigateLearningPage('index.html?section=flashcards')" data-i18n="nav_flash">🃏 Flashcards</button>
+    <button class="nav-link"        id="nav-practice"   onclick="navigateLearningPage('index.html?section=practice')"   data-i18n="nav_practice">🎯 Practice</button>
+    <button class="nav-link"        id="nav-phrases"    onclick="navigateLearningPage('index.html?section=phrases')"    data-i18n="nav_phrases">💬 Phrases</button>
+    <a class="nav-link active" id="nav-exam" href="exam.html" onclick="event.preventDefault();examHome()" data-i18n="nav_exam">🏛️ Exam A2</a>
+  </div>
+  <div class="nav-settings">
+    <button class="lang-btn" id="progressBtn" onclick="showProgress()" aria-label="Progress">📊</button>
+    <button class="lang-btn" id="olympusBtn" onclick="showOlympus()" aria-label="My Olympus">🏛️</button>
+    <button class="lang-btn theme-btn" id="themeBtn" onclick="toggleTheme()" type="button" aria-label="Switch to dark theme" aria-pressed="false">🌙</button>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">RU</button>
+    <button class="account-button" id="accountBtn" onclick="location.hash=currentUser ? 'profile' : 'login'" aria-label="Log in">Log in</button>
+  </div>
+</nav>
+
+<p id="learningNotice" class="learning-notice" role="alert" hidden></p>
+<main class="wrap exam-wrap">
+<section class="section active" id="sec-exam"><div id="examRoot"></div></section>
+  <section class="section account-section" id="sec-auth" aria-labelledby="authTitle">
+    <a class="account-back" href="#" data-auth-text="back">← Back to verbs</a>
+    <div class="account-card">
+      <div class="auth-hermes-hero">
+        <div class="auth-hermes-portrait"><img src="assets/olympus/mascots/hermes-login-v2.png" alt="Hermes / Гермес"></div>
+        <div><strong id="authHeroTitle">10 заданий в день — и ты на шаг ближе к Олимпу</strong><span id="authHeroText">Гермес сохранит твой прогресс и награды Олимпа.</span></div>
+      </div>
+      <div class="auth-tabs" aria-label="Account">
+        <button type="button" id="authTab-login" class="active" onclick="setAuthMode('login')" data-auth-text="login" aria-pressed="true">Log in</button>
+        <button type="button" id="authTab-register" onclick="setAuthMode('register')" data-auth-text="register" aria-pressed="false">Sign up</button>
+      </div>
+      <h2 id="authTitle">Welcome back</h2>
+      <p class="account-intro" id="authIntro">Log in and keep learning Greek.</p>
+      <form id="authForm" onsubmit="submitAuth(event)">
+        <label class="account-field"><span data-auth-text="email">Email</span><input id="authEmail" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required /></label>
+        <label class="account-field"><span data-auth-text="password">Password</span><input id="authPassword" name="password" type="password" autocomplete="current-password" maxlength="128" required aria-describedby="passwordHelp" /><small id="passwordHelp" data-auth-text="passwordHelp" hidden>8–128 characters</small></label>
+        <label class="account-field" id="confirmField" hidden><span data-auth-text="confirm">Confirm password</span><input id="authConfirm" name="confirmPassword" type="password" autocomplete="new-password" maxlength="128" disabled /></label>
+        <fieldset class="avatar-picker" id="registrationAvatarPicker" hidden>
+          <legend id="registrationAvatarTitle">Выберите персонажа профиля</legend>
+          <div class="avatar-options" data-avatar-picker="registration"></div>
+        </fieldset>
+        <p class="account-error" id="authError" role="alert" aria-live="polite"></p>
+        <p class="account-success" id="authSuccess" role="status" aria-live="polite"></p>
+        <button class="account-primary" id="authSubmit" type="submit">Log in</button>
+      </form>
+      <button class="forgot-password-link" id="forgotPasswordBtn" type="button" onclick="openPasswordRecovery()">Forgot password?</button>
+      <form id="forgotForm" class="password-recovery-form" onsubmit="requestPasswordReset(event)" hidden>
+        <h2 id="forgotTitle">Reset password</h2>
+        <p class="account-intro" id="forgotIntro">Enter your email and we will send a reset link.</p>
+        <label class="account-field"><span id="forgotEmailLabel">Email</span><input id="forgotEmail" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required /></label>
+        <p class="account-error" id="forgotError" role="alert" aria-live="polite"></p>
+        <p class="account-success" id="forgotSuccess" role="status" aria-live="polite"></p>
+        <button class="account-primary" id="forgotSubmit" type="submit">Send reset link</button>
+        <button class="password-back-link" type="button" onclick="closePasswordRecovery()">← Back to login</button>
+      </form>
+      <form id="resetForm" class="password-recovery-form" onsubmit="submitNewPassword(event)" hidden>
+        <h2 id="resetTitle">Create a new password</h2>
+        <p class="account-intro" id="resetIntro">Use at least 8 characters.</p>
+        <label class="account-field"><span id="resetPasswordLabel">New password</span><input id="resetPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required /></label>
+        <label class="account-field"><span id="resetConfirmLabel">Confirm password</span><input id="resetConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" required /></label>
+        <p class="account-error" id="resetError" role="alert" aria-live="polite"></p>
+        <button class="account-primary" id="resetSubmit" type="submit">Save new password</button>
+      </form>
+      <p class="account-note" data-auth-text="localProgress">Your progress is saved in this browser. Other devices have their own progress.</p>
+    </div>
+  </section>
+  <section class="section account-section" id="sec-profile" aria-labelledby="profileTitle">
+    <a class="account-back" href="#" data-auth-text="back">← Back to verbs</a>
+    <div class="account-card profile-card">
+      <div class="profile-avatar" id="profileAvatar" aria-hidden="true"></div>
+      <h2 id="profileTitle" data-auth-text="profile">Profile</h2>
+      <dl class="profile-details"><dt data-auth-text="email">Email</dt><dd id="profileEmail"></dd></dl>
+      <fieldset class="avatar-picker profile-avatar-picker">
+        <legend id="profileAvatarTitle">Персонаж профиля</legend>
+        <div class="avatar-options" data-avatar-picker="profile"></div>
+      </fieldset>
+      <p class="account-note" data-auth-text="localProgress">Your progress is saved in this browser. Other devices have their own progress.</p>
+      <p class="account-error" id="profileError" role="alert"></p>
+      <button class="tool-btn profile-tour-btn" id="profileTourBtn" type="button" onclick="navigateLearningPage('index.html?onboarding=1')">🪽 How the site works</button>
+      <button class="account-primary" id="logoutBtn" type="button" onclick="logout()" data-auth-text="logout">Log out</button>
+    </div>
+  </section>
+
+</main>
+<dialog id="verbDialog" class="verb-dialog"><div id="verbDialogContent"></div></dialog>
+<dialog id="progressDialog" class="verb-dialog"><div id="progressContent"></div></dialog>
+<dialog id="olympusDialog" class="verb-dialog olympus-dialog"><div id="olympusContent"></div></dialog>
+<dialog id="rewardDialog" class="verb-dialog reward-dialog"><div id="rewardContent"></div></dialog>
+<dialog id="onboardingDialog" class="verb-dialog onboarding-dialog" aria-labelledby="onboardingTitle"><div id="onboardingContent"></div></dialog>
+
+
+<script src="data.js?v=20261109-exam1"></script>
+<script src="exam-data.js?v=20261109-exam1"></script>
+<script src="storage.js?v=20261109-exam1"></script>
+<script src="auth.js?v=20261109-exam1"></script>
+<script src="exam.js?v=20261109-exam1"></script>
+<script src="app.js?v=20261109-exam1"></script>
+</body></html>
