@@ -12,7 +12,7 @@ python3 server.py
 
 ## DigitalOcean production
 
-Live URL: https://greek-verbs.161.35.40.15.sslip.io/
+Live URL: https://greekmaster.com/
 
 `deploy/setup-server.sh` runs as root on Ubuntu after the initial upload. It configures the Python environment, the `greek-verbs` systemd service, Nginx, and a TLS certificate with automatic renewal. The application database is stored outside the code directory at `/var/lib/greek-verbs/auth.sqlite3`; back up this directory.
 

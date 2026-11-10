@@ -74,6 +74,7 @@ if [[ "$DRY_RUN" == true ]]; then OPTIONS+=(--dry-run); fi
 "${AUTH[@]}" rsync "${OPTIONS[@]}" \
   -e "ssh -p $DEPLOY_PORT -o StrictHostKeyChecking=ask -o ConnectTimeout=15" \
   --include '/index.html' --include '/verb.html' --include '/exam.html' --include '/exam.js' --include '/exam-data.js' --include '/exam.css' \
+  --include '/privacy.html' --include '/terms.html' --include '/legal.js' --include '/legal.css' \
   --include '/app.js' --include '/data.js' --include '/auth.js' \
   --include '/storage.js' --include '/verb-page.js' --include '/theme.js' --include '/style.css' \
   --include '/favicon.ico' --include '/favicon.svg' --include '/apple-touch-icon.png' \
@@ -85,5 +86,5 @@ if [[ "$DRY_RUN" == true ]]; then
   printf 'Preview complete. No remote files changed.\n'
 else
   "${AUTH[@]}" "${SSH[@]}" "$TARGET" "systemctl try-restart greek-verbs.service"
-  printf 'Upload complete: https://greek-verbs.161.35.40.15.sslip.io/\n'
+  printf 'Upload complete: https://greekmaster.com/\n'
 fi

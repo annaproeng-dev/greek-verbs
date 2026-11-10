@@ -13,6 +13,8 @@
   <script src="theme.js?v=20261104-light-fix1"></script>
   <link rel="stylesheet" href="style.css?v=20261109-exam1" />
   <link rel="stylesheet" href="exam.css?v=20261109-exam1">
+  <link rel="stylesheet" href="legal.css?v=20261110">
+  <script src="legal.js?v=20261110" defer></script>
 </head>
 <body data-page="exam">
 <div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
@@ -58,6 +60,7 @@
           <legend id="registrationAvatarTitle">Выберите персонажа профиля</legend>
           <div class="avatar-options" data-avatar-picker="registration"></div>
         </fieldset>
+        <label id="legalAcceptance" class="legal-acceptance" hidden><input type="checkbox" id="acceptTerms" disabled><span id="legalAcceptanceText"></span></label>
         <p class="account-error" id="authError" role="alert" aria-live="polite"></p>
         <p class="account-success" id="authSuccess" role="status" aria-live="polite"></p>
         <button class="account-primary" id="authSubmit" type="submit">Log in</button>

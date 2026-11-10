@@ -1,0 +1,2302 @@
+{
+  "schemaVersion": "1.0.0",
+  "locale": "ru",
+  "targetLanguage": "el",
+  "title": "Греческий A2: карточки и грамматика",
+  "scope": "Прототип; авторские упражнения по темам учебников и форматам исторических тестов. Не полный курс и не официальный пробный экзамен.",
+  "sources": {
+    "ellinika": {
+      "title": "Ελληνικά Α΄",
+      "path": "/Users/annavinogradova/Documents/учебники/Греческий/Ελληνικά Α .pdf",
+      "role": "Порядок базовой грамматики A1–A2; оглавление PDF 4–5 и выборочные тематические страницы."
+    },
+    "klik": {
+      "title": "ΚΛΙΚ στα ελληνικά Α2",
+      "path": "/Users/annavinogradova/Downloads/ΚΛΙΚ Α2.pdf",
+      "role": "Коммуникативные ситуации A2; оглавление PDF 17–18, методика PDF 10–15."
+    },
+    "exam": {
+      "title": "КЕГ: экзаменационные задания A1 & A2, 2015–2018",
+      "path": "/Users/annavinogradova/Documents/учебники/Греческий/A1-A2_KEG_Sbornik_ekzamenov_Kniga (2).pdf",
+      "role": "Форматы раздела A2. Исторические образцы из предоставленного сборника."
+    }
+  },
+  "modules": [
+    {
+      "id": "gender",
+      "title": "Род: ο · η · το",
+      "subtitle": "Узнавать слово вместе с артиклем",
+      "category": "grammar",
+      "prerequisites": [],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            14,
+            15,
+            16
+          ],
+          "printed": "раздел 2, с. 24–37"
+        }
+      ]
+    },
+    {
+      "id": "articles",
+      "title": "Артикль: известное или одно из",
+      "subtitle": "ο / η / το и ένας / μία / ένα",
+      "category": "grammar",
+      "prerequisites": [
+        "gender"
+      ],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49
+          ],
+          "printed": "раздел 8, с. 94–107"
+        }
+      ]
+    },
+    {
+      "id": "cases",
+      "title": "Кто действует — кого вижу",
+      "subtitle": "Именительный и винительный",
+      "category": "grammar",
+      "prerequisites": [
+        "articles"
+      ],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            26
+          ],
+          "printed": "раздел 4, с. 48–58"
+        }
+      ]
+    },
+    {
+      "id": "genitive",
+      "title": "Чей? Кому принадлежит?",
+      "subtitle": "Родительный без большой таблицы",
+      "category": "grammar",
+      "prerequisites": [
+        "cases"
+      ],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            67
+          ],
+          "printed": "раздел 11, с. 132–149"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            48,
+            60
+          ],
+          "printed": "с. 47 и 59"
+        }
+      ]
+    },
+    {
+      "id": "plural",
+      "title": "Один → несколько",
+      "subtitle": "Множественное число по моделям",
+      "category": "grammar",
+      "prerequisites": [
+        "genitive"
+      ],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49,
+            50
+          ],
+          "printed": "раздел 8, с. 94–107"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18,
+            33
+          ],
+          "printed": "с. 32"
+        }
+      ]
+    },
+    {
+      "id": "agreement",
+      "title": "Согласование: меняем всю группу",
+      "subtitle": "Артикль + прилагательное + существительное",
+      "category": "grammar",
+      "prerequisites": [
+        "plural"
+      ],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            56
+          ],
+          "printed": "раздел 9, с. 108–121"
+        }
+      ]
+    },
+    {
+      "id": "prepositions",
+      "title": "В городе: στο · στην · στον",
+      "subtitle": "σε + артикль и винительный",
+      "category": "grammar",
+      "prerequisites": [
+        "agreement"
+      ],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            16
+          ],
+          "printed": "разделы 2 и 6, с. 24–37, 66–79"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17
+          ],
+          "printed": "раздел 3, с. 64–83"
+        }
+      ]
+    },
+    {
+      "id": "verb-time",
+      "title": "Сейчас · вчера · завтра",
+      "subtitle": "Форма глагола в ситуации",
+      "category": "grammar",
+      "prerequisites": [
+        "prepositions"
+      ],
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            76,
+            94
+          ],
+          "printed": "разделы 12–14, с. 150–199"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            18
+          ],
+          "printed": "с. 24, 32, 78"
+        }
+      ]
+    },
+    {
+      "id": "exam-skills",
+      "title": "Ситуации A2",
+      "subtitle": "Чтение · слушание · письмо · речь",
+      "category": "communication",
+      "prerequisites": [],
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            191,
+            193,
+            195,
+            197,
+            200,
+            201,
+            203,
+            205,
+            206,
+            208,
+            209,
+            210
+          ]
+        }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "moduleId": "gender",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Род: ο · η · το",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            14,
+            15,
+            16
+          ],
+          "printed": "раздел 2, с. 24–37"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "gender-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "Род: ο · η · το",
+      "body": "У греческого существительного есть грамматический род: мужской ο, женский η, средний το. Запоминай пару «артикль + слово», даже если род отличается от русского.",
+      "example": "ο δρόμος — улица · η πόλη — город · το σπίτι — дом",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "gender",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Род: ο · η · το",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            14,
+            15,
+            16
+          ],
+          "printed": "раздел 2, с. 24–37"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "gender-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "Окончание помогает, но не гарантирует род: η οδός — улица, το μέρος — место. Το κορίτσι — девочка, но грамматически средний род. Русский перевод не определяет греческий род.",
+      "example": "ο δρόμος — улица · η πόλη — город · το σπίτι — дом",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "gender",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Род: ο · η · το",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            14,
+            15,
+            16
+          ],
+          "printed": "раздел 2, с. 24–37"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "gender-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Выбери артикль",
+      "context": "___ σπίτι",
+      "answer": "το",
+      "hint": "Слово среднего рода.",
+      "feedback": "Το σπίτι — дом. Запоминай эту пару целиком.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "το"
+      ],
+      "options": [
+        "ο",
+        "η",
+        "το"
+      ]
+    },
+    {
+      "moduleId": "gender",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Род: ο · η · το",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            14,
+            15,
+            16
+          ],
+          "printed": "раздел 2, с. 24–37"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "gender-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Русский перевод не подсказывает род",
+      "context": "___ πόλη — город",
+      "answer": "η",
+      "hint": "Вспомни пару η πόλη.",
+      "feedback": "Η πόλη — женский род, хотя «город» в русском мужского рода.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "η"
+      ],
+      "options": [
+        "ο",
+        "η",
+        "το"
+      ]
+    },
+    {
+      "moduleId": "gender",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Род: ο · η · το",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            14,
+            15,
+            16
+          ],
+          "printed": "раздел 2, с. 24–37"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "gender-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Впиши артикль",
+      "context": "___ δρόμος — улица",
+      "answer": "ο",
+      "hint": "Мужской род.",
+      "feedback": "Ο δρόμος — мужской род. В русском «улица» — женского.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "ο"
+      ]
+    },
+    {
+      "moduleId": "gender",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Род: ο · η · το",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            14,
+            15,
+            16
+          ],
+          "printed": "раздел 2, с. 24–37"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "gender-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Прочитай объявление и выбери пару с правильным родом",
+      "context": "Το σπίτι είναι κοντά στην πόλη.",
+      "answer": "το σπίτι · η πόλη",
+      "acceptedAnswers": [
+        "το σπίτι · η πόλη"
+      ],
+      "options": [
+        "ο σπίτι · το πόλη",
+        "το σπίτι · η πόλη",
+        "η σπίτι · ο πόλη"
+      ],
+      "feedback": "Το σπίτι — средний род; η πόλη — женский. В тексте στην πόλη артикль уже изменился из-за падежа.",
+      "assessment": "exact"
+    },
+    {
+      "moduleId": "articles",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Артикль: известное или одно из",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49
+          ],
+          "printed": "раздел 8, с. 94–107"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "articles-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "Артикль: известное или одно из",
+      "body": "Определённый артикль указывает на известного или конкретного человека/предмет. Неопределённый вводит «какого-то», «одного»: ένας φίλος, μία φίλη, ένα σπίτι. В греческом артикль часто стоит и перед именами: η Άννα.",
+      "example": "Αυτό είναι ένα βιβλίο. Το βιβλίο είναι καινούριο. — Это книга. Эта книга новая.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "articles",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Артикль: известное или одно из",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49
+          ],
+          "printed": "раздел 8, с. 94–107"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "articles-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "Это не правило «перед каждым словом нужен артикль». Например, после είμαι профессия часто без артикля: Είμαι γιατρός. У неопределённого артикля нет множественного числа; во множественном числе можно использовать существительное без него.",
+      "example": "Αυτό είναι ένα βιβλίο. Το βιβλίο είναι καινούριο. — Это книга. Эта книга новая.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "articles",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Артикль: известное или одно из",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49
+          ],
+          "printed": "раздел 8, с. 94–107"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "articles-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Впервые вводим предмет: «Это какая-то книга»",
+      "context": "Αυτό είναι ___ βιβλίο.",
+      "answer": "ένα",
+      "hint": "Βιβλίο — средний род.",
+      "feedback": "Ένα βιβλίο — одна / какая-то книга.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "ένα"
+      ],
+      "options": [
+        "ένα",
+        "ένας",
+        "μία"
+      ]
+    },
+    {
+      "moduleId": "articles",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Артикль: известное или одно из",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49
+          ],
+          "printed": "раздел 8, с. 94–107"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "articles-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Теперь говорим о той же книге",
+      "context": "___ βιβλίο είναι καινούριο.",
+      "answer": "Το",
+      "hint": "Предмет уже известен.",
+      "feedback": "Το βιβλίο — конкретная книга, о которой уже заговорили.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "Το"
+      ],
+      "options": [
+        "Το",
+        "Ο",
+        "Η"
+      ]
+    },
+    {
+      "moduleId": "articles",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Артикль: известное или одно из",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49
+          ],
+          "printed": "раздел 8, с. 94–107"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "articles-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Представь профессию без артикля",
+      "context": "Είμαι ___. (врач)",
+      "answer": "γιατρός",
+      "hint": "Слово начинается на γ.",
+      "feedback": "Είμαι γιατρός — я врач. Здесь профессия обычно без артикля.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "γιατρός"
+      ]
+    },
+    {
+      "moduleId": "articles",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Артикль: известное или одно из",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49
+          ],
+          "printed": "раздел 8, с. 94–107"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "articles-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Выбери естественное продолжение сообщения",
+      "context": "Έχω ένα σπίτι στο χωριό. ___ είναι μικρό.",
+      "answer": "Το σπίτι",
+      "acceptedAnswers": [
+        "Το σπίτι"
+      ],
+      "options": [
+        "Ένα σπίτι",
+        "Το σπίτι",
+        "Η σπίτι"
+      ],
+      "feedback": "Во второй фразе речь о том же доме, поэтому Το σπίτι.",
+      "assessment": "exact"
+    },
+    {
+      "moduleId": "cases",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Кто действует — кого вижу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            26
+          ],
+          "printed": "раздел 4, с. 48–58"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "cases-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "Кто действует — кого вижу",
+      "body": "Сначала найди роль слова. Кто действует? Именительный: ο φίλος. Кого вижу? Винительный: τον φίλο. Артикль и окончание существительного меняются вместе. Это не просто перевод русских окончаний.",
+      "example": "Ο φίλος γράφει. — Друг пишет. Βλέπω τον φίλο. — Вижу друга. Η φίλη → τη φίλη. Το παιδί → το παιδί.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "cases",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Кто действует — кого вижу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            26
+          ],
+          "printed": "раздел 4, с. 48–58"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "cases-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "У среднего рода формы именительного и винительного совпадают: το παιδί. В мужском единственном числе на -ος: ο φίλος → τον φίλο. Эту модель нельзя переносить на все существительные. Для женского винительного встречаются τη и την по правилу конечного ν.",
+      "example": "Ο φίλος γράφει. — Друг пишет. Βλέπω τον φίλο. — Вижу друга. Η φίλη → τη φίλη. Το παιδί → το παιδί.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "cases",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Кто действует — кого вижу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            26
+          ],
+          "printed": "раздел 4, с. 48–58"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "cases-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Кто звонит?",
+      "context": "___ φίλος τηλεφωνεί.",
+      "answer": "Ο",
+      "hint": "Это действующее лицо.",
+      "feedback": "Ο φίλος — именительный: друг сам звонит.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "Ο"
+      ],
+      "options": [
+        "Ο",
+        "Τον",
+        "Του"
+      ]
+    },
+    {
+      "moduleId": "cases",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Кто действует — кого вижу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            26
+          ],
+          "printed": "раздел 4, с. 48–58"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "cases-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Кого ты ждёшь?",
+      "context": "Περιμένω ___ φίλο μου.",
+      "answer": "τον",
+      "hint": "Прямое дополнение.",
+      "feedback": "Περιμένω τον φίλο μου — жду друга. Меняются и артикль, и φίλος → φίλο.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "τον"
+      ],
+      "options": [
+        "ο",
+        "τον",
+        "του"
+      ]
+    },
+    {
+      "moduleId": "cases",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Кто действует — кого вижу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            26
+          ],
+          "printed": "раздел 4, с. 48–58"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "cases-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Измени всю пару: «вижу друга»",
+      "context": "Βλέπω ___ ___. (ο φίλος)",
+      "answer": "τον φίλο",
+      "hint": "ο → τον; φίλος → φίλο.",
+      "feedback": "Βλέπω τον φίλο. Винительный падеж указывает, кого видят.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "τον φίλο"
+      ]
+    },
+    {
+      "moduleId": "cases",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Кто действует — кого вижу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            26
+          ],
+          "printed": "раздел 4, с. 48–58"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "cases-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "В письме пропущена форма: выбери подходящую",
+      "context": "Αύριο θα συναντήσω ___ στο κέντρο.",
+      "answer": "τον φίλο μου",
+      "acceptedAnswers": [
+        "τον φίλο μου"
+      ],
+      "options": [
+        "ο φίλος μου",
+        "τον φίλο μου",
+        "του φίλου μου"
+      ],
+      "feedback": "Συναντώ кого? Τον φίλο μου. Будущее время не меняет роль дополнения.",
+      "assessment": "exact"
+    },
+    {
+      "moduleId": "genitive",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Чей? Кому принадлежит?",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            67
+          ],
+          "printed": "раздел 11, с. 132–149"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            48,
+            60
+          ],
+          "printed": "с. 47 и 59"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "genitive-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "Чей? Кому принадлежит?",
+      "body": "Родительный может показывать принадлежность: το βιβλίο του φίλου — книга друга; η τσάντα της Μαρίας — сумка Марии. Для знакомых моделей: ο φίλος → του φίλου; η φίλη → της φίλης; το παιδί → του παιδιού.",
+      "example": "το σπίτι της Άννας — дом Анны · το όνομα του παιδιού — имя ребёнка",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "genitive",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Чей? Кому принадлежит?",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            67
+          ],
+          "printed": "раздел 11, с. 132–149"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            48,
+            60
+          ],
+          "printed": "с. 47 и 59"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "genitive-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "Не смешивай две конструкции: της Μαρίας — Марии; μου — мой/моя/моё после существительного. Родительный нужен и после многих других слов, но здесь отрабатываем только принадлежность. Ударение может меняться: παιδί → παιδιού.",
+      "example": "το σπίτι της Άννας — дом Анны · το όνομα του παιδιού — имя ребёнка",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "genitive",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Чей? Кому принадлежит?",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            67
+          ],
+          "printed": "раздел 11, с. 132–149"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            48,
+            60
+          ],
+          "printed": "с. 47 и 59"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "genitive-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Чья сумка?",
+      "context": "Η τσάντα ___ Μαρίας.",
+      "answer": "της",
+      "hint": "Принадлежит Марии.",
+      "feedback": "Της Μαρίας — родительный: сумка Марии.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "της"
+      ],
+      "options": [
+        "τη",
+        "της",
+        "την"
+      ]
+    },
+    {
+      "moduleId": "genitive",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Чей? Кому принадлежит?",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            67
+          ],
+          "printed": "раздел 11, с. 132–149"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            48,
+            60
+          ],
+          "printed": "с. 47 и 59"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "genitive-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Выбери: имя ребёнка",
+      "context": "Το όνομα ___.",
+      "answer": "του παιδιού",
+      "hint": "У родительного меняется ударение.",
+      "feedback": "Το παιδί → του παιδιού. Правильно запомнить всю пару.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "του παιδιού"
+      ],
+      "options": [
+        "το παιδί",
+        "του παιδιού",
+        "τον παιδί"
+      ]
+    },
+    {
+      "moduleId": "genitive",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Чей? Кому принадлежит?",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            67
+          ],
+          "printed": "раздел 11, с. 132–149"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            48,
+            60
+          ],
+          "printed": "с. 47 и 59"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "genitive-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Вставь артикль: «дом друга»",
+      "context": "Το σπίτι ___ φίλου.",
+      "answer": "του",
+      "hint": "Родительный мужского рода.",
+      "feedback": "Του φίλου — друга; τον φίλο — винительный, здесь не подходит.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "του"
+      ]
+    },
+    {
+      "moduleId": "genitive",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Чей? Кому принадлежит?",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            67
+          ],
+          "printed": "раздел 11, с. 132–149"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            48,
+            60
+          ],
+          "printed": "с. 47 и 59"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "genitive-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Понять объявление: кому принадлежит телефон?",
+      "context": "Βρέθηκε το τηλέφωνο της δασκάλας.",
+      "answer": "Учительнице",
+      "acceptedAnswers": [
+        "Учительнице"
+      ],
+      "options": [
+        "Учительнице",
+        "Учителю",
+        "Ребёнку"
+      ],
+      "feedback": "Της δασκάλας — учительницы. Родительный помогает понять владельца.",
+      "assessment": "exact"
+    },
+    {
+      "moduleId": "plural",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Один → несколько",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49,
+            50
+          ],
+          "printed": "раздел 8, с. 94–107"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18,
+            33
+          ],
+          "printed": "с. 32"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "plural-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "Один → несколько",
+      "body": "Учи множественное вместе с единственным: ο φίλος → οι φίλοι; η φίλη → οι φίλες; το βιβλίο → τα βιβλία; το παιδί → τα παιδιά. Артикль тоже меняется. Это несколько моделей, а не одно универсальное окончание.",
+      "example": "ένας φίλος → δύο φίλοι · μία φίλη → δύο φίλες · ένα παιδί → δύο παιδιά",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "plural",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Один → несколько",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49,
+            50
+          ],
+          "printed": "раздел 8, с. 94–107"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18,
+            33
+          ],
+          "printed": "с. 32"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "plural-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "Οι бывает и у мужского, и у женского рода. По одному артиклю οι род не определить. Есть другие модели: ο καφές → οι καφέδες. Не образуй все множественные по образцу φίλος.",
+      "example": "ένας φίλος → δύο φίλοι · μία φίλη → δύο φίλες · ένα παιδί → δύο παιδιά",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "plural",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Один → несколько",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49,
+            50
+          ],
+          "printed": "раздел 8, с. 94–107"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18,
+            33
+          ],
+          "printed": "с. 32"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "plural-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Один друг → два друга",
+      "context": "ένας φίλος → δύο ___",
+      "answer": "φίλοι",
+      "hint": "Модель -ος → -οι.",
+      "feedback": "Φίλος → φίλοι; φίλες — подруги.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "φίλοι"
+      ],
+      "options": [
+        "φίλοι",
+        "φίλες",
+        "φίλο"
+      ]
+    },
+    {
+      "moduleId": "plural",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Один → несколько",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49,
+            50
+          ],
+          "printed": "раздел 8, с. 94–107"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18,
+            33
+          ],
+          "printed": "с. 32"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "plural-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Выбери артикль множественного",
+      "context": "___ βιβλία",
+      "answer": "τα",
+      "hint": "Βιβλία — средний род, несколько книг.",
+      "feedback": "Το βιβλίο → τα βιβλία.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "τα"
+      ],
+      "options": [
+        "το",
+        "τα",
+        "οι"
+      ]
+    },
+    {
+      "moduleId": "plural",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Один → несколько",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49,
+            50
+          ],
+          "printed": "раздел 8, с. 94–107"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18,
+            33
+          ],
+          "printed": "с. 32"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "plural-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Один ребёнок → два ребёнка",
+      "context": "ένα παιδί → δύο ___",
+      "answer": "παιδιά",
+      "hint": "Ударение в конце.",
+      "feedback": "Παιδί → παιδιά. Во множественном: τα παιδιά.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "παιδιά"
+      ]
+    },
+    {
+      "moduleId": "plural",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Один → несколько",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            49,
+            50
+          ],
+          "printed": "раздел 8, с. 94–107"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18,
+            33
+          ],
+          "printed": "с. 32"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "plural-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Прочитай сообщение и выбери число",
+      "context": "Τα δωμάτια είναι διαθέσιμα από τη Δευτέρα.",
+      "answer": "Свободны несколько комнат",
+      "acceptedAnswers": [
+        "Свободны несколько комнат"
+      ],
+      "options": [
+        "Свободна одна комната",
+        "Свободны несколько комнат",
+        "Комнат нет"
+      ],
+      "feedback": "Τα δωμάτια — множественное число. Είναι само по себе числа не различает.",
+      "assessment": "exact"
+    },
+    {
+      "moduleId": "agreement",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Согласование: меняем всю группу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            56
+          ],
+          "printed": "раздел 9, с. 108–121"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "agreement-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "Согласование: меняем всю группу",
+      "body": "Прилагательное согласуется с существительным в роде, числе и падеже. Для модели -ος / -η / -ο: ο μικρός κήπος, η μικρή τσάντα, το μικρό σπίτι. Сначала определи существительное, затем подстрой остальные слова.",
+      "example": "το μικρό σπίτι → τα μικρά σπίτια · ο καλός φίλος → βλέπω τον καλό φίλο",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "agreement",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Согласование: меняем всю группу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            56
+          ],
+          "printed": "раздел 9, с. 108–121"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "agreement-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "Не все прилагательные имеют женскую форму на -η: ωραίος → ωραία → ωραίο. Винительный меняет всю группу: τον καλό φίλο. Поэтому проверяй не только род, но и роль слов в предложении.",
+      "example": "το μικρό σπίτι → τα μικρά σπίτια · ο καλός φίλος → βλέπω τον καλό φίλο",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "agreement",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Согласование: меняем всю группу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            56
+          ],
+          "printed": "раздел 9, с. 108–121"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "agreement-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Дом среднего рода",
+      "context": "Το ___ σπίτι.",
+      "answer": "μικρό",
+      "hint": "Артикль το помогает.",
+      "feedback": "Το μικρό σπίτι — все слова относятся к среднему роду.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "μικρό"
+      ],
+      "options": [
+        "μικρός",
+        "μικρή",
+        "μικρό"
+      ]
+    },
+    {
+      "moduleId": "agreement",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Согласование: меняем всю группу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            56
+          ],
+          "printed": "раздел 9, с. 108–121"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "agreement-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Несколько сумок",
+      "context": "Οι ___ τσάντες.",
+      "answer": "μικρές",
+      "hint": "Τσάντες — женский род, множественное.",
+      "feedback": "Η μικρή τσάντα → οι μικρές τσάντες.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "μικρές"
+      ],
+      "options": [
+        "μικρή",
+        "μικρές",
+        "μικρά"
+      ]
+    },
+    {
+      "moduleId": "agreement",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Согласование: меняем всю группу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            56
+          ],
+          "printed": "раздел 9, с. 108–121"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "agreement-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Вставь: «хорошего»",
+      "context": "Βλέπω τον ___ φίλο. (καλός)",
+      "answer": "καλό",
+      "hint": "Винительный мужского рода.",
+      "feedback": "Τον καλό φίλο — все три слова согласованы в винительном единственного.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "καλό"
+      ]
+    },
+    {
+      "moduleId": "agreement",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Согласование: меняем всю группу",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            56
+          ],
+          "printed": "раздел 9, с. 108–121"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "agreement-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Заполни объявление об аренде",
+      "context": "Ενοικιάζεται ένα ___ διαμέρισμα.",
+      "answer": "μικρό",
+      "acceptedAnswers": [
+        "μικρό"
+      ],
+      "options": [
+        "μικρός",
+        "μικρή",
+        "μικρό"
+      ],
+      "feedback": "Διαμέρισμα — средний род. Ένα μικρό διαμέρισμα — небольшая квартира.",
+      "assessment": "exact"
+    },
+    {
+      "moduleId": "prepositions",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "В городе: στο · στην · στον",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            16
+          ],
+          "printed": "разделы 2 и 6, с. 24–37, 66–79"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17
+          ],
+          "printed": "раздел 3, с. 64–83"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "prepositions-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "В городе: στο · στην · στον",
+      "body": "Σε соединяется с определённым артиклем: σε + τον → στον; σε + την → στην; σε + το → στο. Учи с местом: στον σταθμό, στην τράπεζα, στο σπίτι. «Куда?» и «где?» с σε оба могут требовать винительного.",
+      "example": "Πηγαίνω στην τράπεζα. — Иду в банк. Είμαι στην τράπεζα. — Я в банке.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "prepositions",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "В городе: στο · στην · στον",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            16
+          ],
+          "printed": "разделы 2 и 6, с. 24–37, 66–79"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17
+          ],
+          "printed": "раздел 3, с. 64–83"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "prepositions-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "Русское различие «в банк / в банке» не означает два разных греческих падежа. Не выбирай στο для любого места. Сначала вспомни род: η τράπεζα → στην τράπεζα; ο σταθμός → στον σταθμό.",
+      "example": "Πηγαίνω στην τράπεζα. — Иду в банк. Είμαι στην τράπεζα. — Я в банке.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "prepositions",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "В городе: στο · στην · στον",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            16
+          ],
+          "printed": "разделы 2 и 6, с. 24–37, 66–79"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17
+          ],
+          "printed": "раздел 3, с. 64–83"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "prepositions-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Ты идёшь в банк",
+      "context": "Πηγαίνω ___ τράπεζα.",
+      "answer": "στην",
+      "hint": "Η τράπεζα.",
+      "feedback": "Σε + την → στην. Πηγαίνω στην τράπεζα.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "στην"
+      ],
+      "options": [
+        "στο",
+        "στην",
+        "στον"
+      ]
+    },
+    {
+      "moduleId": "prepositions",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "В городе: στο · στην · στον",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            16
+          ],
+          "printed": "разделы 2 и 6, с. 24–37, 66–79"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17
+          ],
+          "printed": "раздел 3, с. 64–83"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "prepositions-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Ты уже на вокзале",
+      "context": "Είμαι ___ σταθμό.",
+      "answer": "στον",
+      "hint": "Ο σταθμός → τον σταθμό.",
+      "feedback": "Σε + τον → στον. Даже «где?» здесь с винительным.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "στον"
+      ],
+      "options": [
+        "στο",
+        "στην",
+        "στον"
+      ]
+    },
+    {
+      "moduleId": "prepositions",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "В городе: στο · στην · στον",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            16
+          ],
+          "printed": "разделы 2 и 6, с. 24–37, 66–79"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17
+          ],
+          "printed": "раздел 3, с. 64–83"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "prepositions-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Соедини σε + το",
+      "context": "Πηγαίνω ___ σχολείο.",
+      "answer": "στο",
+      "hint": "Средний род.",
+      "feedback": "Σε + το → στο. Το σχολείο — школа.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "στο"
+      ]
+    },
+    {
+      "moduleId": "prepositions",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "В городе: στο · στην · στον",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            4,
+            16
+          ],
+          "printed": "разделы 2 и 6, с. 24–37, 66–79"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17
+          ],
+          "printed": "раздел 3, с. 64–83"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "prepositions-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Выбери правильный маршрут",
+      "context": "Αύριο θα πάω ___ για να στείλω ένα γράμμα.",
+      "answer": "στο ταχυδρομείο",
+      "acceptedAnswers": [
+        "στο ταχυδρομείο"
+      ],
+      "options": [
+        "στην ταχυδρομείο",
+        "στο ταχυδρομείο",
+        "στον ταχυδρομείο"
+      ],
+      "feedback": "Το ταχυδρομείο — почта, поэтому στο. Контекст: отправить письмо.",
+      "assessment": "exact"
+    },
+    {
+      "moduleId": "verb-time",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Сейчас · вчера · завтра",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            76,
+            94
+          ],
+          "printed": "разделы 12–14, с. 150–199"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            18
+          ],
+          "printed": "с. 24, 32, 78"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "verb-time-intro-1",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "Сейчас · вчера · завтра",
+      "body": "Для начала связывай форму со временем и смыслом: κάθε μέρα γράφω — пишу каждый день; χθες έγραψα — вчера написал(а); αύριο θα γράψω — завтра напишу. Учим связку γράφω — έγραψα — θα γράψω.",
+      "example": "Κάθε μέρα γράφω. Χθες έγραψα. Αύριο θα γράψω.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "verb-time",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Сейчас · вчера · завтра",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            76,
+            94
+          ],
+          "printed": "разделы 12–14, с. 150–199"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            18
+          ],
+          "printed": "с. 24, 32, 78"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "verb-time-intro-2",
+      "stage": "introduction",
+      "type": "explanation",
+      "prompt": "На что обратить внимание",
+      "body": "Αύριο не всегда требует θα γράψω: θα γράφω показывает процесс или повторение в будущем. Прошедшее тоже различает процесс и завершённое действие: έγραφα / έγραψα. В этой карточке нужен именно один завершённый результат, а не вся система времён.",
+      "example": "Κάθε μέρα γράφω. Χθες έγραψα. Αύριο θα γράψω.",
+      "assessment": "none"
+    },
+    {
+      "moduleId": "verb-time",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Сейчас · вчера · завтра",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            76,
+            94
+          ],
+          "printed": "разделы 12–14, с. 150–199"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            18
+          ],
+          "printed": "с. 24, 32, 78"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "verb-time-drill-1",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Вчера написала одно письмо и закончила",
+      "context": "Χθες ___ ένα γράμμα.",
+      "answer": "έγραψα",
+      "hint": "Завершённое действие в прошлом.",
+      "feedback": "Έγραψα — написал(а). Γράφω — настоящее; θα γράψω — будущее.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "έγραψα"
+      ],
+      "options": [
+        "γράφω",
+        "έγραψα",
+        "θα γράψω"
+      ]
+    },
+    {
+      "moduleId": "verb-time",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Сейчас · вчера · завтра",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            76,
+            94
+          ],
+          "printed": "разделы 12–14, с. 150–199"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            18
+          ],
+          "printed": "с. 24, 32, 78"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "verb-time-drill-2",
+      "stage": "drill",
+      "type": "choice",
+      "prompt": "Завтра напишу одно сообщение",
+      "context": "Αύριο ___ ένα μήνυμα.",
+      "answer": "θα γράψω",
+      "hint": "Один будущий результат.",
+      "feedback": "Θα γράψω — напишу. Для процесса/повторения возможна другая форма: θα γράφω.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "θα γράψω"
+      ],
+      "options": [
+        "γράφω",
+        "έγραψα",
+        "θα γράψω"
+      ]
+    },
+    {
+      "moduleId": "verb-time",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Сейчас · вчера · завтра",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            76,
+            94
+          ],
+          "printed": "разделы 12–14, с. 150–199"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            18
+          ],
+          "printed": "с. 24, 32, 78"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "verb-time-drill-3",
+      "stage": "drill",
+      "type": "input",
+      "prompt": "Впиши: «пишу»",
+      "context": "Κάθε μέρα ___ ένα μήνυμα.",
+      "answer": "γράφω",
+      "hint": "Настоящее, я.",
+      "feedback": "Κάθε μέρα γράφω — пишу каждый день.",
+      "assessment": "exact",
+      "acceptedAnswers": [
+        "γράφω"
+      ]
+    },
+    {
+      "moduleId": "verb-time",
+      "level": "A1→A2",
+      "skill": "grammar",
+      "topic": "Сейчас · вчера · завтра",
+      "sourceRefs": [
+        {
+          "source": "ellinika",
+          "pdfPages": [
+            5,
+            76,
+            94
+          ],
+          "printed": "разделы 12–14, с. 150–199"
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            17,
+            18
+          ],
+          "printed": "с. 24, 32, 78"
+        }
+      ],
+      "authorship": "original",
+      "contentVersion": 1,
+      "id": "verb-time-transfer",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Различи планы и прошлое в письме",
+      "context": "Χθες πήγα στην τράπεζα. Αύριο θα πάω στο ταχυδρομείο.",
+      "answer": "В банк уже сходили, на почту пойдут завтра",
+      "acceptedAnswers": [
+        "В банк уже сходили, на почту пойдут завтра"
+      ],
+      "options": [
+        "На почте уже были",
+        "В банк уже сходили, на почту пойдут завтра",
+        "Оба действия происходят каждый день"
+      ],
+      "feedback": "Πήγα — сходил(а); θα πάω — пойду. Хронология важна для понимания письма.",
+      "assessment": "exact"
+    },
+    {
+      "id": "reading-tf",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "reading",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Верно или неверно? «В воскресенье библиотека открыта»",
+      "context": "Η βιβλιοθήκη είναι ανοιχτή από Δευτέρα έως Σάββατο, 09:00–18:00. Την Κυριακή είναι κλειστή.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Την Κυριακή είναι κλειστή — в воскресенье закрыта.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            191,
+            192
+          ]
+        }
+      ],
+      "assessment": "exact",
+      "answer": "Неверно",
+      "acceptedAnswers": [
+        "Неверно"
+      ],
+      "options": [
+        "Верно",
+        "Неверно"
+      ]
+    },
+    {
+      "id": "reading-detail",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "reading",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Когда можно попасть в банк?",
+      "context": "Η τράπεζα λειτουργεί από Δευτέρα έως Παρασκευή, 08:00–14:00. Το Σάββατο και την Κυριακή είναι κλειστή.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Нужны оба условия: рабочий день и время 08:00–14:00.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            195,
+            196
+          ]
+        }
+      ],
+      "assessment": "exact",
+      "answer": "Во вторник в 10:00",
+      "acceptedAnswers": [
+        "Во вторник в 10:00"
+      ],
+      "options": [
+        "В субботу в 10:00",
+        "Во вторник в 10:00",
+        "Во вторник в 16:00",
+        "В воскресенье в 09:00"
+      ]
+    },
+    {
+      "id": "reading-match",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "reading",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Найди продолжение: «Ο Νίκος δουλεύει…»",
+      "context": "Ο Νίκος είναι σερβιτόρος. Δουλεύει σε ένα εστιατόριο από τις έξι το απόγευμα έως τις έντεκα το βράδυ. Το πρωί πηγαίνει στο μάθημα ελληνικών.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Работа — 18:00–23:00. Утром он учится; это не время работы.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            193,
+            194
+          ]
+        }
+      ],
+      "assessment": "exact",
+      "answer": "το απόγευμα και το βράδυ.",
+      "acceptedAnswers": [
+        "το απόγευμα και το βράδυ."
+      ],
+      "options": [
+        "μόνο το πρωί.",
+        "το απόγευμα και το βράδυ.",
+        "σε ένα σχολείο.",
+        "κάθε Κυριακή."
+      ]
+    },
+    {
+      "id": "reading-cloze",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "reading",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "choice",
+      "prompt": "Подбери слово для пропуска. Два варианта лишние.",
+      "context": "Το μουσείο είναι ανοιχτό. Μπορείτε να ___ εισιτήρια στην είσοδο.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Μπορείτε να αγοράσετε εισιτήρια — можете купить билеты. После να здесь форма αγοράσετε.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            197,
+            198
+          ]
+        }
+      ],
+      "assessment": "exact",
+      "answer": "αγοράσετε",
+      "acceptedAnswers": [
+        "αγοράσετε"
+      ],
+      "options": [
+        "αγοράσετε",
+        "κοιμηθείτε",
+        "βρέξει"
+      ]
+    },
+    {
+      "id": "listen-time",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "listening",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "listening",
+      "prompt": "Послушай объявление. Во сколько отправляется автобус?",
+      "context": "",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Αναχωρεί στις δέκα και μισή — отправляется в 10:30. Десять часов — время прибытия на остановку.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            201,
+            203
+          ]
+        }
+      ],
+      "assessment": "exact",
+      "answer": "В 10:30",
+      "acceptedAnswers": [
+        "В 10:30"
+      ],
+      "options": [
+        "В 10:00",
+        "В 10:30",
+        "В 11:30"
+      ],
+      "audioText": "Το λεωφορείο για το κέντρο αναχωρεί στις δέκα και μισή. Παρακαλώ να είστε στη στάση στις δέκα.",
+      "transcript": "Το λεωφορείο για το κέντρο αναχωρεί στις δέκα και μισή. Παρακαλώ να είστε στη στάση στις δέκα.",
+      "audioStatus": "device-tts-demo"
+    },
+    {
+      "id": "listen-note",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "listening",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "listening-input",
+      "prompt": "Послушай и впиши цену билета цифрой",
+      "context": "",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Το εισιτήριο κοστίζει οκτώ ευρώ — билет стоит 8 евро. Время начала: семь вечера.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            203
+          ]
+        }
+      ],
+      "assessment": "exact",
+      "answer": "8",
+      "acceptedAnswers": [
+        "8"
+      ],
+      "audioText": "Η παράσταση αρχίζει στις επτά το βράδυ. Το εισιτήριο κοστίζει οκτώ ευρώ.",
+      "transcript": "Η παράσταση αρχίζει στις επτά το βράδυ. Το εισιτήριο κοστίζει οκτώ ευρώ.",
+      "audioStatus": "device-tts-demo"
+    },
+    {
+      "id": "writing-letter",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "writing",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "writing",
+      "prompt": "Напиши другу о поездке · 80–100 слов",
+      "context": "Ты вернулась из короткой поездки. Расскажи, куда и с кем ездила, как добиралась, что делала и что понравилось.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Это самопроверка по содержанию. Количество слов не подтверждает правильность грамматики.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            205
+          ]
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18
+          ],
+          "printed": "с. 82"
+        }
+      ],
+      "assessment": "self",
+      "rubric": [
+        "Есть приветствие и завершение",
+        "Указаны место и спутники",
+        "Понятно, как добиралась",
+        "Есть действия в прошлом",
+        "Есть впечатление и причина"
+      ],
+      "wordTarget": [
+        80,
+        100
+      ],
+      "modelAnswer": "Γεια σου, Ελένη!\nΤο Σαββατοκύριακο πήγα στη Λάρνακα με την αδελφή μου. Ταξιδέψαμε με το λεωφορείο και μείναμε σε ένα μικρό ξενοδοχείο κοντά στη θάλασσα. Το Σάββατο κάναμε μια μεγάλη βόλτα στην πόλη. Μετά φάγαμε ψάρι σε μια ταβέρνα και αγοράσαμε δώρα για τους γονείς μας. Την Κυριακή επισκεφτήκαμε ένα μουσείο και ήπιαμε καφέ στην παραλία. Μου άρεσε πολύ το ταξίδι, γιατί ο καιρός ήταν καλός και είχαμε χρόνο να ξεκουραστούμε. Γυρίσαμε το βράδυ. Θέλω να πάμε μαζί την επόμενη φορά!\nΦιλιά, Μαρία"
+    },
+    {
+      "id": "writing-notice",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "writing",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "writing",
+      "prompt": "Составь объявление · 80–100 слов",
+      "context": "В вашем центре начинаются занятия греческим. Укажи дату начала, место, дни и время, цену, кому подходят занятия и как записаться.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Отметь каждый пункт самостоятельно. Для языковой оценки понадобится преподаватель или отдельная проверка текста.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            206
+          ]
+        }
+      ],
+      "assessment": "self",
+      "rubric": [
+        "Дата начала и место",
+        "Дни и время",
+        "Стоимость",
+        "Кому подходят занятия",
+        "Как записаться"
+      ],
+      "wordTarget": [
+        80,
+        100
+      ],
+      "modelAnswer": "Μαθήματα ελληνικών\nΘέλετε να μάθετε ελληνικά; Στις 12 Νοεμβρίου αρχίζουν νέα μαθήματα στο πολιτιστικό κέντρο της γειτονιάς μας, στην οδό Κύπρου 10. Τα μαθήματα θα γίνονται κάθε Τρίτη και Πέμπτη, από τις έξι έως τις οκτώ το βράδυ. Το κόστος είναι σαράντα ευρώ τον μήνα και τα βιβλία είναι δωρεάν. Μπορούν να έρθουν ενήλικες που γνωρίζουν λίγα ελληνικά και θέλουν να μιλούν καλύτερα. Για πληροφορίες και εγγραφές, τηλεφωνήστε στο 22000000 από τις εννέα το πρωί έως τις δύο το μεσημέρι. Σας περιμένουμε όλους!"
+    },
+    {
+      "id": "speaking-role",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "speaking",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "speaking",
+      "prompt": "Ролевая ситуация: в поликлинике",
+      "context": "Ты пациентка. Поздоровайся, скажи, что болит и как давно. Ответь на вопрос о возрасте. Спроси, что делать дальше, и поблагодари врача.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "Произнеси ответ вслух и сравни с опорой. В прототипе нет записи и автоматической оценки речи.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            254
+          ]
+        },
+        {
+          "source": "klik",
+          "pdfPages": [
+            18
+          ],
+          "printed": "с. 117"
+        }
+      ],
+      "assessment": "self",
+      "rubric": [
+        "Поздоровалась",
+        "Назвала симптом и длительность",
+        "Ответила о возрасте",
+        "Спросила совет",
+        "Поблагодарила"
+      ],
+      "modelAnswer": "Καλημέρα σας. Έχω πονοκέφαλο από χθες. Είμαι τριάντα χρονών. Τι πρέπει να κάνω; Ευχαριστώ πολύ."
+    },
+    {
+      "id": "speaking-description",
+      "moduleId": "exam-skills",
+      "level": "A2",
+      "skill": "speaking",
+      "topic": "Город и повседневные дела",
+      "stage": "transfer",
+      "type": "speaking",
+      "prompt": "Опиши сцену и расскажи о себе",
+      "context": "Сцена для прототипа: две подруги сидят за столиком кафе. Одна читает меню, другая разговаривает с официантом. Опиши людей и действия, затем расскажи, как часто ты ходишь в кафе и с кем.",
+      "authorship": "original",
+      "contentVersion": 1,
+      "feedback": "В сборнике здесь используется изображение. Текстовая сцена — временная замена для проверки сценария; для финальной карточки нужна иллюстрация.",
+      "sourceRefs": [
+        {
+          "source": "exam",
+          "pdfPages": [
+            209
+          ]
+        }
+      ],
+      "assessment": "self",
+      "rubric": [
+        "Названы люди и место",
+        "Описаны действия",
+        "Есть ответ о себе",
+        "Есть частотность",
+        "Есть связные предложения"
+      ],
+      "modelAnswer": "Βλέπω δύο φίλες σε ένα καφέ. Η μία διαβάζει το μενού και η άλλη μιλάει με τον σερβιτόρο. Εγώ πηγαίνω σε καφέ κάθε Σάββατο με τους φίλους μου.",
+      "visualStatus": "text-scene-placeholder"
+    }
+  ],
+  "trainingPlan": [
+    "gender-drill-1",
+    "articles-drill-1",
+    "cases-drill-2",
+    "plural-drill-2",
+    "agreement-drill-1",
+    "prepositions-drill-1",
+    "genitive-drill-1",
+    "verb-time-drill-1",
+    "reading-detail",
+    "reading-cloze"
+  ],
+  "reviewPolicy": {
+    "delay": 3,
+    "maxRetriesPerCard": 2,
+    "firstAttemptAccuracyOnly": true
+  },
+  "roadmap": [
+    "Краткие личные и притяжательные местоимения",
+    "Να + глагол; просьбы и повелительное",
+    "Отрицание δεν / μην",
+    "Условие αν, связки γιατί / όταν / για να",
+    "Сравнение и степени прилагательных",
+    "Числительные, время и даты",
+    "Живые диалоги и проверенные аудиозаписи",
+    "Описание иллюстраций",
+    "Полноразмерный режим экзамена"
+  ]
+}

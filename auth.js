@@ -120,6 +120,15 @@ function renderAuth() {
   document.getElementById('authTitle').textContent = authT(authMode + 'Title');
   document.getElementById('authIntro').textContent = authT(authMode + 'Intro');
   document.getElementById('confirmField').hidden = authMode !== 'register';
+  const legalAcceptance = document.getElementById('legalAcceptance');
+  if (legalAcceptance) {
+    legalAcceptance.hidden = authMode !== 'register';
+    document.getElementById('acceptTerms').disabled = authMode !== 'register';
+    document.getElementById('acceptTerms').required = authMode === 'register';
+    document.getElementById('legalAcceptanceText').innerHTML = lang === 'ru'
+      ? 'Мне исполнилось 18 лет. Я принимаю <a href="terms.html" target="_blank" rel="noopener">условия использования</a> и ознакомился(-ась) с <a href="privacy.html" target="_blank" rel="noopener">политикой конфиденциальности</a>.'
+      : 'I am 18 or older. I accept the <a href="terms.html" target="_blank" rel="noopener">terms of use</a> and have read the <a href="privacy.html" target="_blank" rel="noopener">privacy notice</a>.';
+  }
   document.getElementById('registrationAvatarPicker').hidden = authMode !== 'register';
   document.getElementById('registrationAvatarTitle').textContent = lang==='ru'?'Выберите персонажа профиля':'Choose your profile character';
   document.getElementById('profileAvatarTitle').textContent = lang==='ru'?'Персонаж профиля':'Profile character';
@@ -270,6 +279,7 @@ async function submitAuth(event) {
   const confirmPassword = document.getElementById('authConfirm').value;
   const error = document.getElementById('authError');
   if (authMode === 'register' && password !== confirmPassword) { error.textContent = authT('password_mismatch'); return; }
+  if (authMode === 'register' && !document.getElementById('acceptTerms')?.checked) { error.textContent = lang === 'ru' ? 'Подтвердите возраст и принятие условий.' : 'Confirm your age and accept the terms.'; return; }
   setAccountBusy(true);
   error.textContent = '';
   renderAuth();

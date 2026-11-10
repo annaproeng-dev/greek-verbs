@@ -1,0 +1,822 @@
+[
+  {
+    "path": "output/domain-research/rdap-results.json",
+    "bytes": 73261,
+    "sha256": "7e8ffb3c8fb57c12cb69aa66b62c475c166b9030751fea33f8f8595f0e20acab"
+  },
+  {
+    "path": "output/domain-research/report.md",
+    "bytes": 43265,
+    "sha256": "d498bc617a8f090a304f4c5acbf5f2b4e5d782ef0fc38994b8f0bd17462eff30"
+  },
+  {
+    "path": "output/domain-research/search-notes.md",
+    "bytes": 2545,
+    "sha256": "df4ac3cb2d816db9a2090719d2ae8b0ec05e8aab08e9ce275b978d6bd8c94546"
+  },
+  {
+    "path": "output/greek-verbs-updated-2026-11-05.zip",
+    "bytes": 71313907,
+    "sha256": "4d1c9e76a1d957435529a0de68c97e30d693496f8e888b757dcd6071b28e7087"
+  },
+  {
+    "path": "output/link-previews/preview-1.png",
+    "bytes": 33358,
+    "sha256": "8702f77b2d627ab32638a2df2dfe7c408d6171f78de6444f239929905282fe53"
+  },
+  {
+    "path": "output/link-previews/preview-2.png",
+    "bytes": 35576,
+    "sha256": "d55353967643e17ddccd003d6da7bc8b2f83d9c489f3393d48090859e8c78d57"
+  },
+  {
+    "path": "output/link-previews/preview-3.png",
+    "bytes": 45807,
+    "sha256": "5cd8bebbf4393268e01a82f3b567d0ca37688ddc67eead31be29c148264cee5d"
+  },
+  {
+    "path": "output/link-previews/preview-4.png",
+    "bytes": 35232,
+    "sha256": "041c6bfdb57eddb7a96c9e9247be9d3db41e5a701e404aac18c8865ce6d00272"
+  },
+  {
+    "path": "output/link-previews/preview-5.png",
+    "bytes": 207495,
+    "sha256": "c995595148d9ac108ee0028e77caab7fbe4f0e393aa39ed15b1d972e143f74e0"
+  },
+  {
+    "path": "output/link-previews/preview-6.png",
+    "bytes": 39679,
+    "sha256": "ba6fb1961463863ae250098379b8f9f263050f191f6310a1afd36019673ba70f"
+  },
+  {
+    "path": "output/link-previews/six-previews.jpg",
+    "bytes": 257789,
+    "sha256": "29e17ea7ee0df81f826fa54768e7db76f22f8f5ff48630c1981c48d6f7e6391b"
+  },
+  {
+    "path": "output/mechanics/lesson.png",
+    "bytes": 40120,
+    "sha256": "b2ce2cad9c88daa41becbc3fa7ece0f89b3a8f7bf03474e3cb9957847a8ca1bc"
+  },
+  {
+    "path": "output/mechanics/practice.png",
+    "bytes": 42050,
+    "sha256": "d1a6d24ade9f28275669be2417f12bdf1a672428339c71f6a1f502d11bc2f84c"
+  },
+  {
+    "path": "output/mechanics/training.png",
+    "bytes": 42886,
+    "sha256": "81918defeb9b46ab3b8b712fe84e6aebad99e48a47298262bbe40d669f87623d"
+  },
+  {
+    "path": "output/onboarding-practice-demo.mp4",
+    "bytes": 2629156,
+    "sha256": "fdae7c4fe8abedd5652d7a0e035bd5614d8e87438f0ceac908661f70666e055b"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel.zip",
+    "bytes": 3851415,
+    "sha256": "0c57b57626b1f036d50d68ed937ec7fb76dde3fff94f3a86ed4e24bb1940a1d0"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/01.png",
+    "bytes": 452392,
+    "sha256": "d660cacc893ea9975860cd0271fee203acd9e373923bf38243a81f067dd259c4"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/02.png",
+    "bytes": 514343,
+    "sha256": "cd5bd487c13a830b7e7c0c12b67d45f66fd196cb213232313c9a7dcd96a6a89c"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/03.png",
+    "bytes": 454476,
+    "sha256": "cd23bd63d1d23956b6b4c22488d0fca04a67aa35090bbdd576e25d60b87fad0e"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/04.png",
+    "bytes": 504976,
+    "sha256": "87215d905c5435a0c2bdf6187d5e1a25c1e1722692f13fb042e84ef72f8ebf12"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/05.png",
+    "bytes": 455577,
+    "sha256": "2dc5161bbc897fcc00b01d54069f476fd30dde7398ebb8eca1530285d6dbd004"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/06.png",
+    "bytes": 504507,
+    "sha256": "33d79b94caf94d2adf1eb18cc403530410aa64804a7e176b05276239119c9dd0"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/07.png",
+    "bytes": 532595,
+    "sha256": "de9d8c60ca67f26f769e05d66773981c3f8c75089d03d0a3d4cd55de63180898"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel/08.png",
+    "bytes": 442209,
+    "sha256": "89323c9c2951fe3771c78654c22637c15539a77ac9e64cf1f48a6902aba285f9"
+  },
+  {
+    "path": "output/promo-anna-v2/greek-verbs-onboarding.mp4",
+    "bytes": 1243810,
+    "sha256": "439ad0f0bab99fa0719dcc2e87b33526b279635c3bfc53f5d9d45f704aece449"
+  },
+  {
+    "path": "output/promo-anna-v2/make_assets.py",
+    "bytes": 9508,
+    "sha256": "c18f296c30d650c470defd41ba75ea659713f3b81fd4242de2901459235357a0"
+  },
+  {
+    "path": "output/promo-anna-v2/preview.jpg",
+    "bytes": 330831,
+    "sha256": "ff060d1cc99d7020956263bf30e8fb03f4f0c57f8cd6504bb5f8ccb58e56c8eb"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/01.mp4",
+    "bytes": 150502,
+    "sha256": "9947e0fd449ec7bd6955926ba0bfe402dd68f08dcebd00b4d804cc32daf63a8a"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/01.png",
+    "bytes": 572510,
+    "sha256": "3cb578811370b41b7c9f177612ede2ee1db447bcaf9842d9f5c996fc2ef861ad"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/02.mp4",
+    "bytes": 170647,
+    "sha256": "51ad0bcd0575ab5cea69ea582a52cab0ac01d9896d2aa13db9c9753ef9e22291"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/02.png",
+    "bytes": 695657,
+    "sha256": "b2bf3bc6007aa63ebd28671fec83d05ab86677a63127656fd2f0af49d8e99194"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/03.mp4",
+    "bytes": 155471,
+    "sha256": "440410e874d237596485bcff9a283419ced2ac4c0450250894f0303db4abe93f"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/03.png",
+    "bytes": 574268,
+    "sha256": "39bf76723124d3ea2fc4ca04445eb1285fd69140fc2be66720644d40c8739bdc"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/04.mp4",
+    "bytes": 161022,
+    "sha256": "5d322887b52699af3a21cbe95491b44a08b01923d064467d0be699955c82056f"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/04.png",
+    "bytes": 688164,
+    "sha256": "46d265d0bf08d2cddf0efaae80a9388daff070a84a4ee70b4a9709e485625ba6"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/05.mp4",
+    "bytes": 153806,
+    "sha256": "6b97f870829739b193c8c728a44c8dcf38d339d9715479bb1512473441f2e9b8"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/05.png",
+    "bytes": 591432,
+    "sha256": "323b5d925326d7822cfb076f33f17ef1877c0c0bcc95c26698960bb9428237cf"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/06.mp4",
+    "bytes": 146982,
+    "sha256": "de0f27e65f03c30610540517c57e757e024365b744b048a0385b2cb01f89fa06"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/06.png",
+    "bytes": 646494,
+    "sha256": "7ba2d4c7ab7fa9ce0b06af5614e0aeda968cd2f72d4559d1821bd2127444cb3f"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/07.mp4",
+    "bytes": 167812,
+    "sha256": "31370177092431127e9101d218c61dad663ffa6643895bcd3d660f1c53b94e96"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/07.png",
+    "bytes": 705934,
+    "sha256": "7757d3924a51ab47fee2f84887b779d3ae622e9cfb9bb90c60dc02edab8a1c0a"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/08.mp4",
+    "bytes": 143328,
+    "sha256": "27674b56bb0184609ca78a4ec13e18f7804a1defd6054b6c2449e6268972fa57"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/08.png",
+    "bytes": 563405,
+    "sha256": "cd282947649b249d59ad731039934437568f00ecd59bb941a3c39d570550b531"
+  },
+  {
+    "path": "output/promo-anna-v2/video-slides/concat.txt",
+    "bytes": 112,
+    "sha256": "8049bff2809e4a5b889e39780d21a4d169ecb8289a3d05a84f70c4b68877e237"
+  },
+  {
+    "path": "output/promo-anna/carousel.zip",
+    "bytes": 443634,
+    "sha256": "afeeba69fe1a16d5fd94a6418a44c6af6bb0a003f234d4b5ad54bc9d30a93fc4"
+  },
+  {
+    "path": "output/promo-anna/carousel/01.png",
+    "bytes": 63030,
+    "sha256": "357ea298a8b240fc386a5f32901c07e8c17358a6807eed920b1b4c01a3310ac2"
+  },
+  {
+    "path": "output/promo-anna/carousel/02.png",
+    "bytes": 64772,
+    "sha256": "520120be3c46f65e54d85241ca4e77c74d9d2f1abf2738ced9d11ab942dc2218"
+  },
+  {
+    "path": "output/promo-anna/carousel/03.png",
+    "bytes": 64422,
+    "sha256": "a37ee02d1e42357d3c46ce3893ad54d406001afdd497687ddb6eddf444311872"
+  },
+  {
+    "path": "output/promo-anna/carousel/04.png",
+    "bytes": 66799,
+    "sha256": "36e3315ee6c48b29c52300437e2d9abad68dea50cf96e8cc7c6a389ecc60aad3"
+  },
+  {
+    "path": "output/promo-anna/carousel/05.png",
+    "bytes": 62080,
+    "sha256": "4d9a20d97beae20cce7aaea521f1ce142496c2e522416d24c220676d66a4a664"
+  },
+  {
+    "path": "output/promo-anna/carousel/06.png",
+    "bytes": 64532,
+    "sha256": "1422401adb170a56850f1495c41f56d826020635af5f3056bee694fb0d5cf8bf"
+  },
+  {
+    "path": "output/promo-anna/carousel/07.png",
+    "bytes": 64340,
+    "sha256": "1e8277f879a74e4bc4d01c943b23cbc66e0d40f6ff9a799485094e69dc17758e"
+  },
+  {
+    "path": "output/promo-anna/carousel/08.png",
+    "bytes": 58550,
+    "sha256": "ec254c0d57a5bc27f94e35ad1c3719548c1b1a54dd8ac356dd0a1913e48bb149"
+  },
+  {
+    "path": "output/promo-anna/greek-verbs-presentation.mp4",
+    "bytes": 347835,
+    "sha256": "9393bb8bbcd5f9068ac830ce342b4d57c0ab0443c878331e611f28f8ea439864"
+  },
+  {
+    "path": "output/promo-anna/make_assets.py",
+    "bytes": 7477,
+    "sha256": "535e88b9aede7e63af191e885e5cb32d481c6409990775952277237c875c61ac"
+  },
+  {
+    "path": "output/promo-anna/preview.jpg",
+    "bytes": 134413,
+    "sha256": "770b3e2295369f8d8974235ab15caab92ee25a79966c8569ba6dec398532feb7"
+  },
+  {
+    "path": "output/promo-anna/publications.md",
+    "bytes": 7182,
+    "sha256": "defe9d1c72324c870bda96bc44ae2b4952782c914274e156ef7fca0e6e9e1204"
+  },
+  {
+    "path": "output/promo-anna/video-slides/01.mp4",
+    "bytes": 58148,
+    "sha256": "423c79ffb9d3302aacc7aa41d665f31217d63d80e005782170a49103a025fc45"
+  },
+  {
+    "path": "output/promo-anna/video-slides/01.png",
+    "bytes": 68829,
+    "sha256": "c38e81185c3f42cf25ec2629638179126358b0e02c29f85fdc713c11e2e437f2"
+  },
+  {
+    "path": "output/promo-anna/video-slides/02.mp4",
+    "bytes": 63988,
+    "sha256": "be556abefb5f6631cc68c2a2d3e3147c664a8322f89646db894dd61c5de8f453"
+  },
+  {
+    "path": "output/promo-anna/video-slides/02.png",
+    "bytes": 70816,
+    "sha256": "72e236ca793d8f4322ed6a2fea50933bbb2b99519edf42bde687ab9d56289fec"
+  },
+  {
+    "path": "output/promo-anna/video-slides/03.mp4",
+    "bytes": 64615,
+    "sha256": "4d61eb2f584a53207e6cda3f69857c2ca147c11de3c5188a3943eb91db30991d"
+  },
+  {
+    "path": "output/promo-anna/video-slides/03.png",
+    "bytes": 67601,
+    "sha256": "7e1ceb8cac69ac8697d8e7fb1fa662ae78365ea1c5f8e425818e097fa1b82ef6"
+  },
+  {
+    "path": "output/promo-anna/video-slides/04.mp4",
+    "bytes": 55919,
+    "sha256": "fa6194ebbbef57d4915759d5a319f6931abf4888da0c1d7b779cfcadd294b3e6"
+  },
+  {
+    "path": "output/promo-anna/video-slides/04.png",
+    "bytes": 64693,
+    "sha256": "fd4ec77993cc69381e0cc20c4bbec48462dd7699829c0d1b5e2a884e64ddff50"
+  },
+  {
+    "path": "output/promo-anna/video-slides/05.mp4",
+    "bytes": 54957,
+    "sha256": "f995a7baa01579601bcd1f12d2ae21dbb0e14d54d4ec8aa420fd23194414dafc"
+  },
+  {
+    "path": "output/promo-anna/video-slides/05.png",
+    "bytes": 62783,
+    "sha256": "80f9fea23030e27ae7fb87084c795c81ac4195427e6783a022a35dce5161f7fd"
+  },
+  {
+    "path": "output/promo-anna/video-slides/06.mp4",
+    "bytes": 54338,
+    "sha256": "707f9ae1950ca2df5caae74ac646a3089c9c7a0f418aaec96a358073187cbfbf"
+  },
+  {
+    "path": "output/promo-anna/video-slides/06.png",
+    "bytes": 57251,
+    "sha256": "4e87cee372c6f924090c41fd43e77cf858f6c31793066d6c4f0a93c312bac648"
+  },
+  {
+    "path": "output/promo-anna/video-slides/concat.txt",
+    "bytes": 84,
+    "sha256": "542dd105808c83518eed6ce93153d096fcc4af0cd386577a438542d65062529d"
+  },
+  {
+    "path": "output/tester-survey/google-form-header.png",
+    "bytes": 367413,
+    "sha256": "483de05a6b9d9f601540e477ddd6e63e2c9dcda04879d85bc378e72182866834"
+  },
+  {
+    "path": "output/tester-survey/google-form-preview.png",
+    "bytes": 72790,
+    "sha256": "4cd1e4188a36d470105c7ee1f6f6238bc991ce0715371137b8ccd4256e143269"
+  },
+  {
+    "path": "output/tester-survey/google-form-v2-preview.png",
+    "bytes": 42924,
+    "sha256": "d92a0c24a3af2483d94520fcc5c50b7e1a7b72e4e5309f8a28e6d8ec108a132c"
+  },
+  {
+    "path": "output/user-journey/create-practice-levels.py",
+    "bytes": 6458,
+    "sha256": "bc68360fd41580b06975fc134f8cea590751705964f7d574437f8b8ac1f013b5"
+  },
+  {
+    "path": "output/user-journey/create-prototypes.py",
+    "bytes": 5181,
+    "sha256": "38a28617b020916bc08440c06303b77eb82e9496960d8de0b71135a803396819"
+  },
+  {
+    "path": "output/user-journey/create_diagram.py",
+    "bytes": 5546,
+    "sha256": "90018d180b9d47874b8e90e7970bfc094dee247fdc3202c7e9b64ed34dfd817c"
+  },
+  {
+    "path": "output/user-journey/greek-verbs-user-journey.svg",
+    "bytes": 14693,
+    "sha256": "1c34307538eed20c5595e8811957fffb5316d11c8d09197f5ea31146e60daa92"
+  },
+  {
+    "path": "output/user-journey/greek-verbs-user-journey.svg.png",
+    "bytes": 441218,
+    "sha256": "bcaa347f86d50f7eef7493e5957ca73a877980c0f5ea91262e0af6be82f183ce"
+  },
+  {
+    "path": "output/user-journey/journey-preview.svg",
+    "bytes": 14705,
+    "sha256": "d1160c612e9e4b0777a8a2609c5d4f549ae2efc7afa7a275404db58f1c800a60"
+  },
+  {
+    "path": "output/user-journey/journey-preview.svg.png",
+    "bytes": 531441,
+    "sha256": "d93c77179bcb3764cba12a5a2dfbb013a12e40061c53b16f35d38b37c7a73008"
+  },
+  {
+    "path": "output/user-journey/mobile-prototypes-preview.svg",
+    "bytes": 12829,
+    "sha256": "9cd6d04e80a85ae205a8533056c2d1893c8ce93040e9384fed58ab2c6dc53bc8"
+  },
+  {
+    "path": "output/user-journey/mobile-prototypes-preview.svg.png",
+    "bytes": 471077,
+    "sha256": "77c12dd8e03f44bc1c5762cf733d20b5558004acff1ae6c557c26f82a7eaf6c3"
+  },
+  {
+    "path": "output/user-journey/mobile-prototypes.svg",
+    "bytes": 12817,
+    "sha256": "262ec8ee710e146be04ccc1d7056cabb1c1075e42e456f5859dd94d4c8ac340c"
+  },
+  {
+    "path": "output/user-journey/practice-levels-05.svg",
+    "bytes": 14009,
+    "sha256": "2db2ec7fe73e9f518fa871a425665efbc01f10b87e6ed515a94c5095f9816d45"
+  },
+  {
+    "path": "output/user-journey/practice-levels-05.svg.png",
+    "bytes": 696421,
+    "sha256": "010f21480a6836e9135ba5a0f416a7def9f23e180877a28452aadeabcad77019"
+  },
+  {
+    "path": "tmp/domain-setup/remote.sh",
+    "bytes": 393,
+    "sha256": "15b1a623c6c55d403bb9c5ba2e4ce4e0ce5e7c8047fe8ae384d5b40f2fd06f67"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/build_cards.py",
+    "bytes": 32814,
+    "sha256": "4087c6ca18bc12c5173e6415c790e88a93efb7ae76dcff4d50c648d127f6945e"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-14.png",
+    "bytes": 1715193,
+    "sha256": "5e39c5b11c13c152d2cbc0182c496ec2489c37fd6af29d7b9097d93a1fb6036e"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-16.png",
+    "bytes": 1512660,
+    "sha256": "eda2d8a51d23f9f23d64b402eb2952a59b2c469f5ebcb7c7189ad678bff18634"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-26.png",
+    "bytes": 1881149,
+    "sha256": "882728b4db79a2bee0679c964ae43d56f9e28b2c6256f53d50a669cb280421c8"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-3.jpg",
+    "bytes": 881047,
+    "sha256": "06b0d0971949e098c59ae9a61cb4fcf5500e3c23d967f6d44371a0bc55b301f6"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-3.png",
+    "bytes": 840946,
+    "sha256": "f215cb2c64202be3f13bba94a8476e93e337ab59ef9145c25c854446338d15c8"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-4.jpg",
+    "bytes": 833689,
+    "sha256": "e6daaf347c90e4c100d86e2095c83907e88804dc3aade206ce03b878bacea1bb"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-4.png",
+    "bytes": 908945,
+    "sha256": "f281afc3856be8bc76e3b7536943fcde055b4093fc06d37f984c15df00f5f8ec"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-49.png",
+    "bytes": 1857305,
+    "sha256": "e8bc8b752a9be93a8cece8227c2b9abe5339437e1fbc44f57792405226a67c74"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-5.jpg",
+    "bytes": 798781,
+    "sha256": "9f451f1ee2506c7e8b7b538e77d101521bcb1fb7aeaba98933ab2f31b3ccd1eb"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-5.png",
+    "bytes": 889664,
+    "sha256": "9f9e7b43dd8ba07242613a8da24212e1115f8fb896cadd1d97c8d4f31e4c559f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-6.jpg",
+    "bytes": 799494,
+    "sha256": "a70430420c30ecb3d8fe4ae985027ca6419f95dc987936c9811dc4be1c52b0fe"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-6.png",
+    "bytes": 1440109,
+    "sha256": "15e6b71236f49c63648086a899031b9bf9e137ac82f0e2f216d06196a400a295"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-67.png",
+    "bytes": 1355635,
+    "sha256": "da0e66bcf6eebe90bf5d2afdcb9aa1b72515704570db90de199960ba8930cb4c"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-later.txt",
+    "bytes": 34155,
+    "sha256": "7e7d395b410c2373b297bf6fcd0c0bdfd37b14334eb25629715cab97cd63a66f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-ocr.txt",
+    "bytes": 25145,
+    "sha256": "1ae978614fb8c0ea50d5e8d737a125060bc20947b01ce4b224e6de074c53ec1e"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika-topics.txt",
+    "bytes": 69077,
+    "sha256": "ff47ae19affd028357440a8c362345f075ef812254bb6233c74e535a5f2d2bad"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/ellinika.txt",
+    "bytes": 3548,
+    "sha256": "f6f79600dc5d905087b0297fc342b74ca34d1125fdeaf417184c9b19b8f19c03"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-190.png",
+    "bytes": 281236,
+    "sha256": "53c7f1d40fa1b1bfb246dc0f35c3367a3a388a38213b49fae808fe359115bcd5"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-191.png",
+    "bytes": 716519,
+    "sha256": "6548aec9aca33ae2993b655ebef31f2095864cacc12a8708abe795bed8d86f0e"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-192.png",
+    "bytes": 409085,
+    "sha256": "8ef841629103bd5a5e4e296ef1965c85b68bf96aa2c26a72e3f0e03cbe2969fb"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-193.png",
+    "bytes": 928617,
+    "sha256": "b6648aeb2662081099e4543d71559cbe54fd46a9519b50e7a2dff0f7d40fde55"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-194.png",
+    "bytes": 505727,
+    "sha256": "54dc5551a2ce6ef34ff1e09edbb69c9d423fb0a8869cbc3c03163c54968ec276"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-195.png",
+    "bytes": 783431,
+    "sha256": "ae265e9ea19dce982e7303f10a2e8a5dd69b45a9d5a8482588879826ec236255"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-196.png",
+    "bytes": 748736,
+    "sha256": "0aa4e03d3e5dd3b7bc9a6f060732ee65f059280f9afd5d010c8d667d87ae5878"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-197.png",
+    "bytes": 814688,
+    "sha256": "23134f5c25457df3a49d459806613e7802aa4ab24558acf2927e5f546774c0b7"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-198.png",
+    "bytes": 350655,
+    "sha256": "779070ff5e95aab5a8ec7f9bad34a55c1c5a6a909f50ac7df760cc3eae4744d7"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-199.png",
+    "bytes": 318504,
+    "sha256": "1183c7fa0e7b0dd17a0e57f09a6e866346c3e4702e38ae3ae46b0a711956ba9f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-204.png",
+    "bytes": 285065,
+    "sha256": "cbc0f9bb6982ab8f308ac9f479432f8430cab4e48c0419d2446a8ca5abba6fa6"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-205.png",
+    "bytes": 605308,
+    "sha256": "c9d331f487f301608f31070eef55f7648f0a1ca7e57cd39e8beb844f295e579a"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-206.png",
+    "bytes": 535828,
+    "sha256": "c39fa79cf354f2552fc2edd47c0b3f6c2bb86d5657415e6ae0e1f43c3d9c08a3"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-207.png",
+    "bytes": 310517,
+    "sha256": "e4dbc7cda96ab9b0f42b41eebc37a621793430a4758b2f4ac8d68e12b2ac8e65"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-208.png",
+    "bytes": 658435,
+    "sha256": "49ce06a181c0808f69215d102b3ed0f44a15a50aa2b6f10ca6572a1d2fc3272c"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-209.png",
+    "bytes": 795335,
+    "sha256": "298ea19c5487c07eba90189dc40d33d7bd9a322e9241944ce080c835903ac0ef"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-210.png",
+    "bytes": 775752,
+    "sha256": "40f2d02272dfde000b617f87ba7587f5933520ae24f1f37803b4bb3394ccaba5"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-3.jpg",
+    "bytes": 146646,
+    "sha256": "99bfb47039415bef7b3f2406cbd654d527beda5aaf680348f4d97f4cbf2c1609"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-3.png",
+    "bytes": 1023266,
+    "sha256": "8ed2c8d54200ae961379b0c4041396d47a6e160bd6452a7682cb07fdeebbef8c"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-4.jpg",
+    "bytes": 79311,
+    "sha256": "2eaead729b0f8962f2ee3a574cb939834e0dcbf9d8599effb8bbab69e1530768"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-4.png",
+    "bytes": 372735,
+    "sha256": "f55acfe56d5c56f9ce4fc1789db017f3a9b8fccf96ef0da89d16642af602dbe0"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-5.jpg",
+    "bytes": 135749,
+    "sha256": "1b3dade27a26daf5331ac686b13cb3ccc1e1dcb9268b780b263b67c8fa998e44"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-5.png",
+    "bytes": 895171,
+    "sha256": "46f7f1df1be2cb139028fd8c4e4db5ec766658f10f62c9961e04cc0c38bfe0ba"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-6.jpg",
+    "bytes": 91070,
+    "sha256": "2ff70e57910982ad9454258f8dc1bdfccc2948ff39f95902625fe0c633472e2e"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-6.png",
+    "bytes": 430875,
+    "sha256": "5d5fb626248681c30a10921300f7b623a7e74daa4797d5c728d7613325dde859"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-7.jpg",
+    "bytes": 149190,
+    "sha256": "f636978e3b25869072e65ac591f77ef9da8052589d2168abe1adb4e36b7e89b5"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-7.png",
+    "bytes": 1119715,
+    "sha256": "aec81ebf075ac22630cc6b44473a5aa74974ad1e57d10fb3bafdcdf03b2fedb2"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-8.jpg",
+    "bytes": 82814,
+    "sha256": "3f9d51fb727830b549971c02e166d3f845e8066cfddc3f82125a949c27006a32"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-8.png",
+    "bytes": 410585,
+    "sha256": "6091a5f3c4387f4b960807e51476fadc6aab9e5834114cbdedb36b5936998019"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-a2.txt",
+    "bytes": 53392,
+    "sha256": "87642eb5cbc1e46df3bcb9a29b7816760c9270d61585fa8c87bb72ac09d8ece9"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-map.png",
+    "bytes": 1759563,
+    "sha256": "653809507a541977b44f62a692476c737b4aa259a5606da598d25207e5499e70"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam-ocr.txt",
+    "bytes": 9451,
+    "sha256": "64981a3faa817613dbe16b4b736500892a4eb38d642c0f9deaa4f7ba9b79969d"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/exam.txt",
+    "bytes": 6239,
+    "sha256": "1eeb3ae3d73ad264995f5b65b24c891a3364bfc4cfe6ffc5e88f6e5ddf554f2f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-109.png",
+    "bytes": 1131537,
+    "sha256": "9c65a0bdf010ecfe43d2f582ae404d319f19a8892b1db0357ba37f18d5f85ecd"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-143.png",
+    "bytes": 1000731,
+    "sha256": "ff2b8b8e9c4aeac515cde70c4f4ad679dcde33a2e41c6c89fc037ad95546562b"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-16.png",
+    "bytes": 1100642,
+    "sha256": "b35d630e94f4e658fca9d994107b36983839aa2d76c6031e8dcd64cf7834e4d2"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-17.png",
+    "bytes": 1065169,
+    "sha256": "d1e2dd5b1431e2479e426f22acb68b623f030bdc05168697df18035973d32420"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-18.png",
+    "bytes": 909736,
+    "sha256": "c5bb312e9b6844febf536e7e9e4d369f525a6e4b22e6c9198e40d4644decbb2d"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-19.png",
+    "bytes": 1013722,
+    "sha256": "6fdecdec69ee494a923c7d011d5e41ddd25be2750d1ab5f68fb7587d5a318ee4"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-20.png",
+    "bytes": 1135476,
+    "sha256": "d2ac3d2fbb5fced885abb62e82fc5a13a6b55823dca83817fcb77bc4dc076d58"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-21.png",
+    "bytes": 736963,
+    "sha256": "2c5040712d649dad85ebb7c1a0ce2fb6508419cc770eac01336405c506a31d0f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-22.png",
+    "bytes": 1076844,
+    "sha256": "c3e711143b3bae508207f595018c0925cefe45445efd83cd313c7a842a89bc15"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-23.png",
+    "bytes": 1015702,
+    "sha256": "bdb0299da72bb946f992bdadbc6153f19130505f951f4776da51f351eff40f88"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-24.png",
+    "bytes": 1019868,
+    "sha256": "eb98c1f35d1351b509d826308b1b42996b8167a9a2ec15173bef12cce62c4485"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-3.jpg",
+    "bytes": 643047,
+    "sha256": "90ad29743890bed460358925f5af7061b59f6ed8811caec514883d636e06cacc"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-3.png",
+    "bytes": 571608,
+    "sha256": "56ed3378700acdec3578d48044202304ebfa21bd87c9e7a69d4a00b41c5dadad"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-4.jpg",
+    "bytes": 448140,
+    "sha256": "590538b663b053cb47c0f8c8cbf11a836d5e5ba519c8142a54c4a8c1816186d6"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-4.png",
+    "bytes": 498707,
+    "sha256": "db95bfc320de8d2bdb18d05555974af0a15d70b75e15fb418f295c731d71053e"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-48.png",
+    "bytes": 1048102,
+    "sha256": "1ea380b1de30550f7ebc29c58956450ab0473ff721cff29265e0e9023c889cb9"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-5.jpg",
+    "bytes": 5361,
+    "sha256": "4720ad11e1816a41fa2335f59cd4195390493e5602f694255bb5e6fe9c36c00f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-5.png",
+    "bytes": 5361,
+    "sha256": "4720ad11e1816a41fa2335f59cd4195390493e5602f694255bb5e6fe9c36c00f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-6.jpg",
+    "bytes": 1824203,
+    "sha256": "4ca11f31f40eaedfa02662c54ac0d1ca4b585723b4893bc2800a73d42f8287c4"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-6.png",
+    "bytes": 1519102,
+    "sha256": "ec903670b60c9cf3ebbee7f2206fcf458c3444a142e335dc537190072c83c54f"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-60.png",
+    "bytes": 1170832,
+    "sha256": "0777f02f137a4871fd1c2b708a5465ce749bbf9f8760d9ba51b83f7181438b95"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-content.txt",
+    "bytes": 53712,
+    "sha256": "9686082e74f18ca24fa9d4ec53b55c6b72a9cdc569a8bb96ecc7a39ccf07877d"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-later.txt",
+    "bytes": 19145,
+    "sha256": "fe635692fd622d2f597414f14ba10db942909dc90fd38d3dd6253cb82cfb22c4"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik-ocr.txt",
+    "bytes": 9998,
+    "sha256": "796449f176c5f62ba22d11713e5033a6a5da1dba0da171af6992b293002e1533"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/klik.txt",
+    "bytes": 3387,
+    "sha256": "3e1195029fb9e8f004cc8831fe5099c00ce1dc1cb5743793ed3a76844530ad97"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/pages.py",
+    "bytes": 351,
+    "sha256": "337452d68a9295e949e17a50792d7b7db0471dc63263cde2b549778e5deab012"
+  },
+  {
+    "path": "tmp/pdfs/grammar-research/scan.swift",
+    "bytes": 1083,
+    "sha256": "09f43db362b89f324c391fd9da608cbfc69633c10c6200010fa9c01154771844"
+  }
+]
