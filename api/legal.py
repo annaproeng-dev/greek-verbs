@@ -44,6 +44,6 @@ def cleanup_expired(execute, now):
     execute('DELETE FROM auth_attempts WHERE expires_at <= ?', (now,))
     execute('DELETE FROM password_reset_tokens WHERE expires_at <= ? OR used_at IS NOT NULL', (now,))
     cutoff = now - CONFIG['retention']['guestDays'] * 86400
-    execute("DELETE FROM practice_access WHERE owner LIKE 'guest:%' AND updated_at <= ?", (cutoff,))
-    execute("DELETE FROM learning WHERE owner IN (SELECT owner FROM learning_metadata WHERE owner LIKE 'guest:%' AND updated_at <= ?)", (cutoff,))
-    execute("DELETE FROM learning_metadata WHERE owner LIKE 'guest:%' AND updated_at <= ?", (cutoff,))
+    execute("DELETE FROM practice_access WHERE substr(owner, 1, 6) = 'guest:' AND updated_at <= ?", (cutoff,))
+    execute("DELETE FROM learning WHERE owner IN (SELECT owner FROM learning_metadata WHERE substr(owner, 1, 6) = 'guest:' AND updated_at <= ?)", (cutoff,))
+    execute("DELETE FROM learning_metadata WHERE substr(owner, 1, 6) = 'guest:' AND updated_at <= ?", (cutoff,))
