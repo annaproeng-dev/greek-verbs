@@ -295,11 +295,13 @@ async function changeAccount(user, adoptGuest = false) {
   // with the new session, and never let a failed pending write retain old identity.
   if (typeof examDraftTimer !== 'undefined') clearTimeout(examDraftTimer);
   currentUser = user;
+  if(window.Subscriptions){Subscriptions.access=null;Subscriptions.identity=null;Subscriptions.keys=new WeakMap();Subscriptions.openPhrases=new Set();}
   applyLearning({progress: {}, difficult: []});
   renderAuth();
   try { await LearningStore.flush(); } catch { learningNotice('storage'); }
   const record = await LearningStore.load(user, adoptGuest);
   applyLearning(record);
+  if(window.Subscriptions?.refresh)await Subscriptions.refresh();
   // Discard exercises started under the previous account.
   if(typeof isExamPage==='function'&&isExamPage()){
     resetExamAccount();
@@ -311,6 +313,7 @@ async function changeAccount(user, adoptGuest = false) {
   practicePool = ALL_VERBS.filter(v => v.conj_pres);
   selectedPracticeTense = 'mixed';
   switchExercise('quiz');
+  renderPhrases();
   for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
   renderAuth();
 }

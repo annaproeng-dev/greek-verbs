@@ -6,6 +6,8 @@ const base=process.env.LEGAL_TEST_URL||'http://localhost:8000';
  const browser=await chromium.launch({headless:true,channel:'chrome'});
  try{
   const context=await browser.newContext({viewport:{width:390,height:844},acceptDownloads:true});
+ // Hermes first-visit flow is covered by access_browser; keep this suite focused.
+ await context.addInitScript(()=>{try{localStorage.setItem('greekOnboarding:guest','done');}catch{}});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base+'/');
   await page.waitForFunction(()=>typeof accountReady!=='undefined'&&accountReady);

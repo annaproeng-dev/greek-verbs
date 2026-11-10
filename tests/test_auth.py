@@ -49,6 +49,62 @@ class AuthTests(unittest.TestCase):
         conn.close()
         return result
 
+    def test_free_access_guest_bonus_daily_and_paid(self):
+        import time
+        from api.access import FORMATS
+        status, headers, result = self.request('practice_access', {})
+        self.assertEqual(status, 200)
+        guest = headers['Set-Cookie'].split(';')[0]
+        for fmt in FORMATS:
+            for i in range(3):
+                payload = {'operation': 'use', 'format': fmt, 'task': fmt + str(i), 'owner': 'guest'}
+                self.assertEqual(self.request('practice_access', payload, cookie=guest)[0], 200)
+                self.assertEqual(self.request('practice_access', payload, cookie=guest)[0], 200)
+            self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': fmt, 'task': 'fourth'}, cookie=guest)[0], 403)
+        with patch('api.auth.time.time', return_value=time.time() + 86400):
+            self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'tomorrow'}, cookie=guest)[0], 403)
+        _, headers, result = self.request('register', {'email': 'allowances@example.test', 'password': 'password-123', 'confirmPassword': 'password-123'})
+        cookie = headers['Set-Cookie'].split(';')[0]
+        uid = result['user']['id']
+        for i in range(13):
+            response = self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'q' + str(i)}, cookie=cookie)
+            self.assertEqual(response[0], 200)
+        self.assertEqual(response[2]['access']['dailyRemaining'], 0)
+        self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'over'}, cookie=cookie)[0], 403)
+        # Other-format bonus remains available even when the shared daily pool is empty.
+        self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': 'cards', 'task': 'bonus'}, cookie=cookie)[0], 200)
+        # Resetting progress cannot reset allowances.
+        _, _, learning = self.request('learning', {}, cookie=cookie)
+        self.request('learning', {**learning, 'operation': 'reset'}, cookie=cookie)
+        self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'still-over'}, cookie=cookie)[0], 403)
+        with patch('api.auth.time.time', return_value=time.time() + 86400):
+            result = self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'next-day'}, cookie=cookie)
+            self.assertEqual(result[0], 200)
+            self.assertEqual(result[2]['access']['dailyRemaining'], 9)
+            self.assertEqual(result[2]['access']['introRemaining']['quiz'], 0)
+        self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': 'unknown', 'task': 'bad'}, cookie=cookie)[0], 400)
+        self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'bad', 'owner': 'guest'}, cookie=cookie)[0], 409)
+        with database() as execute:
+            execute('INSERT INTO subscriptions (user_id, plan, expires_at) VALUES (?, ?, ?)', (uid, 'plus', int(time.time()) + 3600))
+        result = self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'paid'}, cookie=cookie)
+        self.assertEqual(result[0], 200)
+        self.assertTrue(result[2]['access']['unlimited'])
+        # Invalid/revoked login cannot silently turn into a new guest allowance.
+        self.request('logout', {}, cookie=cookie)
+        self.assertEqual(self.request('practice_access', {}, cookie=cookie)[0], 401)
+
+    def test_access_concurrent_last_slot(self):
+        from concurrent.futures import ThreadPoolExecutor
+        _, headers, result = self.request('register', {'email': 'quota-race@example.test', 'password': 'password-123', 'confirmPassword': 'password-123'})
+        cookie = headers['Set-Cookie'].split(';')[0]
+        for i in range(12):
+            self.assertEqual(self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': str(i)}, cookie=cookie)[0], 200)
+        def spend(i):
+            return self.request('practice_access', {'operation': 'use', 'format': 'quiz', 'task': 'race' + str(i)}, cookie=cookie)[0]
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            statuses = list(pool.map(spend, range(4)))
+        self.assertEqual(sorted(statuses), [200, 403, 403, 403])
+
     def test_subscription_grants_and_expiry(self):
         import time
         accounts = []

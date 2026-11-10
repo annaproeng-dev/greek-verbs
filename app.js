@@ -152,6 +152,7 @@ function renderOnboarding(){
       <div class="onboarding-layout">
         <div class="onboarding-hermes"><img src="assets/olympus/mascots/hermes.png" alt="Hermes / Гермес"></div>
         <div class="onboarding-copy">
+          <button class="tool-btn" type="button" onclick="finishOnboarding()">Пропустить / Skip</button>
           <h2 id="onboardingTitle">Выберите язык<br>Choose your language</h2>
           <p>На каком языке показать сайт и подсказки?<br>Which language would you like for the site and tips?</p>
           <div class="onboarding-actions">
@@ -179,7 +180,7 @@ function renderOnboarding(){
         <div class="onboarding-actions">
           <button class="tool-btn" type="button" onclick="finishOnboarding()">${lang==='ru'?'Пропустить':'Skip'}</button>
           ${onboardingStep?`<button class="tool-btn" type="button" onclick="onboardingStep--;renderOnboarding()">${lang==='ru'?'← Назад':'← Back'}</button>`:''}
-          <button class="fill-submit" type="button" onclick="showOnboardingRegistration()">${lang==='ru'?'Далее →':'Next →'}</button>
+          <button class="fill-submit" type="button" onclick="continueOnboardingAsGuest()">${lang==='ru'?'Далее →':'Next →'}</button>
         </div>
       </div>
     </div>`;
@@ -244,11 +245,12 @@ function renderContextTour(){
   tooltip.id='contextTourTooltip';tooltip.className='context-tour-tooltip';tooltip.setAttribute('role','dialog');
   const dots=Array.from({length:6},(_,index)=>`<span class="onboarding-dot ${index===tourIndex+1?'active':''}"></span>`).join('');
   const demo=step.demo==='olympus'?`<div class="collection-reveal-demo" aria-label="${lang==='ru'?'Фигурки открываются одна за другой':'Figurines unlock one by one'}">${['hermes','athena','apollo','aphrodite','zeus'].map((id,index)=>`<span style="--reveal-index:${index}"><img src="assets/olympus/mascots/${id}.png" alt=""><i>✓</i></span>`).join('')}</div><small class="collection-demo-label">${lang==='ru'?'Каждый этап делает следующую фигуру видимой':'Each milestone reveals the next figurine'}</small>`:'';
-  tooltip.innerHTML=`<div class="context-tour-head"><img src="assets/olympus/mascots/hermes-login-v2.png" alt=""><div><span>${lang==='ru'?'Шаг':'Step'} ${tourIndex+2} / 6</span><h3>${step.title}</h3></div></div><p class="context-tour-message">${step.text}</p>${demo}<div class="context-tour-footer"><div class="onboarding-dots">${dots}</div><div class="context-tour-actions">${tourIndex?`<button class="tool-btn" onclick="tourIndex--;renderContextTour()">${lang==='ru'?'← Назад':'← Back'}</button>`:''}<button class="fill-submit" onclick="${tourIndex===steps.length-1?'finishContextTour()':'tourIndex++;renderContextTour()'}">${tourIndex===steps.length-1?(lang==='ru'?'Начать заниматься':'Start learning'):(lang==='ru'?'Далее →':'Next →')}</button></div></div>`;
+  tooltip.innerHTML=`<div class="context-tour-head"><img src="assets/olympus/mascots/hermes-login-v2.png" alt=""><div><span>${lang==='ru'?'Шаг':'Step'} ${tourIndex+2} / 6</span><h3>${step.title}</h3></div></div><p class="context-tour-message">${step.text}</p>${demo}<div class="context-tour-footer"><div class="onboarding-dots">${dots}</div><div class="context-tour-actions"><button class="tool-btn" onclick="finishContextTour()">${lang==='ru'?'Пропустить':'Skip'}</button>${tourIndex?`<button class="tool-btn" onclick="tourIndex--;renderContextTour()">${lang==='ru'?'← Назад':'← Back'}</button>`:''}<button class="fill-submit" onclick="${tourIndex===steps.length-1?'finishContextTour()':'tourIndex++;renderContextTour()'}">${tourIndex===steps.length-1?(lang==='ru'?'Начать заниматься':'Start learning'):(lang==='ru'?'Далее →':'Next →')}</button></div></div>`;
   document.body.appendChild(tooltip);positionContextTour();window.addEventListener('resize',positionContextTour);
 }
 function finishContextTour(){
   clearContextTour();appStorage.setItem(onboardingStorageKey(),'done');switchSection('flashcards');
+  window.Subscriptions?.invite?.();
 }
 function showGuestRegistrationPrompt(){
   if(currentUser)return;
@@ -260,6 +262,7 @@ function finishOnboarding(goToCards=false){
   stopDialogue();
   appStorage.setItem(onboardingStorageKey(),'done');
   document.getElementById('onboardingDialog')?.close();
+  window.Subscriptions?.invite?.();
   if(goToCards){
     leaveAccountRoute();
     switchSection('flashcards');
@@ -657,7 +660,8 @@ function renderFC() {
   document.getElementById('fcNextBtn').style.display = 'none';
 }
 
-function fcShow() {
+function fcShow(granted=false) {
+  if(!granted&&window.Subscriptions?.use){const card=fcDeck[fcIdx];return Subscriptions.use('cards',Subscriptions.task(card),()=>{if(fcDeck[fcIdx]===card)fcShow(true);});}
   fcRevealed = true;
   document.getElementById('fcCard').classList.add('revealed');
   document.getElementById('fcShowBtn').style.display = 'none';
@@ -704,12 +708,16 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderMC(opts, correctAnswer, containerId, onSelect) {
   const grid = document.getElementById(containerId);
   grid.innerHTML = '';
+  const allowanceTask={};
   opts.forEach(opt => {
     const b = document.createElement('button');
     b.className = 'opt-btn';
     b.textContent = opt;
     b.dataset.key = opt;
-    b.onclick = () => onSelect(b, opt, correctAnswer);
+    b.onclick = () => {
+      const answer=()=>{if(b.isConnected&&!b.disabled)onSelect(b,opt,correctAnswer);};
+      if(window.Subscriptions?.use){const format={qOpts:'quiz',tOpts:'tense',cjOpts:'conj',ctOpts:'change'}[containerId];Subscriptions.use(format,Subscriptions.task(allowanceTask),answer);}else answer();
+    };
     grid.appendChild(b);
   });
 }
@@ -817,6 +825,7 @@ function handleMatch(el) {
     el.classList.add('selected'); matchSel=el; return;
   }
   if (el.dataset.side==='left') { matchSel.classList.remove('selected'); el.classList.add('selected'); matchSel=el; return; }
+  if(!arguments[1]&&window.Subscriptions?.use){const selected=matchSel;return Subscriptions.use('match',Subscriptions.task(selected),()=>{if(el.isConnected&&matchSel===selected)handleMatch(el,true);});}
   if (el.dataset.key===matchSel.dataset.key) {
     [el,matchSel].forEach(e=>{ e.classList.remove('selected'); e.classList.add('matched'); });
     matchPaired++;
@@ -999,9 +1008,10 @@ function renderFill() {
   document.getElementById('fillScore').textContent=sessionProgressText(fIdx,fDeck.length);
 }
 
-function checkFill() {
+function checkFill(granted=false) {
   const input=document.getElementById('fillInput'); if(!input.value.trim()||fAnswered)return;
   const item=fDeck[fIdx], state=fStates[fIdx]||(fStates[fIdx]={});
+  if(!granted&&window.Subscriptions?.use)return Subscriptions.use('fill',Subscriptions.task(item),()=>{if(fDeck[fIdx]===item)checkFill(true);});
   const result=checkStr(input.value,item.answer), ok=result==='correct';
   recordAnswer(item.v,item.tense,ok); if(ok)fCorrect++;
   state.attempted=true; state.input=input.value; state.result=result; state.solved=ok;
@@ -1193,11 +1203,12 @@ function renderSituation(preserveAudio=false){
   document.getElementById('situationNext').classList.toggle('show',Boolean(state.solved));
   document.getElementById('situationScore').textContent=situationText(`Dialogue ${number} / ${categoryItems.length}`,`Диалог ${number} / ${categoryItems.length}`);
 }
-function checkSituation(){
+function checkSituation(granted=false){
   if(situationAnswered)return;
   const item=situationDeck[situationIdx],state=situationState(),answers=situationAnswers(item);
   const given=situationMode==='drag'?state.slots.map(index=>index===null?'':answers[index]).join(' '):state.inputs.join(' ');
   if(situationMode==='drag'?state.slots.some(index=>index===null):state.inputs.some(value=>!value.trim()))return;
+  if(!granted&&window.Subscriptions?.use){const task=Subscriptions.task(item);return Subscriptions.use('situation',task,()=>{if(situationDeck[situationIdx]===item)checkSituation(true);});}
   const result=checkStr(given,item.answer),ok=result==='correct';
   recordAnswer(null,'situation',ok);if(ok)situationCorrect++;
   state.attempted=true;state.result=result;state.solved=ok;
@@ -1240,6 +1251,7 @@ function handleImg(el) {
     el.classList.add('selected'); imgSel=el; return;
   }
   if (el.dataset.side==='left') { imgSel.classList.remove('selected'); el.classList.add('selected'); imgSel=el; return; }
+  if(!arguments[1]&&window.Subscriptions?.use){const selected=imgSel;return Subscriptions.use('match',Subscriptions.task(selected),()=>{if(el.isConnected&&imgSel===selected)handleImg(el,true);});}
   if (el.dataset.key===imgSel.dataset.key) {
     [el,imgSel].forEach(e=>{ e.classList.remove('selected'); e.classList.add('matched'); });
     imgPaired++;
@@ -1303,10 +1315,22 @@ function renderPhrases() {
   const sourceCats=PHRASE_CATEGORY_MAP[phraseCategory]||[phraseCategory];
   EXAM_PHRASES.filter(item=>sourceCats.includes(item.cat)).forEach(item=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td class="td-phrase-greek"><div class="phrase-line"><span class="phrase-emoji" aria-hidden="true">${phraseEmoji(item)}</span><button class="audio-btn phrase-audio" aria-label="${t('fc_audio')}" onclick="speakGreek('${item.gr.replaceAll("'","\\'")}',event)">🔊</button><span class="phrase-text">${item.gr}</span></div></td>
-      <td class="td-phrase-meaning">${lang==='en'?item.en:item.ru}</td>
-      <td class="td-phrase-context">${topicLabel(phraseCategory)}</td>`;
+    const reveal=()=>{
+      tr.replaceChildren();
+      const greek=document.createElement('td');greek.className='td-phrase-greek';
+      const audio=document.createElement('button');audio.className='audio-btn';audio.textContent='🔊';audio.ariaLabel=t('fc_audio');audio.onclick=event=>speakGreek(item.gr,event);
+      const text=document.createElement('span');text.textContent=item.gr;greek.append(audio,text);
+      const meaning=document.createElement('td');meaning.textContent=lang==='en'?item.en:item.ru;
+      const context=document.createElement('td');context.textContent=topicLabel(phraseCategory);tr.append(greek,meaning,context);
+    };
+    if(!window.Subscriptions?.use||Subscriptions.plan()!=='free'||Subscriptions.openPhrases?.has(item.gr))reveal();
+    else {
+      const cell=document.createElement('td');cell.colSpan=3;
+      const button=document.createElement('button');button.className='tool-btn';button.textContent=lang==='ru'?'Открыть фразу':'Open phrase';
+      const hint=document.createElement('span');hint.textContent=' · '+(lang==='en'?item.en:item.ru);
+      button.onclick=()=>Subscriptions.use('phrases',Subscriptions.task(item),()=>{(Subscriptions.openPhrases||=new Set()).add(item.gr);if(tr.isConnected)reveal();});
+      cell.append(button,hint);tr.append(cell);
+    }
     tbody.appendChild(tr);
   });
 }
@@ -1342,7 +1366,6 @@ function setupControls() {
 }
 
 function startConfiguredPractice() {
-  if(window.Subscriptions && !Subscriptions.require())return;
   const topic=document.getElementById('practiceTopic').value;
   const requested=document.getElementById('practiceType').value;
   const candidateTense=requested==='situation'?'mixed':document.getElementById('practiceTense').value;
@@ -1367,6 +1390,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   document.querySelector('.wrap').inert = true;
   document.querySelector('nav').inert = true;
   try { await initAccount(); } catch { learningNotice('storage'); renderAuth(); routeAccount(); }
+  if(window.Subscriptions?.refresh)await Subscriptions.refresh();
   document.querySelector('.wrap').inert = false;
   document.querySelector('nav').inert = false;
   if(!isExamPage()){
@@ -1383,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder=t(el.dataset.i18nPh); });
   if(isExamPage())initExamPage();
   if(!isExamPage()&&new URLSearchParams(location.search).get('exercise')==='situation')switchExercise('situation');
-  if(new URLSearchParams(location.search).get('onboarding')==='1')setTimeout(()=>startOnboarding(true),0);
+  if(!accountRoute())setTimeout(()=>startOnboarding(new URLSearchParams(location.search).get('onboarding')==='1'),0);
 });
 
 // Flush account-scoped learning data before moving between the two trainers.

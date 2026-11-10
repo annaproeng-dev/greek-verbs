@@ -7,18 +7,21 @@ PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
 usage() {
   cat <<'HELP'
-Usage: ./deploy/deploy.sh [--dry-run]
+Usage: ./deploy/deploy.sh [--dry-run] [--runtime-only]
 
 Upload code to the DigitalOcean VPS using rsync over SSH.
 Configuration: deploy/.env (see deploy/.env.example), or environment variables.
 --dry-run  Preview changes; still connects over SSH, but writes no remote files.
+--runtime-only Preserve and verify the entire live legal bundle; deploy runtime only.
 -h, --help Show help.
 HELP
 }
 DRY_RUN=false
+RUNTIME_ONLY=false
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
+    --runtime-only) RUNTIME_ONLY=true ;;
     -h|--help) usage; exit 0 ;;
     *) printf 'Unknown option: %s\n' "$arg" >&2; exit 2 ;;
   esac
@@ -73,10 +76,22 @@ OPTIONS=(-az --itemize-changes)
 if [[ "$DRY_RUN" == true ]]; then OPTIONS+=(--dry-run); fi
 # Do not delete remote files: the VPS may hold persistent data or configuration.
 # Validate generated documents and use the same public manifest as the HTTP server.
-python3 "$PROJECT_ROOT/scripts/build_legal.py" --release --check
+if [[ "$RUNTIME_ONLY" == true ]]; then
+  python3 "$PROJECT_ROOT/scripts/build_legal.py" --check
+else
+  python3 "$PROJECT_ROOT/scripts/build_legal.py" --release --check
+fi
 python3 "$PROJECT_ROOT/scripts/build_routes.py" --check
 RELEASE_FILES="$(mktemp)"
-python3 "$PROJECT_ROOT/scripts/release_files.py" > "$RELEASE_FILES"
+if [[ "$RUNTIME_ONLY" == true ]]; then
+  python3 "$PROJECT_ROOT/scripts/release_files.py" --runtime-only > "$RELEASE_FILES"
+else
+  python3 "$PROJECT_ROOT/scripts/release_files.py" > "$RELEASE_FILES"
+fi
+if [[ "$RUNTIME_ONLY" == true && "$DRY_RUN" == false ]]; then
+  LEGAL_SNAPSHOT="/var/backups/greek-verbs/legal-before-runtime-$(date -u +%Y%m%dT%H%M%SZ)"
+  "${AUTH[@]}" "${SSH[@]}" "$TARGET" "cd '$DEPLOY_PATH' && python3 -c 'import api.legal' && mkdir -p /var/backups/greek-verbs && tar -cf '$LEGAL_SNAPSHOT.tar' legal/config.json legal-manifest.json privacy.html privacy.en.html terms.html terms.en.html && sha256sum legal/config.json legal-manifest.json privacy.html privacy.en.html terms.html terms.en.html > '$LEGAL_SNAPSHOT.sha256'"
+fi
 "${AUTH[@]}" rsync "${OPTIONS[@]}" --files-from="$RELEASE_FILES" \
   -e "ssh -p $DEPLOY_PORT -o StrictHostKeyChecking=ask -o ConnectTimeout=15" \
   "$PROJECT_ROOT/" "$TARGET:$DEPLOY_PATH/"
@@ -84,6 +99,9 @@ rm -f -- "$RELEASE_FILES"
 if [[ "$DRY_RUN" == true ]]; then
   printf 'Preview complete. No remote files changed.\n'
 else
-  "${AUTH[@]}" "${SSH[@]}" "$TARGET" "systemctl try-restart greek-verbs.service"
+  if [[ "$RUNTIME_ONLY" == true ]]; then
+    "${AUTH[@]}" "${SSH[@]}" "$TARGET" "cd '$DEPLOY_PATH' && sha256sum -c '$LEGAL_SNAPSHOT.sha256' && python3 -c 'import api.legal'"
+  fi
+  "${AUTH[@]}" "${SSH[@]}" "$TARGET" "systemctl try-restart greek-verbs.service && systemctl is-active --quiet greek-verbs.service"
   printf 'Upload complete: https://greekmaster.com/\n'
 fi

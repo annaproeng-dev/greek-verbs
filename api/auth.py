@@ -61,6 +61,7 @@ def database():
         execute("CREATE TABLE IF NOT EXISTS user_roles (user_id TEXT PRIMARY KEY REFERENCES users(id), role TEXT NOT NULL CHECK (role IN ('owner', 'user')))")
         execute("INSERT INTO user_roles (user_id, role) SELECT id, 'user' FROM users WHERE 1=1 ON CONFLICT (user_id) DO NOTHING")
         execute("CREATE TABLE IF NOT EXISTS subscriptions (user_id TEXT PRIMARY KEY REFERENCES users(id), plan TEXT NOT NULL CHECK (plan IN ('plus', 'pro')), expires_at BIGINT NOT NULL)")
+        execute('CREATE TABLE IF NOT EXISTS practice_access (owner TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at BIGINT NOT NULL)')
         execute('CREATE TABLE IF NOT EXISTS learning (owner TEXT PRIMARY KEY, data TEXT NOT NULL, revision BIGINT NOT NULL)')
         execute('CREATE TABLE IF NOT EXISTS learning_metadata (owner TEXT PRIMARY KEY, generation TEXT NOT NULL, imports TEXT NOT NULL, migration_closed INTEGER NOT NULL, updated_at BIGINT NOT NULL)')
         execute('CREATE INDEX IF NOT EXISTS sessions_expiry ON sessions (expires_at)')
@@ -200,7 +201,7 @@ class handler(BaseHTTPRequestHandler):
             self.reply(400, {'error': 'invalid_request'})
             return
         action = parse_qs(urlsplit(self.path).query).get('action', [''])[0]
-        if action not in ('login', 'register', 'logout', 'request_reset', 'reset_password', 'accept_legal', 'export_data', 'delete_account', 'logout_all', 'learning', 'admin_users', 'admin_subscription'):
+        if action not in ('login', 'register', 'logout', 'request_reset', 'reset_password', 'accept_legal', 'export_data', 'delete_account', 'logout_all', 'learning', 'admin_users', 'admin_subscription', 'practice_access'):
             self.reply(404, {'error': 'not_found'})
             return
         reset_email = None
@@ -232,6 +233,9 @@ class handler(BaseHTTPRequestHandler):
                             for user in users:
                                 user['subscription'] = subscription_payload(execute, user['id'], now)
                             result = (200, {'users': users}, None)
+                elif action == 'practice_access':
+                    from api.access import access_request
+                    result = access_request(self, execute, payload, now)
                 elif action == 'learning':
                     result = learning_request(self, execute, payload, now)
                 elif action == 'logout':
@@ -259,13 +263,14 @@ class handler(BaseHTTPRequestHandler):
                         elif action == 'export_data':
                             rows = execute('SELECT version, language, accepted_at, terms_sha256, privacy_sha256, adult_confirmed FROM legal_acceptances WHERE user_id = ? ORDER BY accepted_at', (account[0],)).fetchall()
                             acceptances = [dict(zip(('version','language','acceptedAt','termsSha256','privacySha256','adultConfirmed'), row)) for row in rows]
-                            result = (200, {'export': {'schemaVersion': 1, 'exportedAt': now, 'account': {'id': account[0], 'email': account[1], 'createdAt': account[3]}, 'learning': learning_export(execute, 'user:' + account[0]), 'legalAcceptances': acceptances}}, None)
+                            result = (200, {'export': {'schemaVersion': 1, 'exportedAt': now, 'account': {'id': account[0], 'email': account[1], 'createdAt': account[3]}, 'learning': learning_export(execute, 'user:' + account[0]), 'practiceAccess': (lambda row: json.loads(row[0]) if row else {})(execute('SELECT data FROM practice_access WHERE owner = ?', ('user:' + account[0],)).fetchone()), 'legalAcceptances': acceptances}}, None)
                         elif action == 'logout_all':
                             execute('DELETE FROM sessions WHERE user_id = ?', (account[0],))
                             result = (200, {'user': None}, self.cookie())
                         elif payload.get('confirmation') != 'DELETE':
                             result = (400, {'error': 'deletion_confirmation_required'}, None)
                         else:
+                            execute('DELETE FROM practice_access WHERE owner = ?', ('user:' + account[0],))
                             execute('DELETE FROM learning WHERE owner = ?', ('user:' + account[0],))
                             execute('DELETE FROM learning_metadata WHERE owner = ?', ('user:' + account[0],))
                             for table in ('sessions', 'password_reset_tokens', 'legal_acceptances', 'subscriptions', 'user_roles'):

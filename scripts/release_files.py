@@ -1,4 +1,5 @@
 """Emit the exact production file inventory; public serving uses the same manifest."""
+import argparse
 import json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
@@ -14,5 +15,11 @@ def release_files():
         if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(ROOT) or any(part.startswith('.') for part in Path(name).parts):
             raise ValueError('Invalid release path: '+name)
         yield name
+LEGAL_BUNDLE = {'legal/config.json', 'legal-manifest.json', 'privacy.html', 'privacy.en.html', 'terms.html', 'terms.en.html'}
 if __name__=='__main__':
-    for name in release_files():print(name)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--runtime-only', action='store_true', help='Preserve the complete existing production legal bundle')
+    args = parser.parse_args()
+    for name in release_files():
+        if not args.runtime_only or name not in LEGAL_BUNDLE:
+            print(name)
