@@ -46,4 +46,3 @@ def cleanup_expired(execute, now):
     cutoff = now - CONFIG['retention']['guestDays'] * 86400
     execute("DELETE FROM learning WHERE owner IN (SELECT owner FROM learning_metadata WHERE owner LIKE 'guest:%' AND updated_at <= ?)", (cutoff,))
     execute("DELETE FROM learning_metadata WHERE owner LIKE 'guest:%' AND updated_at <= ?", (cutoff,))
-

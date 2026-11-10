@@ -1342,6 +1342,7 @@ function setupControls() {
 }
 
 function startConfiguredPractice() {
+  if(window.Subscriptions && !Subscriptions.require())return;
   const topic=document.getElementById('practiceTopic').value;
   const requested=document.getElementById('practiceType').value;
   const candidateTense=requested==='situation'?'mixed':document.getElementById('practiceTense').value;

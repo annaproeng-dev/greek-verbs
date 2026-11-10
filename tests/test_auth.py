@@ -49,6 +49,33 @@ class AuthTests(unittest.TestCase):
         conn.close()
         return result
 
+    def test_subscription_grants_and_expiry(self):
+        import time
+        accounts = []
+        for email in ('sub-owner@example.test', 'sub-member@example.test'):
+            status, headers, result = self.request('register', {'email': email, 'password': 'test-password-123', 'confirmPassword': 'test-password-123', 'subscription': {'plan': 'pro'}})
+            self.assertEqual(status, 200)
+            self.assertEqual(result['user']['subscription']['plan'], 'free')
+            accounts.append((result['user']['id'], headers['Set-Cookie'].split(';')[0]))
+        owner, member = accounts
+        with database() as execute:
+            execute("UPDATE user_roles SET role = 'owner' WHERE user_id = ?", (owner[0],))
+        payload = {'userId': member[0], 'plan': 'plus'}
+        self.assertEqual(self.request('admin_subscription', payload)[0], 403)
+        self.assertEqual(self.request('admin_subscription', payload, cookie=member[1])[0], 403)
+        for plan in ('plus', 'pro'):
+            status, _, result = self.request('admin_subscription', {**payload, 'plan': plan}, cookie=owner[1])
+            self.assertEqual(status, 200)
+            self.assertEqual(result['subscription']['plan'], plan)
+            self.assertAlmostEqual(result['subscription']['expiresAt'], time.time() + 7 * 86400, delta=3)
+            self.assertEqual(self.request(cookie=member[1])[2]['user']['subscription']['plan'], plan)
+        self.assertEqual(self.request('admin_subscription', {**payload, 'plan': 'owner'}, cookie=owner[1])[0], 400)
+        with database() as execute:
+            execute('UPDATE subscriptions SET expires_at = ? WHERE user_id = ?', (int(time.time()) - 1, member[0]))
+        self.assertEqual(self.request(cookie=member[1])[2]['user']['subscription']['plan'], 'free')
+        self.assertEqual(self.request('admin_subscription', {**payload, 'plan': 'free'}, cookie=owner[1])[2]['subscription']['plan'], 'free')
+        self.assertEqual(self.request(path='/pricing')[0], 200)
+
     def test_owner_admin_access_and_user_isolation(self):
         with patch.dict(os.environ, {'OWNER_EMAIL': 'owner@example.test'}):
             cookies = []

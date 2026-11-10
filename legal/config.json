@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "2026-11-10.2",
+  "version": "2026-11-10.4",
   "site": {
     "name": "Greekmaster",
     "origin": "https://greekmaster.com"
@@ -19,11 +19,12 @@
   "services": {
     "hosting": {
       "provider": "DigitalOcean",
-      "country": null
+      "country": "United Kingdom"
     },
     "email": {
       "provider": null,
-      "country": null
+      "country": null,
+      "enabled": false
     }
   },
   "retention": {
@@ -38,11 +39,13 @@
   },
   "optionalTracking": false,
   "releaseBlockers": [
-    "operator.country",
     "operator.postalAddress",
-    "services.hosting.country",
-    "services.email.provider",
-    "services.email.country"
+    "compliance.russianLocalizationReviewed",
+    "compliance.backupAndLogRetentionApproved"
   ],
-  "effectiveDate": "2026-11-10"
+  "effectiveDate": "2026-11-10",
+  "compliance": {
+    "russianLocalizationReviewed": false,
+    "backupAndLogRetentionApproved": false
+  }
 }

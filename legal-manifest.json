@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-10.2",
+  "version": "2026-11-10.4",
   "minimumAge": 18,
   "noticeDays": 180,
   "sessionDays": 30,
@@ -7,19 +7,19 @@
   "documents": {
     "privacy.ru": {
       "path": "privacy.html",
-      "sha256": "eece24651f5d9298220315801cec41570f0c2ab17d641e5ccca80b7679e72433"
+      "sha256": "ba080bdeab61edce7759253a893e82a80b9d62433a3bee220ebb8fbfa66567f4"
     },
     "terms.ru": {
       "path": "terms.html",
-      "sha256": "200f3a5831f4cc83c1fe655cc7a36300dc975b345a17ec38c792af59b77822e0"
+      "sha256": "13740f5d81d86eea703bef81d4431f5fbca0a32b0cfcb9c890c40021f5c7259e"
     },
     "privacy.en": {
       "path": "privacy.en.html",
-      "sha256": "752b8c8f6129bceb3aef8bb0bf4cd867e784b50fbd2a733f1d2f06749563d0b8"
+      "sha256": "2867fe73dc3302d254b3fed22c6074d71393d0f4f80347f51ba2be5bdfabf51f"
     },
     "terms.en": {
       "path": "terms.en.html",
-      "sha256": "faad0a0c8a17fac3ee9feaaf22d21799b87e763fe76677d73559954b81211d73"
+      "sha256": "813ba7f5731f9fe8aede8690e141a8da537100ad1beb730ebef786827ab0dca7"
     }
   },
   "optionalTracking": false

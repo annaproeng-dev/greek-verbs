@@ -23,12 +23,14 @@
 
 ## Verification
 
-25 Python tests and five JavaScript suites passed on the final integrated implementation. Browser suites passed for legal/account privacy and the full A2 flow: mobile layout, blocked storage, explicit acceptance, export, erase/reset, stale-tab write rejection, session revocation, shared scores, drafts, rewards and exam completion.
+26 Python tests and five JavaScript suites passed on the final integrated implementation. Browser suites passed for legal/account privacy and the full A2 flow: mobile layout, blocked storage, explicit acceptance, export, erase/reset, stale-tab write rejection, session revocation, shared scores, drafts, rewards and exam completion.
 
 ## Release boundaries
 
-Latest legal revision is a reviewed implementation draft, not a guarantee of complete legal compliance. Known facts: operator is in Russia, Saint Petersburg; full postal address, actual datacenter location, SMTP provider/country and operational backup/log retention are unconfirmed. `build_legal.py --release --check` must fail until mandatory facts are filled in. Russian localization/notifications, processor agreements and applicability to actual markets require factual checks.
+Latest legal revision is a reviewed implementation draft, not a guarantee of complete legal compliance. Known facts: operator is in Russia, Saint Petersburg; full postal address, SMTP provider/country and operational backup/log retention are unconfirmed. `build_legal.py --release --check` must fail until mandatory facts and the localization/retention checks are completed. Russian localization/notifications, processor agreements and applicability to actual markets require factual checks.
 
-Email verification remains a tracked security issue before broad paid launch. Child accounts/verified parental consent, optional trackers, payments and future learning roadmap features are not implemented by this integration.
+Email verification remains a tracked security issue before broad paid launch. Child accounts/verified parental consent, optional trackers, payment processing and future learning roadmap features are not implemented by this integration.
 
 The PostgreSQL chat has separately migrated the live backend and reviewed admin/routing; its deployment status is recorded in `POSTGRES_STATUS.md`. Publishing the latest legal revision is separate from preserving all work in main.
+
+The concurrent subscription task completed during integration. Its pricing page, profile status, expiring 7-day admin grants and UI demo gating are included. This is not secure server-side content paywalling; downloadable learning assets remain public. Payments and automatic renewals are not connected.

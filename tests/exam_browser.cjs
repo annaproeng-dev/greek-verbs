@@ -6,6 +6,8 @@ const base=process.env.EXAM_TEST_URL||'http://localhost:8000';
 (async()=>{
  const browser=await chromium.launch({headless:true,channel:'chrome'});
  const context=await browser.newContext({viewport:{width:1440,height:1100}});
+ // Exercise the learning engine with paid access; subscription grants/expiry are API-tested separately.
+ await context.route('**/subscriptions.js', route=>route.fulfill({contentType:'text/javascript',body:'window.Subscriptions={plan:()=>"plus",require:()=>true,render(){}};'}));
  const errors=[];context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
  const page=await context.newPage();
  const ready=async p=>p.waitForFunction(()=>typeof accountReady!=='undefined'&&accountReady&&!document.querySelector('.wrap').inert);
