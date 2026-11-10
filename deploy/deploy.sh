@@ -73,7 +73,7 @@ OPTIONS=(-az --itemize-changes)
 if [[ "$DRY_RUN" == true ]]; then OPTIONS+=(--dry-run); fi
 # Do not delete remote files: the VPS may hold persistent data or configuration.
 # Validate generated documents and use the same public manifest as the HTTP server.
-python3 "$PROJECT_ROOT/scripts/build_legal.py" --check
+python3 "$PROJECT_ROOT/scripts/build_legal.py" --release --check
 python3 "$PROJECT_ROOT/scripts/build_routes.py" --check
 RELEASE_FILES="$(mktemp)"
 python3 "$PROJECT_ROOT/scripts/release_files.py" > "$RELEASE_FILES"
