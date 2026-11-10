@@ -18,3 +18,7 @@ Implemented following the user's 10-task daily correction.
 ## Deployment
 
 Use deploy/deploy.sh --runtime-only for this release. It excludes the whole six-file legal configuration/manifest/document bundle, validates the current live bundle, creates a complete legal backup and hash list, verifies unchanged hashes after transfer, and restarts/checks the service. Full legal publication still requires the existing separate --release checks.
+
+### Production verification
+
+Runtime commits 5c51366 and 65ee425 deployed to https://greekmaster.com/; all six preserved legal-file checksums verified unchanged. Production initially exposed psycopg percent-placeholder parsing in guest retention SQL; corrected all affected predicates to SQL substring equality in 65ee425. The 28 Python tests passed again after this correction. Production PostgreSQL exercised guest 9×3 limits, idempotent retries, account bonus, shared daily10, exhaustion, next-day reset and paid bypass inside a transaction that was rolled back. A fresh mobile browser on production verified Hermes/skip, registration offer, three free cards, blocked fourth, persisted counters after reload, updated pricing and no JavaScript errors. Service is active. No production test account was retained.
