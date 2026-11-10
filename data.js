@@ -8,6 +8,11 @@ const appStorage = {
     try { return localStorage.getItem(key); }
     catch { this.unavailable=true; return Object.hasOwn(this.memory,key) ? this.memory[key] : null; }
   },
+  removeItem(key) {
+    delete this.memory[key]; this.unsaved.delete(key);
+    try { localStorage.removeItem(key); }
+    catch { this.unavailable=true; this.memory[key]=null; this.unsaved.add(key); }
+  },
   setItem(key,value) {
     this.memory[key]=String(value);
     try { localStorage.setItem(key,String(value)); this.unsaved.delete(key); }
@@ -1868,7 +1873,7 @@ const I18N = {
     page_title:'Greek Verbs', document_title:'Greek Verbs A2 — Trainer',
     subtitle:'{count} A2 verbs · present, past (aorist), simple future',
     nav_exam:'🏛️ Exam A2', exam_entry:'🏛️ Prepare for the A2 exam', nav_verbs:'📖 Verbs', nav_flash:'🃏 Flashcards', nav_practice:'🎯 Practice', nav_phrases:'💬 Phrases',
-    lang_toggle:'RU', accent_label:'Check accents (τόνος)',
+    lang_toggle:'EN', accent_label:'Check accents (τόνος)',
     accent_tip:'To type an accent: press ; and then the vowel (for example, ;α → ά).',
     accent_rule_on:'Accent checking is ON: the accent mark must be in the correct place.',
     accent_rule_off:'Accent checking is OFF: an answer without an accent mark is accepted.',
@@ -1909,7 +1914,7 @@ const I18N = {
     page_title:'Греческие глаголы', document_title:'Греческие глаголы A2 — Тренажёр',
     subtitle:'{count} глагола A2 · настоящее, прошедшее (аорист), простое будущее',
     nav_exam:'🏛️ Экзамен A2', exam_entry:'🏛️ Подготовка к экзамену A2', nav_verbs:'📖 Глаголы', nav_flash:'🃏 Карточки', nav_practice:'🎯 Практика', nav_phrases:'💬 Фразы',
-    lang_toggle:'EN', accent_label:'Проверять ударения (τόνος)',
+    lang_toggle:'RU', accent_label:'Проверять ударения (τόνος)',
     accent_tip:'Как поставить ударение: нажмите Ж (или ;), затем нужную гласную, например Ж + α → ά.',
     accent_rule_on:'Проверка ударений включена: ударение должно стоять в правильном месте.',
     accent_rule_off:'Проверка ударений выключена: ответ без ударения будет принят.',

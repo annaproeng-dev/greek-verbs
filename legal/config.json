@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "version": "2026-11-10.2",
+  "site": {
+    "name": "Greekmaster",
+    "origin": "https://greekmaster.com"
+  },
+  "operator": {
+    "name": "Анна Сергеевна Виноградова",
+    "nameEn": "Anna Sergeevna Vinogradova",
+    "status": "Самозанятая",
+    "taxId": "290303541650",
+    "email": "annawin.esl.online@yandex.ru",
+    "source": "https://eslkidsonline.com/",
+    "country": "Россия",
+    "postalAddress": null,
+    "city": "Санкт-Петербург"
+  },
+  "services": {
+    "hosting": {
+      "provider": "DigitalOcean",
+      "country": null
+    },
+    "email": {
+      "provider": null,
+      "country": null
+    }
+  },
+  "retention": {
+    "sessionDays": 30,
+    "resetMinutes": 30,
+    "rateLimitMinutes": 15,
+    "noticeDays": 180,
+    "guestDays": 365
+  },
+  "registration": {
+    "minimumAge": 18
+  },
+  "optionalTracking": false,
+  "releaseBlockers": [
+    "operator.country",
+    "operator.postalAddress",
+    "services.hosting.country",
+    "services.email.provider",
+    "services.email.country"
+  ],
+  "effectiveDate": "2026-11-10"
+}

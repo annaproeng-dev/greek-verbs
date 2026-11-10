@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    "account-privacy.js",
+    "app.js",
+    "apple-touch-icon.png",
+    "auth.js",
+    "data.js",
+    "exam-data.js",
+    "exam.css",
+    "exam.html",
+    "exam.js",
+    "favicon.ico",
+    "favicon.svg",
+    "index.html",
+    "legal-manifest.json",
+    "legal.css",
+    "legal.js",
+    "privacy.en.html",
+    "privacy.html",
+    "routes.json",
+    "storage.js",
+    "style.css",
+    "terms.en.html",
+    "terms.html",
+    "theme.js",
+    "verb-page.js",
+    "verb.html",
+    "subscriptions.js",
+    "pricing.html"
+  ],
+  "assetDirectory": "assets"
+}

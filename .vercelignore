@@ -17,3 +17,14 @@ SECURITY_AUDIT_*.md
 *.log
 .npmrc
 .pypirc
+
+legal/
+!legal/config.json
+scripts/
+public-files.json
+LEGAL_*.md
+PROMOTION_*.md
+docs/
+prototypes/
+output/
+tmp/

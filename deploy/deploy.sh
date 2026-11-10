@@ -47,6 +47,7 @@ AUTH=(env)
 ASKPASS_DIR=""
 cleanup() {
   unset SSHPASS DEPLOY_PASSWORD
+  if [[ -n "${RELEASE_FILES:-}" ]]; then rm -f -- "$RELEASE_FILES"; fi
   if [[ -n "$ASKPASS_DIR" ]]; then rm -rf -- "$ASKPASS_DIR"; fi
 }
 trap cleanup EXIT
@@ -71,17 +72,15 @@ fi
 OPTIONS=(-az --itemize-changes)
 if [[ "$DRY_RUN" == true ]]; then OPTIONS+=(--dry-run); fi
 # Do not delete remote files: the VPS may hold persistent data or configuration.
-"${AUTH[@]}" rsync "${OPTIONS[@]}" \
+# Validate generated documents and use the same public manifest as the HTTP server.
+python3 "$PROJECT_ROOT/scripts/build_legal.py" --check
+python3 "$PROJECT_ROOT/scripts/build_routes.py" --check
+RELEASE_FILES="$(mktemp)"
+python3 "$PROJECT_ROOT/scripts/release_files.py" > "$RELEASE_FILES"
+"${AUTH[@]}" rsync "${OPTIONS[@]}" --files-from="$RELEASE_FILES" \
   -e "ssh -p $DEPLOY_PORT -o StrictHostKeyChecking=ask -o ConnectTimeout=15" \
-  --include '/index.html' --include '/verb.html' --include '/exam.html' --include '/exam.js' --include '/exam-data.js' --include '/exam.css' \
-  --include '/privacy.html' --include '/terms.html' --include '/legal.js' --include '/legal.css' \
-  --include '/app.js' --include '/data.js' --include '/auth.js' \
-  --include '/storage.js' --include '/verb-page.js' --include '/theme.js' --include '/style.css' \
-  --include '/favicon.ico' --include '/favicon.svg' --include '/apple-touch-icon.png' \
-  --include '/server.py' --include '/requirements.txt' \
-  --include '/api/' --include '/api/*.py' \
-  --exclude '.*' --include '/assets/***' --exclude '*' \
   "$PROJECT_ROOT/" "$TARGET:$DEPLOY_PATH/"
+rm -f -- "$RELEASE_FILES"
 if [[ "$DRY_RUN" == true ]]; then
   printf 'Preview complete. No remote files changed.\n'
 else

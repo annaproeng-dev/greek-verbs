@@ -1,0 +1,26 @@
+{
+  "version": "2026-11-10.2",
+  "minimumAge": 18,
+  "noticeDays": 180,
+  "sessionDays": 30,
+  "resetMinutes": 30,
+  "documents": {
+    "privacy.ru": {
+      "path": "privacy.html",
+      "sha256": "eece24651f5d9298220315801cec41570f0c2ab17d641e5ccca80b7679e72433"
+    },
+    "terms.ru": {
+      "path": "terms.html",
+      "sha256": "200f3a5831f4cc83c1fe655cc7a36300dc975b345a17ec38c792af59b77822e0"
+    },
+    "privacy.en": {
+      "path": "privacy.en.html",
+      "sha256": "752b8c8f6129bceb3aef8bb0bf4cd867e784b50fbd2a733f1d2f06749563d0b8"
+    },
+    "terms.en": {
+      "path": "terms.en.html",
+      "sha256": "faad0a0c8a17fac3ee9feaaf22d21799b87e763fe76677d73559954b81211d73"
+    }
+  },
+  "optionalTracking": false
+}

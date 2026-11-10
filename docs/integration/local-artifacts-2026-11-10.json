@@ -1,5 +1,10 @@
 [
   {
+    "path": "output/admin-routing-review.png",
+    "bytes": 56278,
+    "sha256": "df65e92c3541372aa0ffe2d021997e30a3df707a058812bafaba844cbbc8f768"
+  },
+  {
     "path": "output/domain-research/rdap-results.json",
     "bytes": 73261,
     "sha256": "7e8ffb3c8fb57c12cb69aa66b62c475c166b9030751fea33f8f8595f0e20acab"
@@ -75,9 +80,134 @@
     "sha256": "fdae7c4fe8abedd5652d7a0e035bd5614d8e87438f0ceac908661f70666e055b"
   },
   {
-    "path": "output/promo-anna-v2/carousel.zip",
-    "bytes": 3851415,
-    "sha256": "0c57b57626b1f036d50d68ed937ec7fb76dde3fff94f3a86ed4e24bb1940a1d0"
+    "path": "output/promo-anna/carousel/01.png",
+    "bytes": 63030,
+    "sha256": "357ea298a8b240fc386a5f32901c07e8c17358a6807eed920b1b4c01a3310ac2"
+  },
+  {
+    "path": "output/promo-anna/carousel/02.png",
+    "bytes": 64772,
+    "sha256": "520120be3c46f65e54d85241ca4e77c74d9d2f1abf2738ced9d11ab942dc2218"
+  },
+  {
+    "path": "output/promo-anna/carousel/03.png",
+    "bytes": 64422,
+    "sha256": "a37ee02d1e42357d3c46ce3893ad54d406001afdd497687ddb6eddf444311872"
+  },
+  {
+    "path": "output/promo-anna/carousel/04.png",
+    "bytes": 66799,
+    "sha256": "36e3315ee6c48b29c52300437e2d9abad68dea50cf96e8cc7c6a389ecc60aad3"
+  },
+  {
+    "path": "output/promo-anna/carousel/05.png",
+    "bytes": 62080,
+    "sha256": "4d9a20d97beae20cce7aaea521f1ce142496c2e522416d24c220676d66a4a664"
+  },
+  {
+    "path": "output/promo-anna/carousel/06.png",
+    "bytes": 64532,
+    "sha256": "1422401adb170a56850f1495c41f56d826020635af5f3056bee694fb0d5cf8bf"
+  },
+  {
+    "path": "output/promo-anna/carousel/07.png",
+    "bytes": 64340,
+    "sha256": "1e8277f879a74e4bc4d01c943b23cbc66e0d40f6ff9a799485094e69dc17758e"
+  },
+  {
+    "path": "output/promo-anna/carousel/08.png",
+    "bytes": 58550,
+    "sha256": "ec254c0d57a5bc27f94e35ad1c3719548c1b1a54dd8ac356dd0a1913e48bb149"
+  },
+  {
+    "path": "output/promo-anna/carousel.zip",
+    "bytes": 443634,
+    "sha256": "afeeba69fe1a16d5fd94a6418a44c6af6bb0a003f234d4b5ad54bc9d30a93fc4"
+  },
+  {
+    "path": "output/promo-anna/greek-verbs-presentation.mp4",
+    "bytes": 347835,
+    "sha256": "9393bb8bbcd5f9068ac830ce342b4d57c0ab0443c878331e611f28f8ea439864"
+  },
+  {
+    "path": "output/promo-anna/make_assets.py",
+    "bytes": 7477,
+    "sha256": "535e88b9aede7e63af191e885e5cb32d481c6409990775952277237c875c61ac"
+  },
+  {
+    "path": "output/promo-anna/preview.jpg",
+    "bytes": 134413,
+    "sha256": "770b3e2295369f8d8974235ab15caab92ee25a79966c8569ba6dec398532feb7"
+  },
+  {
+    "path": "output/promo-anna/publications.md",
+    "bytes": 7182,
+    "sha256": "defe9d1c72324c870bda96bc44ae2b4952782c914274e156ef7fca0e6e9e1204"
+  },
+  {
+    "path": "output/promo-anna/video-slides/01.mp4",
+    "bytes": 58148,
+    "sha256": "423c79ffb9d3302aacc7aa41d665f31217d63d80e005782170a49103a025fc45"
+  },
+  {
+    "path": "output/promo-anna/video-slides/01.png",
+    "bytes": 68829,
+    "sha256": "c38e81185c3f42cf25ec2629638179126358b0e02c29f85fdc713c11e2e437f2"
+  },
+  {
+    "path": "output/promo-anna/video-slides/02.mp4",
+    "bytes": 63988,
+    "sha256": "be556abefb5f6631cc68c2a2d3e3147c664a8322f89646db894dd61c5de8f453"
+  },
+  {
+    "path": "output/promo-anna/video-slides/02.png",
+    "bytes": 70816,
+    "sha256": "72e236ca793d8f4322ed6a2fea50933bbb2b99519edf42bde687ab9d56289fec"
+  },
+  {
+    "path": "output/promo-anna/video-slides/03.mp4",
+    "bytes": 64615,
+    "sha256": "4d61eb2f584a53207e6cda3f69857c2ca147c11de3c5188a3943eb91db30991d"
+  },
+  {
+    "path": "output/promo-anna/video-slides/03.png",
+    "bytes": 67601,
+    "sha256": "7e1ceb8cac69ac8697d8e7fb1fa662ae78365ea1c5f8e425818e097fa1b82ef6"
+  },
+  {
+    "path": "output/promo-anna/video-slides/04.mp4",
+    "bytes": 55919,
+    "sha256": "fa6194ebbbef57d4915759d5a319f6931abf4888da0c1d7b779cfcadd294b3e6"
+  },
+  {
+    "path": "output/promo-anna/video-slides/04.png",
+    "bytes": 64693,
+    "sha256": "fd4ec77993cc69381e0cc20c4bbec48462dd7699829c0d1b5e2a884e64ddff50"
+  },
+  {
+    "path": "output/promo-anna/video-slides/05.mp4",
+    "bytes": 54957,
+    "sha256": "f995a7baa01579601bcd1f12d2ae21dbb0e14d54d4ec8aa420fd23194414dafc"
+  },
+  {
+    "path": "output/promo-anna/video-slides/05.png",
+    "bytes": 62783,
+    "sha256": "80f9fea23030e27ae7fb87084c795c81ac4195427e6783a022a35dce5161f7fd"
+  },
+  {
+    "path": "output/promo-anna/video-slides/06.mp4",
+    "bytes": 54338,
+    "sha256": "707f9ae1950ca2df5caae74ac646a3089c9c7a0f418aaec96a358073187cbfbf"
+  },
+  {
+    "path": "output/promo-anna/video-slides/06.png",
+    "bytes": 57251,
+    "sha256": "4e87cee372c6f924090c41fd43e77cf858f6c31793066d6c4f0a93c312bac648"
+  },
+  {
+    "path": "output/promo-anna/video-slides/concat.txt",
+    "bytes": 84,
+    "sha256": "542dd105808c83518eed6ce93153d096fcc4af0cd386577a438542d65062529d"
   },
   {
     "path": "output/promo-anna-v2/carousel/01.png",
@@ -118,6 +248,11 @@
     "path": "output/promo-anna-v2/carousel/08.png",
     "bytes": 442209,
     "sha256": "89323c9c2951fe3771c78654c22637c15539a77ac9e64cf1f48a6902aba285f9"
+  },
+  {
+    "path": "output/promo-anna-v2/carousel.zip",
+    "bytes": 3851415,
+    "sha256": "0c57b57626b1f036d50d68ed937ec7fb76dde3fff94f3a86ed4e24bb1940a1d0"
   },
   {
     "path": "output/promo-anna-v2/greek-verbs-onboarding.mp4",
@@ -218,136 +353,6 @@
     "path": "output/promo-anna-v2/video-slides/concat.txt",
     "bytes": 112,
     "sha256": "8049bff2809e4a5b889e39780d21a4d169ecb8289a3d05a84f70c4b68877e237"
-  },
-  {
-    "path": "output/promo-anna/carousel.zip",
-    "bytes": 443634,
-    "sha256": "afeeba69fe1a16d5fd94a6418a44c6af6bb0a003f234d4b5ad54bc9d30a93fc4"
-  },
-  {
-    "path": "output/promo-anna/carousel/01.png",
-    "bytes": 63030,
-    "sha256": "357ea298a8b240fc386a5f32901c07e8c17358a6807eed920b1b4c01a3310ac2"
-  },
-  {
-    "path": "output/promo-anna/carousel/02.png",
-    "bytes": 64772,
-    "sha256": "520120be3c46f65e54d85241ca4e77c74d9d2f1abf2738ced9d11ab942dc2218"
-  },
-  {
-    "path": "output/promo-anna/carousel/03.png",
-    "bytes": 64422,
-    "sha256": "a37ee02d1e42357d3c46ce3893ad54d406001afdd497687ddb6eddf444311872"
-  },
-  {
-    "path": "output/promo-anna/carousel/04.png",
-    "bytes": 66799,
-    "sha256": "36e3315ee6c48b29c52300437e2d9abad68dea50cf96e8cc7c6a389ecc60aad3"
-  },
-  {
-    "path": "output/promo-anna/carousel/05.png",
-    "bytes": 62080,
-    "sha256": "4d9a20d97beae20cce7aaea521f1ce142496c2e522416d24c220676d66a4a664"
-  },
-  {
-    "path": "output/promo-anna/carousel/06.png",
-    "bytes": 64532,
-    "sha256": "1422401adb170a56850f1495c41f56d826020635af5f3056bee694fb0d5cf8bf"
-  },
-  {
-    "path": "output/promo-anna/carousel/07.png",
-    "bytes": 64340,
-    "sha256": "1e8277f879a74e4bc4d01c943b23cbc66e0d40f6ff9a799485094e69dc17758e"
-  },
-  {
-    "path": "output/promo-anna/carousel/08.png",
-    "bytes": 58550,
-    "sha256": "ec254c0d57a5bc27f94e35ad1c3719548c1b1a54dd8ac356dd0a1913e48bb149"
-  },
-  {
-    "path": "output/promo-anna/greek-verbs-presentation.mp4",
-    "bytes": 347835,
-    "sha256": "9393bb8bbcd5f9068ac830ce342b4d57c0ab0443c878331e611f28f8ea439864"
-  },
-  {
-    "path": "output/promo-anna/make_assets.py",
-    "bytes": 7477,
-    "sha256": "535e88b9aede7e63af191e885e5cb32d481c6409990775952277237c875c61ac"
-  },
-  {
-    "path": "output/promo-anna/preview.jpg",
-    "bytes": 134413,
-    "sha256": "770b3e2295369f8d8974235ab15caab92ee25a79966c8569ba6dec398532feb7"
-  },
-  {
-    "path": "output/promo-anna/publications.md",
-    "bytes": 7182,
-    "sha256": "defe9d1c72324c870bda96bc44ae2b4952782c914274e156ef7fca0e6e9e1204"
-  },
-  {
-    "path": "output/promo-anna/video-slides/01.mp4",
-    "bytes": 58148,
-    "sha256": "423c79ffb9d3302aacc7aa41d665f31217d63d80e005782170a49103a025fc45"
-  },
-  {
-    "path": "output/promo-anna/video-slides/01.png",
-    "bytes": 68829,
-    "sha256": "c38e81185c3f42cf25ec2629638179126358b0e02c29f85fdc713c11e2e437f2"
-  },
-  {
-    "path": "output/promo-anna/video-slides/02.mp4",
-    "bytes": 63988,
-    "sha256": "be556abefb5f6631cc68c2a2d3e3147c664a8322f89646db894dd61c5de8f453"
-  },
-  {
-    "path": "output/promo-anna/video-slides/02.png",
-    "bytes": 70816,
-    "sha256": "72e236ca793d8f4322ed6a2fea50933bbb2b99519edf42bde687ab9d56289fec"
-  },
-  {
-    "path": "output/promo-anna/video-slides/03.mp4",
-    "bytes": 64615,
-    "sha256": "4d61eb2f584a53207e6cda3f69857c2ca147c11de3c5188a3943eb91db30991d"
-  },
-  {
-    "path": "output/promo-anna/video-slides/03.png",
-    "bytes": 67601,
-    "sha256": "7e1ceb8cac69ac8697d8e7fb1fa662ae78365ea1c5f8e425818e097fa1b82ef6"
-  },
-  {
-    "path": "output/promo-anna/video-slides/04.mp4",
-    "bytes": 55919,
-    "sha256": "fa6194ebbbef57d4915759d5a319f6931abf4888da0c1d7b779cfcadd294b3e6"
-  },
-  {
-    "path": "output/promo-anna/video-slides/04.png",
-    "bytes": 64693,
-    "sha256": "fd4ec77993cc69381e0cc20c4bbec48462dd7699829c0d1b5e2a884e64ddff50"
-  },
-  {
-    "path": "output/promo-anna/video-slides/05.mp4",
-    "bytes": 54957,
-    "sha256": "f995a7baa01579601bcd1f12d2ae21dbb0e14d54d4ec8aa420fd23194414dafc"
-  },
-  {
-    "path": "output/promo-anna/video-slides/05.png",
-    "bytes": 62783,
-    "sha256": "80f9fea23030e27ae7fb87084c795c81ac4195427e6783a022a35dce5161f7fd"
-  },
-  {
-    "path": "output/promo-anna/video-slides/06.mp4",
-    "bytes": 54338,
-    "sha256": "707f9ae1950ca2df5caae74ac646a3089c9c7a0f418aaec96a358073187cbfbf"
-  },
-  {
-    "path": "output/promo-anna/video-slides/06.png",
-    "bytes": 57251,
-    "sha256": "4e87cee372c6f924090c41fd43e77cf858f6c31793066d6c4f0a93c312bac648"
-  },
-  {
-    "path": "output/promo-anna/video-slides/concat.txt",
-    "bytes": 84,
-    "sha256": "542dd105808c83518eed6ce93153d096fcc4af0cd386577a438542d65062529d"
   },
   {
     "path": "output/tester-survey/google-form-header.png",

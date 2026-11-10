@@ -57,5 +57,31 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/profile",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/forgot",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/reset",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/pricing",
+      "destination": "/pricing.html"
+    }
   ]
 }

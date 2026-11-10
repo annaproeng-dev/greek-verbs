@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run as root on the Ubuntu 24.04 DigitalOcean VPS after uploading the code.
 set -Eeuo pipefail
-DOMAIN=greek-verbs.161.35.40.15.sslip.io
+DOMAIN="${DOMAIN:-greekmaster.com}"
 APP_DIR=/var/www/greek-verbs
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
@@ -38,7 +38,7 @@ cat > /etc/nginx/sites-available/greek-verbs <<NGINX
 server {
     listen 80;
     server_name $DOMAIN;
-    client_max_body_size 8k;
+    client_max_body_size 2m;
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host 127.0.0.1:8000;

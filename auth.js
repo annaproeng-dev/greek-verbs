@@ -1,11 +1,16 @@
 const AUTH_TEXT = {
   ru: {
+    legal_acceptance_required: "Подтвердите актуальные условия и совершеннолетие.",
+    legal_unavailable: "Не удалось загрузить условия. Обновите страницу и попробуйте снова.",
+    authentication_required: "Войдите в аккаунт.",
+    deletion_confirmation_required: "Подтвердите удаление аккаунта.",
+    storage_reset: "Прогресс изменён в другой вкладке. Обновите страницу.",
     login: 'Войти', register: 'Регистрация', profile: 'Профиль', logout: 'Выйти',
     loginTitle: 'С возвращением', registerTitle: 'Создать аккаунт',
     loginIntro: 'Войдите и продолжайте изучать греческий.', registerIntro: 'Ваш следующий шаг к свободному греческому.',
     email: 'Почта', password: 'Пароль', confirm: 'Повторите пароль', passwordHelp: 'От 8 до 128 символов',
     submitRegister: 'Зарегистрироваться', back: '← К глаголам', busy: 'Подождите…',
-    localProgress: 'Прогресс сохраняется в этом браузере. На другом устройстве он будет отдельным.',
+    localProgress: 'Прогресс аккаунта сохраняется на сервере и доступен на других устройствах.',
     invalid_credentials: 'Неверная почта или пароль.', email_exists: 'Эта почта уже зарегистрирована. Войдите в аккаунт.',
     password_mismatch: 'Пароли не совпадают.', password_length: 'Пароль должен содержать от 8 до 128 символов.',
     invalid_email: 'Введите корректный адрес почты.', rate_limited: 'Слишком много попыток. Попробуйте через 15 минут.',
@@ -15,16 +20,21 @@ const AUTH_TEXT = {
     resetComplete: 'Пароль изменён. Теперь войдите с новым паролем.', invalid_reset_token: 'Ссылка недействительна или устарела. Запросите новую.',
     email_unavailable: 'Отправка писем пока настраивается. Попробуйте немного позже.',
     unavailable: 'Не удалось связаться с сервером. Попробуйте ещё раз.', invalid_request: 'Проверьте введённые данные.',
-    storage: 'Не удалось сохранить прогресс в браузере. Разрешите хранение данных и обновите страницу.',
+    storage: 'Не удалось сохранить прогресс на сервере. Проверьте подключение и обновите страницу.',
     session: 'Не удалось проверить вход. Для повторной попытки обновите страницу.'
   },
   en: {
+    legal_acceptance_required: "Confirm the current terms and that you are an adult.",
+    legal_unavailable: "Could not load the terms. Reload and try again.",
+    authentication_required: "Please log in.",
+    deletion_confirmation_required: "Confirm account deletion.",
+    storage_reset: "Progress was cleared in another tab. Reload this page.",
     login: 'Log in', register: 'Sign up', profile: 'Profile', logout: 'Log out',
     loginTitle: 'Welcome back', registerTitle: 'Create an account',
     loginIntro: 'Log in and keep learning Greek.', registerIntro: 'Your next step towards confident Greek.',
     email: 'Email', password: 'Password', confirm: 'Confirm password', passwordHelp: '8–128 characters',
     submitRegister: 'Create account', back: '← Back to verbs', busy: 'Please wait…',
-    localProgress: 'Your progress is saved in this browser. Other devices have their own progress.',
+    localProgress: 'Account progress is saved on the server and available on other devices.',
     invalid_credentials: 'Incorrect email or password.', email_exists: 'This email is already registered. Log in to your account.',
     password_mismatch: 'Passwords do not match.', password_length: 'Use a password with 8–128 characters.',
     invalid_email: 'Enter a valid email address.', rate_limited: 'Too many attempts. Try again in 15 minutes.',
@@ -34,7 +44,7 @@ const AUTH_TEXT = {
     resetComplete: 'Password changed. You can now log in with the new password.', invalid_reset_token: 'This link is invalid or expired. Request a new one.',
     email_unavailable: 'Email delivery is being configured. Please try again a little later.',
     unavailable: 'Could not reach the server. Please try again.', invalid_request: 'Please check your details.',
-    storage: 'Could not save your progress. Allow browser storage and reload this page.',
+    storage: 'Could not save your progress on the server. Check your connection and reload this page.',
     session: 'Could not check your login. Reload the page to try again.'
   }
 };
@@ -84,7 +94,7 @@ function applyLearning(record) {
   for (const id of Array.isArray(record.difficult) ? record.difficult : []) difficultIds.add(id);
 }
 
-async function authRequest(action, body) {
+async function authRequest(action, body, fullResponse = false) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
@@ -96,7 +106,7 @@ async function authRequest(action, body) {
     let result;
     try { result = await response.json(); } catch { throw new Error('unavailable'); }
     if (!response.ok) throw new Error(result.error || 'unavailable');
-    return result.user;
+    return fullResponse ? result : result.user;
   } finally {
     clearTimeout(timeout);
   }
@@ -110,6 +120,16 @@ function setAccountBusy(value) {
 }
 
 function renderAuth() {
+  let admin = document.getElementById('adminBtn');
+  if (!admin) {
+    admin = document.createElement('button');
+    admin.id='adminBtn'; admin.className='lang-btn'; admin.type='button';
+    admin.textContent='⚙'; admin.onclick=showAdminPanel;
+    document.getElementById('accountBtn').before(admin);
+  }
+  admin.hidden=currentUser?.role!=='owner';
+  admin.title=admin.ariaLabel=lang==='ru'?'Админпанель':'Admin panel';
+
   const button = document.getElementById('accountBtn');
   button.classList.toggle('profile-button', !!currentUser);
   button.setAttribute('aria-label', authT(currentUser ? 'profile' : 'login'));
@@ -127,7 +147,7 @@ function renderAuth() {
     document.getElementById('acceptTerms').required = authMode === 'register';
     document.getElementById('legalAcceptanceText').innerHTML = lang === 'ru'
       ? 'Мне исполнилось 18 лет. Я принимаю <a href="terms.html" target="_blank" rel="noopener">условия использования</a> и ознакомился(-ась) с <a href="privacy.html" target="_blank" rel="noopener">политикой конфиденциальности</a>.'
-      : 'I am 18 or older. I accept the <a href="terms.html" target="_blank" rel="noopener">terms of use</a> and have read the <a href="privacy.html" target="_blank" rel="noopener">privacy notice</a>.';
+      : 'I am 18 or older. I accept the <a href="terms.en.html" target="_blank" rel="noopener">terms of use</a> and have read the <a href="privacy.en.html" target="_blank" rel="noopener">privacy notice</a>.';
   }
   document.getElementById('registrationAvatarPicker').hidden = authMode !== 'register';
   document.getElementById('registrationAvatarTitle').textContent = lang==='ru'?'Выберите персонажа профиля':'Choose your profile character';
@@ -172,9 +192,36 @@ function renderAuth() {
   document.getElementById('resetSubmit').disabled=authBusy;
   document.getElementById('logoutBtn').disabled = authBusy;
   document.getElementById('profileEmail').textContent = currentUser?.email || '';
+  window.Subscriptions?.render();
   renderAvatarPickers();
   const notice = document.getElementById('learningNotice');
   if (notice.dataset.message) notice.textContent = authT(notice.dataset.message);
+  window.AccountPrivacy?.render();
+}
+
+let accountRoutes = {}, routingReady;
+function initRouting() {
+  return routingReady ||= fetch('/routes.json', {cache:'no-cache'}).then(async response => {
+    if (!response.ok) throw new Error('routes_unavailable');
+    accountRoutes = await response.json();
+  });
+}
+function accountRoute() { return accountRoutes[location.pathname]?.view || ''; }
+function accountHome() { return typeof isExamPage === 'function' && isExamPage() ? '/exam.html' : '/'; }
+function navigateAccount(view, replace=false) {
+  if (!Object.keys(accountRoutes).length) return initRouting().then(() => navigateAccount(view, replace));
+  const destination = view ? Object.keys(accountRoutes).find(path => accountRoutes[path].view === view) : accountHome();
+  if (!destination) throw new Error('unknown_route');
+  if (location.pathname !== destination || location.hash || location.search) history[replace ? 'replaceState' : 'pushState'](null, '', destination);
+  routeAccount();
+}
+function leaveAccountRoute() {
+  if (accountRoute()) history.replaceState(null, '', accountHome());
+}
+function migrateLegacyRoute() {
+  const view = location.hash.slice(1);
+  const path = Object.keys(accountRoutes).find(path => accountRoutes[path].view === view);
+  if (path) history.replaceState(null, '', path + location.search);
 }
 
 function setAuthMode(mode) {
@@ -183,12 +230,12 @@ function setAuthMode(mode) {
   passwordFlow='';
   document.getElementById('authForm').reset();
   document.getElementById('authError').textContent = '';
-  if (location.hash !== '#' + mode) location.hash = mode;
+  if (accountRoute() !== mode) navigateAccount(mode);
   renderAuth();
 }
 
 function routeAccount() {
-  let route = location.hash.slice(1);
+  let route = accountRoute();
   if (!['login', 'register'].includes(route)) document.getElementById('authForm').reset();
   if (!['login', 'register', 'profile', 'forgot', 'reset'].includes(route)) {
     document.body.classList.remove('account-page');
@@ -197,8 +244,8 @@ function routeAccount() {
     if (!document.querySelector('.section.active')) switchSection(typeof isExamPage==='function'&&isExamPage()?'exam':'verbs');
     return;
   }
-  if (currentUser && route !== 'profile') { location.replace('#profile'); return; }
-  if (!currentUser && route === 'profile') { location.replace('#login'); return; }
+  if (currentUser && route !== 'profile') { navigateAccount('profile', true); return; }
+  if (!currentUser && route === 'profile') { navigateAccount('login', true); return; }
   document.body.classList.add('account-page');
   document.querySelectorAll('.section, .nav-link').forEach(el => el.classList.remove('active'));
   document.getElementById(route === 'profile' ? 'sec-profile' : 'sec-auth').classList.add('active');
@@ -212,9 +259,9 @@ function routeAccount() {
 function openPasswordRecovery(){
   document.getElementById('authError').textContent='';
   document.getElementById('authSuccess').textContent='';
-  location.hash='forgot';
+  navigateAccount('forgot');
 }
-function closePasswordRecovery(){location.hash='login';}
+function closePasswordRecovery(){navigateAccount('login');}
 
 async function requestPasswordReset(event){
   event.preventDefault();if(authBusy)return;
@@ -237,18 +284,20 @@ async function submitNewPassword(event){
   setAccountBusy(true);renderAuth();
   try{
     await authRequest('reset_password',{token,password,confirmPassword});
-    history.replaceState(null,'',location.pathname+'#login');passwordFlow='';authMode='login';
+    navigateAccount('login',true);passwordFlow='';authMode='login';
     document.getElementById('resetForm').reset();document.getElementById('authSuccess').textContent=authT('resetComplete');routeAccount();
   }catch(failure){error.textContent=authT(failure.message);}
   finally{setAccountBusy(false);renderAuth();}
 }
 
 async function changeAccount(user, adoptGuest = false) {
-  if(typeof isExamPage==='function'&&isExamPage()&&accountReady){flushExamDrafts();await LearningStore.flush();}
+  // The server session has already changed. Never save the previous identity's drafts
+  // with the new session, and never let a failed pending write retain old identity.
+  if (typeof examDraftTimer !== 'undefined') clearTimeout(examDraftTimer);
   currentUser = user;
   applyLearning({progress: {}, difficult: []});
   renderAuth();
-  await LearningStore.flush();
+  try { await LearningStore.flush(); } catch { learningNotice('storage'); }
   const record = await LearningStore.load(user, adoptGuest);
   applyLearning(record);
   // Discard exercises started under the previous account.
@@ -285,13 +334,15 @@ async function submitAuth(event) {
   renderAuth();
   let user;
   try {
-    user = await authRequest(authMode, {email, password, confirmPassword});
+    const legalAcceptance = authMode === 'register' ? await window.SiteLegal.acceptance(document.getElementById('acceptTerms').checked) : undefined;
+    user = await authRequest(authMode, {email, password, confirmPassword, legalAcceptance});
     announceAccountChange();
     const justRegistered = authMode === 'register';
     await changeAccount(user, justRegistered);
+    if(!user.legal?.accepted) { navigateAccount('profile'); return; }
     if(justRegistered)appStorage.setItem(profileAvatarKey(user.email),pendingProfileAvatar);
     document.getElementById('authForm').reset();
-    location.hash = 'profile';
+    navigateAccount('profile');
     const pendingTour=appStorage.getItem('greekOnboardingPending')==='tour';
     if(pendingTour){appStorage.setItem('greekOnboardingPending','');setTimeout(()=>startContextTour(),180);}
     else if (justRegistered) setTimeout(()=>startOnboarding(), 120);
@@ -316,7 +367,7 @@ async function logout() {
     announceAccountChange();
     await changeAccount(null);
     document.getElementById('authForm').reset();
-    location.hash = '';
+    navigateAccount('');
     switchSection(typeof isExamPage==='function'&&isExamPage()?'exam':'verbs');
   } catch (failure) {
     if (revoked) { location.reload(); return; }
@@ -337,6 +388,7 @@ async function revalidateSession() {
   try {
     const user = await authRequest();
     if (authBusy) return;
+    if (user?.id === currentUser?.id && user) { currentUser = user; renderAuth(); }
     if (user?.id !== currentUser?.id) {
       switching = true;
       setAccountBusy(true);
@@ -352,7 +404,10 @@ async function revalidateSession() {
 }
 
 async function initAccount() {
-  window.addEventListener('hashchange', routeAccount);
+  await initRouting();
+  migrateLegacyRoute();
+  window.addEventListener('popstate', routeAccount);
+  window.addEventListener('hashchange', () => { migrateLegacyRoute(); routeAccount(); });
   window.addEventListener('storage', event => {
     if (event.key === 'greekAuthChanged') revalidateSession();
   });
@@ -366,8 +421,7 @@ async function initAccount() {
   });
   try { currentUser = await authRequest(); } catch { learningNotice('session'); }
   try {
-    // Preserve migration even when an existing account is already logged in.
-    await LearningStore.load(null);
+    // Server ownership is session-scoped; never request the guest record while signed in.
     applyLearning(await LearningStore.load(currentUser));
   } catch {
     learningNotice('storage');
@@ -375,4 +429,51 @@ async function initAccount() {
   renderAuth();
   routeAccount();
   accountReady = true;
+}
+
+async function showAdminPanel() {
+  if(currentUser?.role!=='owner') return;
+  let dialog=document.getElementById('adminPanel');
+  if(!dialog){
+    dialog=document.createElement('dialog'); dialog.id='adminPanel';
+    dialog.className='admin-panel'; document.body.append(dialog);
+  }
+  dialog.replaceChildren();
+  const title=document.createElement('h2'); title.id='adminPanelTitle'; dialog.setAttribute('aria-labelledby',title.id); title.textContent=lang==='ru'?'Админпанель':'Admin panel';
+  const close=document.createElement('button'); close.className='lang-btn'; close.textContent='×';
+  close.ariaLabel=lang==='ru'?'Закрыть':'Close'; close.onclick=()=>dialog.close();
+  dialog.append(close,title); dialog.showModal();
+  const status=document.createElement('p'); status.textContent=lang==='ru'?'Загрузка…':'Loading…'; dialog.append(status);
+  try {
+    const response=await fetch('/api/auth?action=admin_users',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'});
+    const result=await response.json(); if(!response.ok)throw new Error(result.error);
+    status.remove();
+    const table=document.createElement('table');
+    const head=table.createTHead().insertRow();
+    for(const label of ['Email',lang==='ru'?'Роль':'Role',lang==='ru'?'Подписка':'Subscription',lang==='ru'?'Выдать на 7 дней':'Grant for 7 days']) {const th=document.createElement('th');th.textContent=label;head.append(th);}
+    const body=table.createTBody();
+    for(const user of result.users){
+      const row=body.insertRow();row.insertCell().textContent=user.email;
+      row.insertCell().textContent=user.role==='owner'?(lang==='ru'?'Владелец':'Owner'):(lang==='ru'?'Пользователь':'User');
+      const subscription=row.insertCell();
+      const update=()=>{subscription.textContent=Subscriptions.label(user.subscription);};update();
+      const actions=row.insertCell();
+      for(const plan of ['plus','pro','free']){
+        const button=document.createElement('button');button.className='tool-btn';button.textContent=plan==='free'?(lang==='ru'?'Сбросить':'Reset'):plan==='plus'?'Plus · 7 дней':'Pro · 7 дней';
+        button.onclick=async()=>{
+          const buttons=actions.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);
+          try{
+            const response=await fetch('/api/auth?action=admin_subscription',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user.id,plan})});
+            const result=await response.json();if(!response.ok)throw new Error();
+            user.subscription=result.subscription;update();
+            if(currentUser.id===user.id){currentUser.subscription=result.subscription;Subscriptions.render();}
+          }catch{subscription.textContent=lang==='ru'?'Ошибка. Попробуйте снова.':'Failed. Try again.';}
+          finally{buttons.forEach(b=>b.disabled=false);}
+        };actions.append(button);
+      }
+    }
+    const search=document.createElement('input');search.type='search';search.placeholder=lang==='ru'?'Поиск по email':'Search by email';search.ariaLabel=search.placeholder;
+    search.oninput=()=>{for(const row of body.rows)row.hidden=!row.cells[0].textContent.toLowerCase().includes(search.value.toLowerCase());};
+    dialog.append(search,table);
+  } catch {status.textContent=lang==='ru'?'Не удалось загрузить пользователей.':'Could not load users.';}
 }

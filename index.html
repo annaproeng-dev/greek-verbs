@@ -29,8 +29,8 @@
   <script src="theme.js?v=20261104-light-fix1"></script>
   <link rel="stylesheet" href="style.css?v=20261109-exam1" />
 <link rel="stylesheet" href="exam.css?v=20261109-exam1">
-  <link rel="stylesheet" href="legal.css?v=20261110">
-  <script src="legal.js?v=20261110" defer></script>
+  <link rel="stylesheet" href="legal.css?v=20261110-legal2">
+  <script src="legal.js?v=20261110-legal2" defer></script>
 </head>
 <body>
 
@@ -51,8 +51,9 @@
     <button class="lang-btn" id="progressBtn" onclick="showProgress()" aria-label="Progress">📊</button>
     <button class="lang-btn" id="olympusBtn" onclick="showOlympus()" aria-label="My Olympus">🏛️</button>
     <button class="lang-btn theme-btn" id="themeBtn" onclick="toggleTheme()" type="button" aria-label="Switch to dark theme" aria-pressed="false">🌙</button>
-    <button class="lang-btn" id="langBtn" onclick="toggleLang()">RU</button>
-    <button class="account-button" id="accountBtn" onclick="location.hash=currentUser ? 'profile' : 'login'" aria-label="Log in">Log in</button>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
+    <a class="nav-link" href="/pricing">Тарифы / Plans</a>
+    <button class="account-button" id="accountBtn" onclick="navigateAccount(currentUser ? 'profile' : 'login')" aria-label="Log in">Log in</button>
   </div>
 </nav>
 
@@ -318,7 +319,7 @@
   </div>
 
   <section class="section account-section" id="sec-auth" aria-labelledby="authTitle">
-    <a class="account-back" href="#" data-auth-text="back">← Back to verbs</a>
+    <a class="account-back" href="/" onclick="event.preventDefault();navigateAccount('')" data-auth-text="back">← Back to verbs</a>
     <div class="account-card">
       <div class="auth-hermes-hero">
         <div class="auth-hermes-portrait"><img src="assets/olympus/mascots/hermes-login-v2.png" alt="Hermes / Гермес"></div>
@@ -365,10 +366,11 @@
     </div>
   </section>
   <section class="section account-section" id="sec-profile" aria-labelledby="profileTitle">
-    <a class="account-back" href="#" data-auth-text="back">← Back to verbs</a>
+    <a class="account-back" href="/" onclick="event.preventDefault();navigateAccount('')" data-auth-text="back">← Back to verbs</a>
     <div class="account-card profile-card">
       <div class="profile-avatar" id="profileAvatar" aria-hidden="true"></div>
       <h2 id="profileTitle" data-auth-text="profile">Profile</h2>
+      <div id="profileSubscription" class="subscription-summary"></div>
       <dl class="profile-details"><dt data-auth-text="email">Email</dt><dd id="profileEmail"></dd></dl>
       <fieldset class="avatar-picker profile-avatar-picker">
         <legend id="profileAvatarTitle">Персонаж профиля</legend>
@@ -390,9 +392,11 @@
 <dialog id="onboardingDialog" class="verb-dialog onboarding-dialog" aria-labelledby="onboardingTitle"><div id="onboardingContent"></div></dialog>
 
 
-<script src="data.js?v=20261109-exam1"></script>
-<script src="storage.js?v=20261102-theme-fix1"></script>
-<script src="auth.js?v=20261107-profile-layout3"></script>
+<script src="data.js?v=20261110-legal2"></script>
+<script src="storage.js?v=20261110-legal2"></script>
+<script src="subscriptions.js"></script>
+<script src="auth.js?v=20261110-legal2"></script>
 <script src="app.js?v=20261109-exam1"></script>
+<script src="account-privacy.js?v=20261110-legal2" defer></script>
 </body>
 </html>

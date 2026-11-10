@@ -9,6 +9,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
+from api.legal import MANIFEST
 from server import Handler
 from api.auth import hash_password, verify_password, database, SECURITY_HEADERS
 
@@ -31,7 +32,9 @@ class AuthTests(unittest.TestCase):
         cls.env.stop()
         cls.temp.cleanup()
 
-    def request(self, action=None, data=None, cookie=None, origin=None, path=None, method=None, extra_headers=None):
+    def request(self, action=None, data=None, cookie=None, origin=None, path=None, method=None, extra_headers=None, accept_legal=True):
+        if action == 'register' and accept_legal and isinstance(data, dict):
+            data = {**data, 'legalAcceptance': data.get('legalAcceptance', {'version': MANIFEST['version'], 'language': 'en', 'termsAccepted': True, 'privacyAcknowledged': True, 'adultConfirmed': True})}
         conn = http.client.HTTPConnection('127.0.0.1', self.server.server_port)
         headers = {'Content-Type': 'application/json'}
         if cookie:
@@ -45,6 +48,36 @@ class AuthTests(unittest.TestCase):
         result = (response.status, dict(response.getheaders()), json.loads(body) if body.startswith(b'{') else body)
         conn.close()
         return result
+
+    def test_owner_admin_access_and_user_isolation(self):
+        with patch.dict(os.environ, {'OWNER_EMAIL': 'owner@example.test'}):
+            cookies = []
+            for email, role in [('owner@example.test', 'owner'), ('member@example.test', 'user')]:
+                status, headers, result = self.request('register', {'email': email, 'password': 'test-password-123', 'confirmPassword': 'test-password-123', 'role': 'owner'})
+                self.assertEqual(status, 200)
+                self.assertEqual(result['user']['role'], 'user')
+                if role == 'owner':
+                    with database() as execute:
+                        execute("UPDATE user_roles SET role = 'owner' WHERE user_id = ?", (result['user']['id'],))
+                cookies.append(headers['Set-Cookie'].split(';')[0])
+            self.assertEqual(self.request('admin_users', {}, cookie=cookies[0])[0], 200)
+            self.assertEqual(self.request('admin_users', {}, cookie=cookies[1])[0], 403)
+            self.assertEqual(self.request('admin_users', {})[0], 403)
+            _, _, initial = self.request('learning', {}, cookie=cookies[0])
+            owner_id = initial['owner']
+            saved = self.request('learning', {'operation': 'save', 'owner': owner_id, 'generation': initial['generation'], 'revision': initial['revision'], 'data': {'progress': {'correct': 7}, 'difficult': ['a']}}, cookie=cookies[0])
+            self.assertEqual(saved[0], 200)
+            self.assertEqual(self.request('learning', {}, cookie=cookies[1])[2]['data']['progress'], {})
+            self.assertEqual(self.request('export_data', {'password': 'test-password-123'}, cookie=cookies[0])[2]['export']['learning']['progress']['correct'], 7)
+
+    def test_clean_routes_and_reset_link(self):
+        from server import ROUTES
+        for path in ROUTES:
+            for method in ('GET', 'HEAD'):
+                status, headers, body = self.request(path=path, method=method)
+                self.assertEqual(status, 200)
+                self.assertIn('text/html', headers['Content-type'])
+        self.assertEqual(self.request(path='/not-a-route')[0], 404)
 
     def test_registration_login_session_logout(self):
         data = {'email': 'Student@Example.com', 'password': 'test-password-123', 'confirmPassword': 'different'}
@@ -172,6 +205,76 @@ class AuthTests(unittest.TestCase):
         self.assertIn('; HttpOnly', value['cookie'])
         self.assertIn('; Path=/', value['cookie'])
         self.assertNotIn('Domain=', value['cookie'])
+
+    def test_legal_validation_and_atomic_registration(self):
+        data = {'email':'legal@example.test','password':'password-123','confirmPassword':'password-123'}
+        for value in (None, {}, {'version':'stale'}, {'version':MANIFEST['version'],'language':'en','termsAccepted':'true','privacyAcknowledged':True,'adultConfirmed':True}):
+            with self.subTest(value=value):
+                self.assertEqual(self.request('register',{**data,'legalAcceptance':value})[0],400)
+        self.assertEqual(self.request('register',data,accept_legal=False)[0],400)
+        with patch('api.auth.record_acceptance',side_effect=RuntimeError('storage failed')):
+            self.assertEqual(self.request('register',data)[0],503)
+        with sqlite3.connect(self.db) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM users WHERE email=?',(data['email'],)).fetchone()[0],0)
+        status,headers,value=self.request('register',data)
+        self.assertEqual(status,200)
+        self.assertTrue(value['user']['legal']['accepted'])
+        with sqlite3.connect(self.db) as db:
+            record=db.execute('SELECT version, terms_sha256, privacy_sha256, adult_confirmed FROM legal_acceptances WHERE user_id=?',(value['user']['id'],)).fetchone()
+            self.assertEqual(record,(MANIFEST['version'],MANIFEST['documents']['terms.en']['sha256'],MANIFEST['documents']['privacy.en']['sha256'],1))
+            self.assertTrue(db.execute('SELECT content FROM legal_documents WHERE sha256=?',(record[1],)).fetchone()[0].startswith('<!doctype html>'))
+
+    def test_existing_account_does_not_imply_acceptance(self):
+        data={'email':'legacy@example.test','password':'password-123','confirmPassword':'password-123'}
+        _,headers,result=self.request('register',data)
+        with sqlite3.connect(self.db) as db:
+            db.execute('DELETE FROM legal_acceptances WHERE user_id=?',(result['user']['id'],))
+        _,headers,result=self.request('login',data)
+        self.assertFalse(result['user']['legal']['accepted'])
+        cookie=headers['Set-Cookie'].split(';')[0]
+        acceptance={'version':MANIFEST['version'],'language':'ru','termsAccepted':True,'privacyAcknowledged':True,'adultConfirmed':True}
+        for _ in range(2):
+            result=self.request('accept_legal',{'legalAcceptance':acceptance},cookie=cookie)
+            self.assertEqual(result[0],200)
+            self.assertTrue(result[2]['user']['legal']['accepted'])
+        with sqlite3.connect(self.db) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM legal_acceptances WHERE user_id=?',(result[2]['user']['id'],)).fetchone()[0],1)
+        self.assertEqual(self.request('accept_legal',{'legalAcceptance':acceptance})[0],401)
+
+    def test_account_export_deletion_and_session_revocation(self):
+        data={'email':'erase@example.test','password':'password-123','confirmPassword':'password-123'}
+        _,headers,user=self.request('register',data)
+        cookie=headers['Set-Cookie'].split(';')[0]
+        _,second,_=self.request('login',data)
+        second_cookie=second['Set-Cookie'].split(';')[0]
+        self.assertEqual(self.request('delete_account',{'password':'wrong','confirmation':'DELETE'},cookie=cookie)[0],401)
+        self.assertEqual(self.request('delete_account',{'password':data['password']},cookie=cookie)[0],400)
+        self.assertEqual(self.request('export_data',{'password':data['password']})[0],401)
+        status,_,export=self.request('export_data',{'password':data['password']},cookie=cookie)
+        self.assertEqual(status,200)
+        self.assertEqual(export['export']['account']['email'],data['email'])
+        self.assertNotIn('password',json.dumps(export).lower())
+        self.assertNotIn('token',json.dumps(export).lower())
+        self.assertEqual(len(export['export']['legalAcceptances']),1)
+        self.assertEqual(self.request('delete_account',{'password':data['password'],'confirmation':'DELETE'},cookie=cookie)[0],200)
+        for token in (cookie,second_cookie): self.assertIsNone(self.request(cookie=token)[2]['user'])
+        with sqlite3.connect(self.db) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM users WHERE id=?',(user['user']['id'],)).fetchone()[0],0)
+            for table in ('legal_acceptances','sessions','password_reset_tokens'):
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM '+table+' WHERE user_id=?',(user['user']['id'],)).fetchone()[0],0)
+
+    def test_logout_all_and_current_release_assets(self):
+        data={'email':'all-sessions@example.test','password':'password-123','confirmPassword':'password-123'}
+        _,first,_=self.request('register',data)
+        _,second,_=self.request('login',data)
+        cookie=first['Set-Cookie'].split(';')[0]
+        self.assertEqual(self.request('logout_all',{'password':data['password']},cookie=cookie)[0],200)
+        self.assertIsNone(self.request(cookie=second['Set-Cookie'].split(';')[0])[2]['user'])
+        for path in ('/privacy.html','/privacy.en.html','/terms.html','/terms.en.html','/legal-manifest.json','/account-privacy.js','/legal.css','/legal.js'):
+            for method in ('GET','HEAD'):
+                self.assertEqual(self.request(path=path,method=method)[0],200)
+        for path in ('/legal/config.json','/legal/privacy.ru.html','/public-files.json','/scripts/maintain_auth.py','/LEGAL_2026_RU.md'):
+            self.assertEqual(self.request(path=path)[0],404)
 
     def test_sqlite_permissions_and_production_tls(self):
         from unittest.mock import Mock

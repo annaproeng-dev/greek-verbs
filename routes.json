@@ -1,0 +1,26 @@
+{
+  "/login": {
+    "view": "login",
+    "file": "index.html"
+  },
+  "/register": {
+    "view": "register",
+    "file": "index.html"
+  },
+  "/profile": {
+    "view": "profile",
+    "file": "index.html"
+  },
+  "/forgot": {
+    "view": "forgot",
+    "file": "index.html"
+  },
+  "/reset": {
+    "view": "reset",
+    "file": "index.html"
+  },
+  "/pricing": {
+    "view": "pricing",
+    "file": "pricing.html"
+  }
+}

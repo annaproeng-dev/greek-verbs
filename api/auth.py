@@ -17,8 +17,10 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlsplit
 
+from api.legal import CONFIG, MANIFEST, validate_acceptance, record_acceptance, user_payload, cleanup_expired
+
 ITERATIONS = 600_000
-SESSION_AGE = 30 * 24 * 60 * 60
+SESSION_AGE = CONFIG['retention']['sessionDays'] * 24 * 60 * 60
 COOKIE = '__Host-greek_session' if os.environ.get('VERCEL') else 'greek_session'
 SECURITY_HEADERS = {
     'X-Content-Type-Options': 'nosniff',
@@ -54,6 +56,13 @@ def database():
         execute('CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires_at BIGINT NOT NULL)')
         execute('CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires_at BIGINT NOT NULL)')
         execute('CREATE TABLE IF NOT EXISTS password_reset_tokens (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires_at BIGINT NOT NULL, used_at BIGINT)')
+        execute('CREATE TABLE IF NOT EXISTS legal_documents (sha256 TEXT PRIMARY KEY, version TEXT NOT NULL, kind TEXT NOT NULL, language TEXT NOT NULL, content TEXT NOT NULL)')
+        execute('CREATE TABLE IF NOT EXISTS legal_acceptances (user_id TEXT NOT NULL REFERENCES users(id), version TEXT NOT NULL, language TEXT NOT NULL, accepted_at BIGINT NOT NULL, terms_sha256 TEXT NOT NULL REFERENCES legal_documents(sha256), privacy_sha256 TEXT NOT NULL REFERENCES legal_documents(sha256), adult_confirmed INTEGER NOT NULL, PRIMARY KEY (user_id, version, language))')
+        execute("CREATE TABLE IF NOT EXISTS user_roles (user_id TEXT PRIMARY KEY REFERENCES users(id), role TEXT NOT NULL CHECK (role IN ('owner', 'user')))")
+        execute("INSERT INTO user_roles (user_id, role) SELECT id, 'user' FROM users WHERE 1=1 ON CONFLICT (user_id) DO NOTHING")
+        execute("CREATE TABLE IF NOT EXISTS subscriptions (user_id TEXT PRIMARY KEY REFERENCES users(id), plan TEXT NOT NULL CHECK (plan IN ('plus', 'pro')), expires_at BIGINT NOT NULL)")
+        execute('CREATE TABLE IF NOT EXISTS learning (owner TEXT PRIMARY KEY, data TEXT NOT NULL, revision BIGINT NOT NULL)')
+        execute('CREATE TABLE IF NOT EXISTS learning_metadata (owner TEXT PRIMARY KEY, generation TEXT NOT NULL, imports TEXT NOT NULL, migration_closed INTEGER NOT NULL, updated_at BIGINT NOT NULL)')
         execute('CREATE INDEX IF NOT EXISTS sessions_expiry ON sessions (expires_at)')
         execute('CREATE INDEX IF NOT EXISTS auth_attempts_expiry ON auth_attempts (expires_at)')
         execute('CREATE INDEX IF NOT EXISTS password_reset_expiry ON password_reset_tokens (expires_at)')
@@ -64,6 +73,14 @@ def database():
         raise
     finally:
         connection.close()
+
+
+def action_is_learning(path):
+    return parse_qs(urlsplit(path).query).get('action', [''])[0] == 'learning'
+
+
+# Public imports retained for existing integrations and tests.
+from api.learning import export_learning as learning_export, learning_request
 
 
 def hash_password(password, salt=None):
@@ -91,7 +108,7 @@ def send_reset_email(email, token):
     origin = os.environ.get('APP_ORIGIN', '').rstrip('/')
     if not origin:
         raise RuntimeError('APP_ORIGIN is not configured')
-    link = f'{origin}/?reset_token={quote(token)}#reset'
+    link = f'{origin}/reset?reset_token={quote(token)}'
     message = EmailMessage()
     message['Subject'] = 'Greek Verbs — password reset / восстановление пароля'
     message['From'] = sender
@@ -156,7 +173,8 @@ class handler(BaseHTTPRequestHandler):
                 return
             with database() as execute:
                 row = execute('SELECT users.id, users.email FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ? AND sessions.expires_at > ?', (hashlib.sha256(token.encode()).hexdigest(), int(time.time()))).fetchone()
-            self.reply(200, {'user': {'id': row[0], 'email': row[1]} if row else None}, self.cookie() if not row else None)
+                user = user_payload(execute, row[0], row[1]) if row else None
+            self.reply(200, {'user': user}, self.cookie() if not row else None)
         except Exception:
             self.reply(503, {'error': 'unavailable'})
 
@@ -173,7 +191,7 @@ class handler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get('Content-Length', '0'))
-            if length < 2 or length > 4096:
+            if length < 2 or length > (2_000_000 if action_is_learning(self.path) else 4096):
                 raise ValueError()
             payload = json.loads(self.rfile.read(length))
             if not isinstance(payload, dict):
@@ -182,19 +200,79 @@ class handler(BaseHTTPRequestHandler):
             self.reply(400, {'error': 'invalid_request'})
             return
         action = parse_qs(urlsplit(self.path).query).get('action', [''])[0]
-        if action not in ('login', 'register', 'logout', 'request_reset', 'reset_password'):
+        if action not in ('login', 'register', 'logout', 'request_reset', 'reset_password', 'accept_legal', 'export_data', 'delete_account', 'logout_all', 'learning', 'admin_users', 'admin_subscription'):
             self.reply(404, {'error': 'not_found'})
             return
         reset_email = None
         try:
             with database() as execute:
                 now = int(time.time())
-                execute('DELETE FROM sessions WHERE expires_at <= ?', (now,))
-                execute('DELETE FROM auth_attempts WHERE expires_at <= ?', (now,))
-                execute('DELETE FROM password_reset_tokens WHERE expires_at <= ? OR used_at IS NOT NULL', (now,))
-                if action == 'logout':
+                cleanup_expired(execute, now)
+                if action in ('admin_users', 'admin_subscription'):
+                    account = execute("SELECT users.id FROM sessions JOIN users ON users.id = sessions.user_id JOIN user_roles ON user_roles.user_id = users.id WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND user_roles.role = 'owner'", (hashlib.sha256(self.session_token().encode()).hexdigest(), now)).fetchone()
+                    if not account:
+                        result = (403, {'error': 'forbidden'}, None)
+                    else:
+                        from api.subscriptions import subscription_payload
+                        if action == 'admin_subscription':
+                            target, plan = payload.get('userId'), payload.get('plan')
+                            if not isinstance(target, str) or plan not in ('free', 'plus', 'pro'):
+                                result = (400, {'error': 'invalid_request'}, None)
+                            elif not execute('SELECT id FROM users WHERE id = ?', (target,)).fetchone():
+                                result = (404, {'error': 'not_found'}, None)
+                            else:
+                                if plan == 'free':
+                                    execute('DELETE FROM subscriptions WHERE user_id = ?', (target,))
+                                else:
+                                    execute('INSERT INTO subscriptions (user_id, plan, expires_at) VALUES (?, ?, ?) ON CONFLICT (user_id) DO UPDATE SET plan = excluded.plan, expires_at = excluded.expires_at', (target, plan, now + 7 * 86400))
+                                result = (200, {'subscription': subscription_payload(execute, target, now)}, None)
+                        else:
+                            rows = execute("SELECT users.id, users.email, users.created_at, COALESCE(user_roles.role, 'user') FROM users LEFT JOIN user_roles ON user_roles.user_id = users.id ORDER BY users.created_at DESC").fetchall()
+                            users = [dict(zip(('id', 'email', 'createdAt', 'role'), row)) for row in rows]
+                            for user in users:
+                                user['subscription'] = subscription_payload(execute, user['id'], now)
+                            result = (200, {'users': users}, None)
+                elif action == 'learning':
+                    result = learning_request(self, execute, payload, now)
+                elif action == 'logout':
                     execute('DELETE FROM sessions WHERE token_hash = ?', (hashlib.sha256(self.session_token().encode()).hexdigest(),))
                     result = (200, {'user': None}, self.cookie())
+                elif action in ('accept_legal', 'export_data', 'delete_account', 'logout_all'):
+                    token_hash = hashlib.sha256(self.session_token().encode()).hexdigest()
+                    account = execute('SELECT users.id, users.email, users.password_hash, users.created_at FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ? AND sessions.expires_at > ?' + (' FOR UPDATE OF users' if os.environ.get('DATABASE_URL') else ''), (token_hash, now)).fetchone()
+                    if not account:
+                        result = (401, {'error': 'authentication_required'}, self.cookie())
+                    elif action == 'accept_legal':
+                        if not validate_acceptance(payload):
+                            result = (400, {'error': 'legal_acceptance_required', 'legalVersion': MANIFEST['version']}, None)
+                        else:
+                            record_acceptance(execute, account[0], payload['legalAcceptance'], now)
+                            result = (200, {'user': user_payload(execute, account[0], account[1])}, None)
+                    else:
+                        key = hashlib.sha256(('account-action:' + account[0]).encode()).hexdigest()
+                        attempts = execute('INSERT INTO auth_attempts (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT (key) DO UPDATE SET count = auth_attempts.count + 1 RETURNING count', (key, now + CONFIG['retention']['rateLimitMinutes'] * 60)).fetchone()[0]
+                        password = payload.get('password')
+                        if attempts > 10:
+                            result = (429, {'error': 'rate_limited'}, None)
+                        elif not isinstance(password, str) or len(password) > 128 or not verify_password(password, account[2]):
+                            result = (401, {'error': 'invalid_credentials'}, None)
+                        elif action == 'export_data':
+                            rows = execute('SELECT version, language, accepted_at, terms_sha256, privacy_sha256, adult_confirmed FROM legal_acceptances WHERE user_id = ? ORDER BY accepted_at', (account[0],)).fetchall()
+                            acceptances = [dict(zip(('version','language','acceptedAt','termsSha256','privacySha256','adultConfirmed'), row)) for row in rows]
+                            result = (200, {'export': {'schemaVersion': 1, 'exportedAt': now, 'account': {'id': account[0], 'email': account[1], 'createdAt': account[3]}, 'learning': learning_export(execute, 'user:' + account[0]), 'legalAcceptances': acceptances}}, None)
+                        elif action == 'logout_all':
+                            execute('DELETE FROM sessions WHERE user_id = ?', (account[0],))
+                            result = (200, {'user': None}, self.cookie())
+                        elif payload.get('confirmation') != 'DELETE':
+                            result = (400, {'error': 'deletion_confirmation_required'}, None)
+                        else:
+                            execute('DELETE FROM learning WHERE owner = ?', ('user:' + account[0],))
+                            execute('DELETE FROM learning_metadata WHERE owner = ?', ('user:' + account[0],))
+                            for table in ('sessions', 'password_reset_tokens', 'legal_acceptances', 'subscriptions', 'user_roles'):
+                                execute('DELETE FROM ' + table + ' WHERE user_id = ?', (account[0],))
+                            # Security counters are pseudonymous and expire after the fixed rate-limit window.
+                            execute('DELETE FROM users WHERE id = ?', (account[0],))
+                            result = (200, {'user': None, 'deleted': True}, self.cookie())
                 elif action == 'reset_password':
                     token, password = payload.get('token'), payload.get('password')
                     if not isinstance(token, str) or not isinstance(password, str) or len(token) < 32 or len(token) > 256:
@@ -234,7 +312,7 @@ class handler(BaseHTTPRequestHandler):
                     limited = False
                     for key, maximum in limits:
                         key = hashlib.sha256(key.encode()).hexdigest()
-                        count = execute('INSERT INTO auth_attempts (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT (key) DO UPDATE SET count = auth_attempts.count + 1 RETURNING count', (key, now + 900)).fetchone()[0]
+                        count = execute('INSERT INTO auth_attempts (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT (key) DO UPDATE SET count = auth_attempts.count + 1 RETURNING count', (key, now + CONFIG['retention']['rateLimitMinutes'] * 60)).fetchone()[0]
                         limited |= count > maximum
                     if limited:
                         result = (429, {'error': 'rate_limited'}, None)
@@ -246,7 +324,7 @@ class handler(BaseHTTPRequestHandler):
                             if row:
                                 raw_token = secrets.token_urlsafe(32)
                                 execute('DELETE FROM password_reset_tokens WHERE user_id = ?', (row[0],))
-                                execute('INSERT INTO password_reset_tokens (token_hash, user_id, expires_at, used_at) VALUES (?, ?, ?, NULL)', (hashlib.sha256(raw_token.encode()).hexdigest(), row[0], now + 1800))
+                                execute('INSERT INTO password_reset_tokens (token_hash, user_id, expires_at, used_at) VALUES (?, ?, ?, NULL)', (hashlib.sha256(raw_token.encode()).hexdigest(), row[0], now + CONFIG['retention']['resetMinutes'] * 60))
                                 reset_email = (row[1], raw_token)
                             # Never disclose whether the address is registered.
                             result = (200, {'ok': True}, None)
@@ -261,6 +339,9 @@ class handler(BaseHTTPRequestHandler):
                         if action == 'register' and password != payload.get('confirmPassword'):
                             self.reply(400, {'error': 'password_mismatch'})
                             return
+                        if action == 'register' and not validate_acceptance(payload):
+                            self.reply(400, {'error': 'legal_acceptance_required', 'legalVersion': MANIFEST['version']})
+                            return
                         row = execute('SELECT id, email, password_hash FROM users WHERE email = ?', (email,)).fetchone()
                         if action == 'register':
                             user_id = secrets.token_hex(16)
@@ -268,6 +349,8 @@ class handler(BaseHTTPRequestHandler):
                             if not inserted:
                                 result = (409, {'error': 'email_exists'}, None)
                             else:
+                                execute('INSERT INTO user_roles (user_id, role) VALUES (?, ?)', (user_id, 'user'))
+                                record_acceptance(execute, user_id, payload['legalAcceptance'], now)
                                 row = (user_id, email)
                                 result = None
                         elif not verify_password(password, row[2] if row else DUMMY_PASSWORD_HASH) or not row:
@@ -278,12 +361,12 @@ class handler(BaseHTTPRequestHandler):
                             token = secrets.token_urlsafe(32)
                             execute('DELETE FROM sessions WHERE token_hash = ?', (hashlib.sha256(self.session_token().encode()).hexdigest(),))
                             execute('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)', (hashlib.sha256(token.encode()).hexdigest(), row[0], now + SESSION_AGE))
-                            result = (200, {'user': {'id': row[0], 'email': row[1]}}, self.cookie(token, SESSION_AGE))
+                            result = (200, {'user': user_payload(execute, row[0], row[1])}, self.cookie(token, SESSION_AGE))
             if reset_email:
                 try:
                     send_reset_email(*reset_email)
                 except Exception as failure:
-                    self.log_error('Password reset email failed: %s', failure)
+                    self.log_error('Password reset email failed (%s)', type(failure).__name__)
             self.reply(*result)
         except Exception:
             self.reply(503, {'error': 'unavailable'})

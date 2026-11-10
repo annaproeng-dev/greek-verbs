@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 
 !deploy/.env.example
+
+# Local exports and research are preserved in place; inventory is versioned in docs/integration.
+/output/
+/tmp/

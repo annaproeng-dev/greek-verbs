@@ -36,6 +36,10 @@ const verbExTranslation = v => (lang === 'en' ? v.ex_en : v.ex_ru) || verbTrans(
 const sessionProgressText = (index,total) => `${t('task_lbl')} ${Math.min(index+1,total)} ${t('of')} ${total}`;
 
 function updateAccessibleNames() {
+  const languageButton=document.getElementById('langBtn');
+  const languageLabel=lang==='ru'?'Текущий язык: русский. Переключить на английский':'Current language: English. Switch to Russian';
+  languageButton.setAttribute('aria-label',languageLabel);
+  languageButton.title=languageLabel;
   document.querySelectorAll('[data-i18n-aria]').forEach(el=>el.setAttribute('aria-label',t(el.dataset.i18nAria)));
   document.getElementById('progressBtn').setAttribute('aria-label',t('progress_title'));
   document.getElementById('olympusBtn').setAttribute('aria-label',lang==='ru'?'Мой Олимп':'My Olympus');
@@ -200,7 +204,7 @@ function showOnboardingRegistration(){
 function openOnboardingAccount(mode){
   appStorage.setItem('greekOnboardingPending','tour');
   document.getElementById('onboardingDialog')?.close();
-  location.hash=mode;
+  navigateAccount(mode);
 }
 function continueOnboardingAsGuest(){
   appStorage.setItem('greekGuestOnboarding','yes');
@@ -213,7 +217,7 @@ function clearContextTour(){
   window.removeEventListener('resize',positionContextTour);
 }
 function startContextTour(){
-  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+  leaveAccountRoute();
   document.body.classList.remove('account-page');
   tourIndex=0; renderContextTour();
 }
@@ -257,7 +261,7 @@ function finishOnboarding(goToCards=false){
   appStorage.setItem(onboardingStorageKey(),'done');
   document.getElementById('onboardingDialog')?.close();
   if(goToCards){
-    if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+    leaveAccountRoute();
     switchSection('flashcards');
   }
 }
@@ -514,7 +518,7 @@ function switchSection(id) {
   if(isExamPage()&&id!=='exam'){navigateLearningPage('index.html?section='+encodeURIComponent(id));return;}
   if(id!=='practice') cancelAutoAdvance();
   document.body.classList.remove('account-page');
-  if (['#login','#register','#profile'].includes(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+  leaveAccountRoute();
   if(id!=='practice' && document.getElementById('ex-situation')?.classList.contains('active')) stopDialogue();
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
