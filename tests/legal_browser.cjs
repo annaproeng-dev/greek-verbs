@@ -11,7 +11,7 @@ const base=process.env.LEGAL_TEST_URL||'http://localhost:8000';
   await page.waitForFunction(()=>typeof accountReady!=='undefined'&&accountReady);
   await page.evaluate(()=>SiteLegal.ready);
   await page.locator('.storage-notice').waitFor();
-  assert(await page.locator('.legal-footer a').count()===2);
+  assert(await page.locator('[data-footer-section=documents] a').count()===2);
   await page.locator('.storage-notice button').click();
   await page.reload();await page.waitForFunction(()=>accountReady);
   assert(await page.locator('.storage-notice').isHidden());

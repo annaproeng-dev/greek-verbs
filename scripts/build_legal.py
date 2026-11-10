@@ -44,6 +44,7 @@ def build():
         if previous['version']==metadata['version'] and previous['documents']!=metadata['documents']:
             raise ValueError('Legal document content changed: increment legal/config.json version before rebuilding')
     output['legal-manifest.json'] = json.dumps(metadata, ensure_ascii=False,indent=2)+'\n'
+    output['site-info.json'] = json.dumps({'name':config['site']['name'], 'operator':{key:config['operator'][key] for key in ('name','nameEn','taxId','email')}},ensure_ascii=False,indent=2)+'\n'
     return config, output
 
 def main():

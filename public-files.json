@@ -16,18 +16,19 @@
     "legal-manifest.json",
     "legal.css",
     "legal.js",
+    "pricing.html",
     "privacy.en.html",
     "privacy.html",
     "routes.json",
+    "site-info.json",
     "storage.js",
     "style.css",
+    "subscriptions.js",
     "terms.en.html",
     "terms.html",
     "theme.js",
     "verb-page.js",
-    "verb.html",
-    "subscriptions.js",
-    "pricing.html"
+    "verb.html"
   ],
   "assetDirectory": "assets"
 }
